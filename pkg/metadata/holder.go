@@ -2,6 +2,8 @@ package metadata
 
 import (
 	"errors"
+	"sync/atomic"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -40,3 +42,15 @@ func (holder *BucketCacheHolder) GetSnapshot() *BucketCacheHandle {
 	holder.Handle.Ref()
 	return holder.Handle
 }
+
+func (holder *BucketCacheHolder) NextVersion() uint64 {
+	return atomic.LoadUint64(&(holder.Version))
+}
+
+// func (holder *BucketCacheHolder) Next(ctx *BucketCacheHolderContext) error {
+// 	holder.RLock()
+// 	defer holder.Unlock()
+// 	// Build cache base from ctx and holder.cache
+// 	// Push(cache)
+// 	return nil
+// }

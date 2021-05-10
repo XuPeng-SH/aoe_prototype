@@ -12,20 +12,20 @@ type IRefProxy interface {
 
 type IBlock interface {
 	IRefProxy
-	GetID() MetaID
+	GetID() ID
 	GetCount() uint64
 }
 
 type ISegment interface {
 	IRefProxy
-	GetID() MetaID
+	GetID() ID
 	GetCount() uint64
 	BlockCount() uint64
 }
 
 type IBucket interface {
 	IRefProxy
-	GetID() MetaID
+	GetID() ID
 	GetCount() uint64
 	SegmentCount() uint64
 }

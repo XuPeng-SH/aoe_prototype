@@ -20,7 +20,8 @@ func TestCache(t *testing.T) {
 	// curr, succ = blk.Unref()
 	// assert.Equal(t, curr, uint64(0))
 	// assert.False(t, succ)
-	holder := NewCacheHolder()
+	// holder := NewCacheHolder()
+	holder := CacheHolder
 	cache := BucketCache{
 		CheckPoint: &Bucket{},
 		Delta:      &Bucket{},

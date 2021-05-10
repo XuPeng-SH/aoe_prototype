@@ -2,7 +2,7 @@ package metadata
 
 import "sync"
 
-type StateType uint32
+type StateType = uint32
 
 type CallBackFunc func(interface{})
 
@@ -14,6 +14,12 @@ const (
 	DELETED
 )
 
+type IndexType = uint32
+
+const (
+	ZONEMAP IndexType = iota
+)
+
 type LogIndex struct {
 	ID       uint64
 	Start    uint64
@@ -21,17 +27,13 @@ type LogIndex struct {
 	Capacity uint64
 }
 
-type MetaID struct {
+type ID struct {
 	ID   uint64
 	Iter uint64
 }
 
 type State struct {
 	Type StateType
-}
-
-type ID struct {
-	ID MetaID
 }
 
 type TimeStamp struct {
@@ -43,11 +45,16 @@ type RefProxy struct {
 	Refs uint64
 }
 
+type Index struct {
+	State
+	ID
+	TimeStamp
+}
+
 type Block struct {
 	State
 	ID
 	TimeStamp
-	// RefProxy
 	Count uint64
 }
 
@@ -55,16 +62,15 @@ type Segment struct {
 	ID
 	TimeStamp
 	State
-	// RefProxy
-	Blocks []*Block
+	Blocks      map[uint64]*Block
+	NextBlockID uint64
 }
 
 type Bucket struct {
 	ID
 	TimeStamp
-	// RefProxy
 	State
-	Blocks []*Segment
+	Segments map[uint64]*Segment
 }
 
 type BucketCacheHandle struct {
@@ -80,8 +86,37 @@ type BucketCache struct {
 	Version    uint64
 }
 
+// type BucketPersistentContext struct {
+// 	Bucket *Bucket
+// }
+
+// type BucketTransientContext struct {
+// 	Segment *Segment
+// 	Block   *Block
+// }
+
+type BucketCacheHolderContext struct {
+	// NewBlock *Block
+	// Handle *BucketCacheHandle
+	// PersistentCtx *BucketPersistentContext
+	// TransientCtx  *BucketTransientContext
+}
+
 type BucketCacheHolder struct {
 	sync.RWMutex
 	Handle  *BucketCacheHandle
 	Version uint64
+}
+
+var (
+	CacheHolder *BucketCacheHolder
+)
+
+func init() {
+	CacheHolder = NewCacheHolder()
+}
+
+type AddBlockContext struct {
+	Block     *Block
+	SegmentID ID
 }
