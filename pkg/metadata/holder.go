@@ -12,7 +12,7 @@ func NewCacheHolder() *BucketCacheHolder {
 		// Snapshots: make(map[uint64]*BucketCacheHandle),
 	}
 	cache := &BucketCache{
-		CheckPoint: &Bucket{},
+		CheckPoint: ID{},
 		Delta:      &Bucket{},
 	}
 	holder.Push(cache)

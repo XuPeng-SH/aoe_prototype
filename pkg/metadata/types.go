@@ -8,10 +8,9 @@ type CallBackFunc func(interface{})
 
 const (
 	PENDING StateType = iota
-	ACTIVE
-	DEACTIVE
+	DROPPENDING
 	COMMITTED
-	DELETED
+	DROPCOMMITTED
 )
 
 type IndexType = uint32
@@ -87,7 +86,7 @@ type BucketCacheHandle struct {
 }
 
 type BucketCache struct {
-	CheckPoint *Bucket
+	CheckPoint ID
 	Delta      *Bucket
 	Version    uint64
 }

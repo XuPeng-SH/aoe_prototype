@@ -23,7 +23,7 @@ func TestCache(t *testing.T) {
 	// holder := NewCacheHolder()
 	holder := CacheHolder
 	cache := BucketCache{
-		CheckPoint: &Bucket{},
+		CheckPoint: ID{},
 		Delta:      &Bucket{},
 	}
 	version, err := holder.Push(&cache)
@@ -42,7 +42,7 @@ func TestCache(t *testing.T) {
 	assert.Equal(t, holder.Handle.Refs, uint64(1))
 
 	cache2 := BucketCache{
-		CheckPoint: &Bucket{},
+		CheckPoint: ID{},
 		Delta:      &Bucket{},
 	}
 
