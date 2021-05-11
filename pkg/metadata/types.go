@@ -65,21 +65,24 @@ type Block struct {
 	State
 	ID
 	TimeStamp
-	LogIndex  LogIndex
-	SegmentID uint64
-	BucketID  uint64
-	Count     uint64
-	DataState DataState
+	Index       *LogIndex
+	PrevIndex   *LogIndex
+	SegmentID   uint64
+	BucketID    uint64
+	Count       uint64
+	DataState   DataState
+	MaxRowCount uint64
 }
 
 type Segment struct {
 	ID
 	TimeStamp
 	State
-	BucketID    uint64
-	Blocks      map[uint64]*Block
-	NextBlockID uint64
-	DataState   DataState
+	BucketID      uint64
+	Blocks        map[uint64]*Block
+	NextBlockID   uint64
+	DataState     DataState
+	MaxBlockCount uint64
 }
 
 type Bucket struct {

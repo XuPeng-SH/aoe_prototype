@@ -36,14 +36,14 @@ func TestCreateBlockOp(t *testing.T) {
 	worker := NewOperationWorker()
 	worker.Start()
 	ss := md.CacheHolder.GetSnapshot()
-	var segment_id uint64
-	for k, _ := range ss.SegmentIDs() {
-		segment_id = k
-		break
-	}
+	// var segment_id uint64
+	// for k, _ := range ss.SegmentIDs() {
+	// 	segment_id = k
+	// 	break
+	// }
 	opCtx := OperationContext{CacheVersion: ss.GetVersion()}
 	op := NewCreateBlockOperation(&opCtx, ss, worker)
-	blk, err := op.CommitNewBlock(segment_id)
+	blk, err := op.CommitNewBlock()
 	assert.Nil(t, err)
 	t.Log(blk.String())
 	assert.True(t, blk.IsActive())
@@ -54,20 +54,20 @@ func TestCreateBlockOp(t *testing.T) {
 
 	new_ss := md.CacheHolder.GetSnapshot()
 	assert.Equal(t, new_ss.GetVersion(), ss.GetVersion()+1)
-	segment, err := new_ss.GetSegment(segment_id)
+	segment, err := new_ss.GetSegment(blk.SegmentID)
 	assert.Nil(t, err)
 	t.Log(segment.String())
-	assert.Equal(t, len(new_ss.GetSegmentBlockIDs(segment_id)), 1)
+	assert.Equal(t, len(new_ss.GetSegmentBlockIDs(blk.SegmentID)), 1)
 
 	opCtx = OperationContext{CacheVersion: new_ss.GetVersion()}
 	blk2, err := new_ss.GetBlock(blk.SegmentID, blk.ID.ID)
 	blk3 := blk2.Copy()
 	assert.Equal(t, blk3.DataState, md.EMPTY)
 	assert.True(t, blk3.IsActive())
-	blk3.SetCount(md.BLOCK_ROW_COUNT / 2)
+	blk3.SetCount(blk3.MaxRowCount / 2)
 	assert.Equal(t, blk3.DataState, md.PARTIAL)
 	assert.True(t, blk3.IsActive())
-	blk3.SetCount(md.BLOCK_ROW_COUNT)
+	blk3.SetCount(blk3.MaxRowCount)
 	assert.Equal(t, blk3.DataState, md.FULL)
 	assert.False(t, blk3.IsActive())
 	opCtx.Block = blk3
@@ -78,14 +78,20 @@ func TestCreateBlockOp(t *testing.T) {
 	blk4, err := new_ss.GetBlock(blk3.SegmentID, blk3.ID.ID)
 	assert.Nil(t, err)
 	assert.True(t, blk4.IsActive())
+	seg, err := new_ss.GetSegment(blk3.SegmentID)
+	assert.Nil(t, err)
+	assert.True(t, seg.IsActive())
+	assert.Equal(t, seg.DataState, md.EMPTY)
 	new_ss = md.CacheHolder.GetSnapshot()
+	// t.Log(new_ss.String())
 	blk5, err := new_ss.GetBlock(blk3.SegmentID, blk3.ID.ID)
 	assert.Nil(t, err)
 	assert.False(t, blk5.IsActive())
 
-	seg, err := new_ss.GetSegment(blk3.SegmentID)
+	seg, err = new_ss.GetSegment(blk3.SegmentID)
 	assert.Nil(t, err)
 	assert.True(t, seg.IsActive())
+	assert.Equal(t, seg.DataState, md.PARTIAL)
 	seg2 := new_ss.Cache.Delta.GetActiveSegment()
 	assert.Equal(t, seg.ID.ID, seg2.ID.ID)
 	blk6, err := seg2.GetActiveBlock()

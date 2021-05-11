@@ -18,8 +18,13 @@ type CreateBlockOperation struct {
 	Operation
 }
 
-func (op *CreateBlockOperation) CommitNewBlock(segment_id uint64) (blk *md.Block, err error) {
-	blk, err = op.Handle.Cache.NewBlock(segment_id)
+func (op *CreateBlockOperation) CommitNewBlock() (blk *md.Block, err error) {
+	seg := op.Handle.Cache.Delta.GetActiveSegment()
+	if seg == nil {
+		err = errors.New("No active segment is available. Please create seg first")
+		return blk, err
+	}
+	blk, err = seg.NextBlock()
 	if err == nil {
 		op.Ctx.Block = blk
 	}
