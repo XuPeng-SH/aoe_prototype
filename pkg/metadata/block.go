@@ -1,12 +1,18 @@
 package metadata
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 func NewBlock(bucket_id, segment_id, id uint64) *Block {
+	now := time.Now().Unix()
 	blk := &Block{
 		ID:        ID{ID: id},
 		BucketID:  bucket_id,
 		SegmentID: segment_id,
+		TimeStamp: TimeStamp{CreatedOn: now, UpdatedOn: now},
+		State:     State{Type: PENDING},
 	}
 	return blk
 }

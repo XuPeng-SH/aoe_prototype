@@ -37,8 +37,8 @@ type State struct {
 }
 
 type TimeStamp struct {
-	CreatedOn uint64
-	UpdatedOn uint64
+	CreatedOn int64
+	UpdatedOn int64
 }
 
 type RefProxy struct {

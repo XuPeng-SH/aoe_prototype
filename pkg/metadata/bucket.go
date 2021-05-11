@@ -4,12 +4,16 @@ import (
 	"errors"
 	"fmt"
 	"sync/atomic"
+	"time"
 	// log "github.com/sirupsen/logrus"
 )
 
 func NewBucket() *Bucket {
+	now := time.Now().Unix()
 	bucket := &Bucket{
-		Segments: make(map[uint64]*Segment),
+		Segments:  make(map[uint64]*Segment),
+		TimeStamp: TimeStamp{CreatedOn: now, UpdatedOn: now},
+		State:     State{Type: PENDING},
 	}
 	return bucket
 }

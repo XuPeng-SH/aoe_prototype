@@ -4,13 +4,17 @@ import (
 	"errors"
 	"fmt"
 	"sync/atomic"
+	"time"
 )
 
 func NewSegment(bucket_id, id uint64) *Segment {
+	now := time.Now().Unix()
 	seg := &Segment{
-		BucketID: bucket_id,
-		ID:       ID{ID: id},
-		Blocks:   make(map[uint64]*Block),
+		BucketID:  bucket_id,
+		ID:        ID{ID: id},
+		Blocks:    make(map[uint64]*Block),
+		TimeStamp: TimeStamp{CreatedOn: now, UpdatedOn: now},
+		State:     State{Type: PENDING},
 	}
 	return seg
 }
