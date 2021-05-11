@@ -18,6 +18,19 @@ func (seg *Segment) NextBlock() (blk *Block, err error) {
 	return blk, err
 }
 
+func (seg *Segment) String() string {
+	s := fmt.Sprintf("Seg(%s,NBlk=%d)", seg.ID.String(), seg.NextBlockID)
+	s += "["
+	for i, blk := range seg.Blocks {
+		if i != 0 {
+			s += ","
+		}
+		s += blk.String()
+	}
+	s += "]"
+	return s
+}
+
 func (seg *Segment) GetNextBlockID() uint64 {
 	return seg.NextBlockID
 }

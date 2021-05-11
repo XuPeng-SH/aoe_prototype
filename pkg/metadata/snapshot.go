@@ -28,6 +28,11 @@ func (handle *BucketCacheHandle) NextBlock(segment_id uint64) (blk *Block, err e
 	return blk, err
 }
 
+func (handle *BucketCacheHandle) GetNextSegmentID() (id uint64, err error) {
+	id, err = handle.Cache.GetNextSegmentID()
+	return id, err
+}
+
 func (handle *BucketCacheHandle) GetNextBlockID(segment_id uint64) (id uint64, err error) {
 	segment, err := handle.Cache.GetSegment(segment_id)
 	if err != nil {

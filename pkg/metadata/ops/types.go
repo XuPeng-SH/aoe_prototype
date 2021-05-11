@@ -9,6 +9,7 @@ import (
 type OperationContext struct {
 	SegmentID    *uint64
 	Block        *md.Block
+	Segment      *md.Segment
 	CacheVersion uint64
 }
 

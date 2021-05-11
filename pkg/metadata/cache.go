@@ -16,6 +16,14 @@ func (cache *BucketCache) NewBlock(segment_id uint64) (blk *Block, err error) {
 	return blk, err
 }
 
+func (cache *BucketCache) GetNextSegmentID() (id uint64, err error) {
+	if cache.Delta != nil {
+		return cache.Delta.NextSegmentID, nil
+	}
+
+	return cache.CheckPoint.NextSegmentID, nil
+}
+
 func (cache *BucketCache) GetSegment(segment_id uint64) (seg *Segment, err error) {
 	var ok bool
 	if cache.Delta != nil {
@@ -63,10 +71,12 @@ func (cache *BucketCache) CopyWithDelta(ctx interface{}) (new_cache *BucketCache
 	return new_cache, err
 }
 
+// Modifier
 func (cache *BucketCache) IncDeltaIter() error {
 	if cache.Delta == nil {
 		cache.Delta = NewBucket()
 		cache.Delta.ID = cache.CheckPoint.ID
+		cache.Delta.NextSegmentID = cache.CheckPoint.NextSegmentID
 	}
 	cache.Delta.IncIteration()
 	return nil
