@@ -39,6 +39,20 @@ func (bkt *Bucket) SegmentIDs() map[uint64]ID {
 	return ids
 }
 
+func (bkt *Bucket) GetActiveSegment() (seg *Segment) {
+	min_seg_id := bkt.NextSegmentID
+	for seg_id, itseg := range bkt.Segments {
+		if seg_id < min_seg_id && itseg.IsActive() {
+			min_seg_id = seg_id
+		}
+	}
+
+	if min_seg_id == bkt.NextSegmentID {
+		return nil
+	}
+	return bkt.Segments[min_seg_id]
+}
+
 func (bkt *Bucket) NextSegment() (seg *Segment, err error) {
 	seg_id := atomic.LoadUint64(&(bkt.NextSegmentID))
 	seg = NewSegment(bkt.ID.ID, seg_id)
@@ -46,7 +60,7 @@ func (bkt *Bucket) NextSegment() (seg *Segment, err error) {
 }
 
 func (bkt *Bucket) String() string {
-	s := fmt.Sprintf("Buk(%s,NSeg=%d)", bkt.ID.String(), bkt.NextSegmentID)
+	s := fmt.Sprintf("Buk[%s](%s,NSeg=%d)", bkt.State.String(), bkt.ID.String(), bkt.NextSegmentID)
 	s += "["
 	for i, seg := range bkt.Segments {
 		if i != 0 {

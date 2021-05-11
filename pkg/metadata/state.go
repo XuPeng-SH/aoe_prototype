@@ -1,7 +1,7 @@
 package metadata
 
 import (
-	"errors"
+// "errors"
 )
 
 func (st *State) Commit() error {
@@ -10,7 +10,7 @@ func (st *State) Commit() error {
 	} else if st.Type == DROPPENDING {
 		st.Type = DROPCOMMITTED
 	} else {
-		return errors.New("Cannot commit already committed resources")
+		// return errors.New("Cannot commit already committed resources")
 	}
 
 	return nil
@@ -28,4 +28,21 @@ func (st *State) String() string {
 		return "DC"
 	}
 	return "Invalid state"
+}
+
+func ToString(val interface{}) string {
+	switch v := val.(type) {
+	case DataState:
+		switch v {
+		case EMPTY:
+			return "EMPTY"
+		case PARTIAL:
+			return "PARTIAL"
+		case FULL:
+			return "FULL"
+		case SORTED:
+			return "SORTED"
+		}
+	}
+	panic("logic error")
 }

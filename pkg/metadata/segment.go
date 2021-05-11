@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+const (
+	SEGMENT_BLOCK_COUNT = 4
+)
+
 func NewSegment(bucket_id, id uint64) *Segment {
 	now := time.Now().Unix()
 	seg := &Segment{
@@ -43,8 +47,32 @@ func (seg *Segment) NextBlock() (blk *Block, err error) {
 	return blk, err
 }
 
+func (seg *Segment) GetActiveBlock() (*Block, error) {
+	if !seg.IsActive() {
+		return nil, errors.New("segment is closed")
+	}
+	min_blk_id := seg.NextBlockID
+	for blk_id, itblk := range seg.Blocks {
+		if blk_id < min_blk_id && itblk.IsActive() {
+			min_blk_id = blk_id
+		}
+	}
+	if min_blk_id == seg.NextBlockID {
+		// Need create new block for this segment
+		return nil, nil
+	}
+	return seg.Blocks[min_blk_id], nil
+}
+
+func (seg *Segment) IsActive() bool {
+	if seg.DataState == EMPTY || seg.DataState == PARTIAL {
+		return true
+	}
+	return false
+}
+
 func (seg *Segment) String() string {
-	s := fmt.Sprintf("Seg(%d-%s,NBlk=%d)", seg.BucketID, seg.ID.String(), seg.NextBlockID)
+	s := fmt.Sprintf("Seg[%s](%d-%s,NBlk=%d)", seg.State.String(), seg.BucketID, seg.ID.String(), seg.NextBlockID)
 	s += "["
 	for i, blk := range seg.Blocks {
 		if i != 0 {

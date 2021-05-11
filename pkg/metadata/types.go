@@ -13,6 +13,15 @@ const (
 	DROPCOMMITTED
 )
 
+type DataState = uint8
+
+const (
+	EMPTY DataState = iota
+	PARTIAL
+	FULL
+	SORTED
+)
+
 type IndexType = uint32
 
 const (
@@ -56,9 +65,11 @@ type Block struct {
 	State
 	ID
 	TimeStamp
+	LogIndex
 	SegmentID uint64
 	BucketID  uint64
 	Count     uint64
+	DataState DataState
 }
 
 type Segment struct {
@@ -68,6 +79,7 @@ type Segment struct {
 	BucketID    uint64
 	Blocks      map[uint64]*Block
 	NextBlockID uint64
+	DataState   DataState
 }
 
 type Bucket struct {

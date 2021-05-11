@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+const (
+	BLOCK_ROW_COUNT = 16
+)
+
 func NewBlock(bucket_id, segment_id, id uint64) *Block {
 	now := time.Now().Unix()
 	blk := &Block{
@@ -15,6 +19,13 @@ func NewBlock(bucket_id, segment_id, id uint64) *Block {
 		State:     State{Type: PENDING},
 	}
 	return blk
+}
+
+func (blk *Block) IsActive() bool {
+	if blk.DataState == EMPTY || blk.DataState == PARTIAL {
+		return true
+	}
+	return false
 }
 
 func (blk *Block) GetID() ID {
@@ -30,7 +41,7 @@ func (blk *Block) GetBucketID() uint64 {
 }
 
 func (blk *Block) String() string {
-	return fmt.Sprintf("Blk(%d-%d-%s)[%s]", blk.BucketID, blk.SegmentID, blk.ID.String(), blk.State.String())
+	return fmt.Sprintf("Blk[%s](%d-%d-%s)", blk.State.String(), blk.BucketID, blk.SegmentID, blk.ID.String())
 }
 
 func (blk *Block) Copy() *Block {
