@@ -96,6 +96,18 @@ func (seg *Segment) GetBlock(id uint64) *Block {
 	return blk
 }
 
+func (seg *Segment) UpdateBlock(blk *Block) (*Block, error) {
+	target_blk := seg.GetBlock(blk.ID.ID)
+	if target_blk == nil {
+		return nil, errors.New("Update block not found")
+	}
+	if target_blk.DataState >= blk.DataState {
+		return nil, errors.New("Cannot update with higher DataState")
+	}
+	seg.Blocks[blk.ID.ID] = blk.Copy()
+	return seg.Blocks[blk.ID.ID], nil
+}
+
 func (seg *Segment) AddBlock(blk *Block) error {
 	if seg.NextBlockID != blk.ID.ID {
 		return errors.New(fmt.Sprintf("AddBlock %d is mismatch with NextBlockID %d", blk.ID.ID, seg.NextBlockID))

@@ -48,6 +48,18 @@ func (handle *BucketCacheHandle) GetNextSegmentID() (id uint64, err error) {
 	return id, err
 }
 
+func (handle *BucketCacheHandle) GetBlock(segment_id, block_id uint64) (blk *Block, err error) {
+	seg, err := handle.Cache.GetSegment(segment_id)
+	if err != nil {
+		return nil, err
+	}
+	blk = seg.GetBlock(block_id)
+	if blk == nil {
+		return nil, errors.New("block not found")
+	}
+	return blk, err
+}
+
 func (handle *BucketCacheHandle) GetSegment(id uint64) (seg *Segment, err error) {
 	seg, err = handle.Cache.GetSegment(id)
 	return seg, err

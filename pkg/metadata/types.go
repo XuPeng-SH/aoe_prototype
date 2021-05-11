@@ -65,7 +65,7 @@ type Block struct {
 	State
 	ID
 	TimeStamp
-	LogIndex
+	LogIndex  LogIndex
 	SegmentID uint64
 	BucketID  uint64
 	Count     uint64
@@ -134,6 +134,10 @@ func init() {
 }
 
 type CommitAddBlockContext struct {
+	Block *Block
+}
+
+type CommitUpdateBlockContext struct {
 	Block *Block
 }
 

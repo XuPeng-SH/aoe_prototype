@@ -46,23 +46,42 @@ func TestCreateBlockOp(t *testing.T) {
 	blk, err := op.CommitNewBlock(segment_id)
 	assert.Nil(t, err)
 	t.Log(blk.String())
+	assert.True(t, blk.IsActive())
 
-	// err = op.OnExecute()
 	op.Push()
 	err = op.WaitDone()
 	assert.Nil(t, err)
 
 	new_ss := md.CacheHolder.GetSnapshot()
 	assert.Equal(t, new_ss.GetVersion(), ss.GetVersion()+1)
-	// t.Log(new_ss.String())
-
 	segment, err := new_ss.GetSegment(segment_id)
 	assert.Nil(t, err)
 	t.Log(segment.String())
-	// assert.Equal(t, segment.BlockIDs())
-	// t.Log(new_ss.GetSegmentBlockIDs(segment_id))
 	assert.Equal(t, len(new_ss.GetSegmentBlockIDs(segment_id)), 1)
-	t.Log(new_ss.Cache.CheckPoint.String())
+
+	opCtx = OperationContext{CacheVersion: new_ss.GetVersion()}
+	blk2, err := new_ss.GetBlock(blk.SegmentID, blk.ID.ID)
+	blk3 := blk2.Copy()
+	assert.Equal(t, blk3.DataState, md.EMPTY)
+	assert.True(t, blk3.IsActive())
+	blk3.SetCount(md.BLOCK_ROW_COUNT / 2)
+	assert.Equal(t, blk3.DataState, md.PARTIAL)
+	assert.True(t, blk3.IsActive())
+	blk3.SetCount(md.BLOCK_ROW_COUNT)
+	assert.Equal(t, blk3.DataState, md.FULL)
+	assert.False(t, blk3.IsActive())
+	opCtx.Block = blk3
+	updateblkop := NewUpdateBlockOperation(&opCtx, new_ss, worker)
+	updateblkop.Push()
+	err = updateblkop.WaitDone()
+	assert.Nil(t, err)
+	blk4, err := new_ss.GetBlock(blk3.SegmentID, blk3.ID.ID)
+	assert.Nil(t, err)
+	assert.True(t, blk4.IsActive())
+	new_ss = md.CacheHolder.GetSnapshot()
+	blk5, err := new_ss.GetBlock(blk3.SegmentID, blk3.ID.ID)
+	assert.Nil(t, err)
+	assert.False(t, blk5.IsActive())
 
 	opCtx = OperationContext{CacheVersion: new_ss.GetVersion()}
 	opCtx.Block = blk
@@ -71,10 +90,10 @@ func TestCreateBlockOp(t *testing.T) {
 	err = flushop.WaitDone()
 	assert.Nil(t, err)
 
-	latest_ss := md.CacheHolder.GetSnapshot()
-	t.Log(ss.String())
-	t.Log(new_ss.String())
-	t.Log(latest_ss.String())
+	// latest_ss := md.CacheHolder.GetSnapshot()
+	// t.Log(ss.String())
+	// t.Log(new_ss.String())
+	// t.Log(latest_ss.String())
 
 	worker.Stop()
 }

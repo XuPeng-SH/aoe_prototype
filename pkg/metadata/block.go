@@ -1,6 +1,7 @@
 package metadata
 
 import (
+	"errors"
 	"fmt"
 	"time"
 )
@@ -19,6 +20,22 @@ func NewBlock(bucket_id, segment_id, id uint64) *Block {
 		State:     State{Type: PENDING},
 	}
 	return blk
+}
+
+func (blk *Block) SetCount(count uint64) error {
+	if count > BLOCK_ROW_COUNT {
+		return errors.New("SetCount exceeds max limit")
+	}
+	if count <= blk.Count {
+		return errors.New("SetCount cannot set smaller count")
+	}
+	blk.Count = count
+	if count == BLOCK_ROW_COUNT {
+		blk.DataState = FULL
+	} else {
+		blk.DataState = PARTIAL
+	}
+	return nil
 }
 
 func (blk *Block) IsActive() bool {
@@ -41,7 +58,7 @@ func (blk *Block) GetBucketID() uint64 {
 }
 
 func (blk *Block) String() string {
-	return fmt.Sprintf("Blk[%s](%d-%d-%s)", blk.State.String(), blk.BucketID, blk.SegmentID, blk.ID.String())
+	return fmt.Sprintf("Blk[%s-%s](%d-%d-%s)", blk.State.String(), ToString(blk.DataState), blk.BucketID, blk.SegmentID, blk.ID.String())
 }
 
 func (blk *Block) Copy() *Block {
@@ -50,6 +67,7 @@ func (blk *Block) Copy() *Block {
 	new_blk.TimeStamp = blk.TimeStamp
 	new_blk.State = blk.State
 	new_blk.Count = blk.Count
+	new_blk.DataState = blk.DataState
 
 	return new_blk
 }

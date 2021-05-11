@@ -111,6 +111,19 @@ func (cache *BucketCache) CopyWithDelta(ctx interface{}) (new_cache *BucketCache
 			return nil, err
 		}
 		segment.IncIteration()
+	case *CommitUpdateBlockContext:
+		new_cache.IncDeltaIter()
+		segment, err := new_cache.GetSegment(context.Block.SegmentID)
+		if err != nil {
+			return nil, err
+		}
+		blk, err := segment.UpdateBlock(context.Block)
+		if err != nil {
+			return nil, err
+		}
+		blk.IncIteration()
+		segment.IncIteration()
+
 	case *CommitAddSegmentContext:
 		new_cache.IncDeltaIter()
 		err = new_cache.Delta.AddSegment(context.Segment)
