@@ -41,9 +41,9 @@ func TestCreateBlockOp(t *testing.T) {
 		segment_id = k
 		break
 	}
-	opCtx := OperationContext{SegmentID: &segment_id, CacheVersion: ss.GetVersion()}
+	opCtx := OperationContext{CacheVersion: ss.GetVersion()}
 	op := NewCreateBlockOperation(&opCtx, ss, worker)
-	blk, err := op.CommitNewBlock()
+	blk, err := op.CommitNewBlock(segment_id)
 	assert.Nil(t, err)
 	t.Log(blk.String())
 

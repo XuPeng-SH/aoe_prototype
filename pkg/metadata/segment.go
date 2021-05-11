@@ -6,12 +6,17 @@ import (
 	"sync/atomic"
 )
 
-func NewSegment(id uint64) *Segment {
+func NewSegment(bucket_id, id uint64) *Segment {
 	seg := &Segment{
-		ID:     ID{ID: id},
-		Blocks: make(map[uint64]*Block),
+		BucketID: bucket_id,
+		ID:       ID{ID: id},
+		Blocks:   make(map[uint64]*Block),
 	}
 	return seg
+}
+
+func (seg *Segment) GetBucketID() uint64 {
+	return seg.BucketID
 }
 
 func (seg *Segment) BlockIDs() map[uint64]ID {
@@ -30,12 +35,12 @@ func (seg *Segment) NextBlock() (blk *Block, err error) {
 	// 	ok = atomic.CompareAndSwapUint64(&(seg.NextBlockID), blk_id, blk_id+1)
 	// }
 
-	blk = NewBlock(blk_id)
+	blk = NewBlock(seg.BucketID, seg.ID.ID, blk_id)
 	return blk, err
 }
 
 func (seg *Segment) String() string {
-	s := fmt.Sprintf("Seg(%s,NBlk=%d)", seg.ID.String(), seg.NextBlockID)
+	s := fmt.Sprintf("Seg(%d-%s,NBlk=%d)", seg.BucketID, seg.ID.String(), seg.NextBlockID)
 	s += "["
 	for i, blk := range seg.Blocks {
 		if i != 0 {

@@ -37,13 +37,7 @@ func (bkt *Bucket) SegmentIDs() map[uint64]ID {
 
 func (bkt *Bucket) NextSegment() (seg *Segment, err error) {
 	seg_id := atomic.LoadUint64(&(bkt.NextSegmentID))
-	// ok := atomic.CompareAndSwapUint64(&(bkt.NextSegmentID), seg_id, seg_id+1)
-	// for ok != true {
-	// 	seg_id = atomic.LoadUint64(&(bkt.NextSegmentID))
-	// 	ok = atomic.CompareAndSwapUint64(&(bkt.NextSegmentID), seg_id, seg_id+1)
-	// }
-
-	seg = NewSegment(seg_id)
+	seg = NewSegment(bkt.ID.ID, seg_id)
 	return seg, err
 }
 

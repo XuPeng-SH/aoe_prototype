@@ -18,8 +18,8 @@ type CreateBlockOperation struct {
 	Operation
 }
 
-func (op *CreateBlockOperation) CommitNewBlock() (blk *md.Block, err error) {
-	blk, err = op.Handle.Cache.NewBlock(*op.Ctx.SegmentID)
+func (op *CreateBlockOperation) CommitNewBlock(segment_id uint64) (blk *md.Block, err error) {
+	blk, err = op.Handle.Cache.NewBlock(segment_id)
 	if err == nil {
 		op.Ctx.Block = blk
 	}
@@ -39,7 +39,7 @@ func (op *CreateBlockOperation) execute() error {
 	}
 
 	latest_ss := md.CacheHolder.GetSnapshot()
-	next_blk_id, err := latest_ss.GetNextBlockID(*op.Ctx.SegmentID)
+	next_blk_id, err := latest_ss.GetNextBlockID(op.Ctx.Block.SegmentID)
 	if err != nil {
 		return err
 	}
@@ -47,8 +47,7 @@ func (op *CreateBlockOperation) execute() error {
 		return errors.New(fmt.Sprintf("Abort CreateBlockOperation due to race condition"))
 	}
 	ctx := md.CommitAddBlockContext{
-		Block:     op.Ctx.Block,
-		SegmentID: md.ID{ID: *op.Ctx.SegmentID},
+		Block: op.Ctx.Block,
 	}
 	latest_cache, err := latest_ss.Cache.CopyWithDelta(&ctx)
 	if err != nil {

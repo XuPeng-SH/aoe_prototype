@@ -49,19 +49,24 @@ type Index struct {
 	State
 	ID
 	TimeStamp
+	SegmentID uint64
+	BucketID  uint64
 }
 
 type Block struct {
 	State
 	ID
 	TimeStamp
-	Count uint64
+	SegmentID uint64
+	BucketID  uint64
+	Count     uint64
 }
 
 type Segment struct {
 	ID
 	TimeStamp
 	State
+	BucketID    uint64
 	Blocks      map[uint64]*Block
 	NextBlockID uint64
 }
@@ -118,8 +123,7 @@ func init() {
 }
 
 type CommitAddBlockContext struct {
-	Block     *Block
-	SegmentID ID
+	Block *Block
 }
 
 type CommitAddSegmentContext struct {

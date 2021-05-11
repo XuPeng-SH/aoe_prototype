@@ -94,7 +94,7 @@ func (cache *BucketCache) CopyWithDelta(ctx interface{}) (new_cache *BucketCache
 	switch context := ctx.(type) {
 	case *CommitAddBlockContext:
 		new_cache.IncDeltaIter()
-		segment, err := new_cache.GetSegment(context.SegmentID.ID)
+		segment, err := new_cache.GetSegment(context.Block.SegmentID)
 		if err != nil {
 			return nil, err
 		}
