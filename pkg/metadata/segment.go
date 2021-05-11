@@ -64,3 +64,16 @@ func (seg *Segment) AddBlock(blk *Block) error {
 	seg.NextBlockID += 1
 	return nil
 }
+
+func (seg *Segment) Copy() *Segment {
+	new_seg := NewSegment(seg.BucketID, seg.ID.ID)
+	new_seg.ID = seg.ID
+	new_seg.TimeStamp = seg.TimeStamp
+	new_seg.State = seg.State
+	new_seg.NextBlockID = seg.NextBlockID
+	for k, v := range seg.Blocks {
+		new_seg.Blocks[k] = v.Copy()
+	}
+
+	return new_seg
+}

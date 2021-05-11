@@ -71,8 +71,9 @@ func (bkt *Bucket) Copy() *Bucket {
 	new_bkt.ID = bkt.ID
 	new_bkt.TimeStamp = bkt.TimeStamp
 	new_bkt.State = bkt.State
+	new_bkt.NextSegmentID = bkt.NextSegmentID
 	for k, v := range bkt.Segments {
-		new_bkt.Segments[k] = v
+		new_bkt.Segments[k] = v.Copy()
 	}
 
 	return new_bkt

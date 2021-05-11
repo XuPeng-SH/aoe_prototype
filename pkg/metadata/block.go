@@ -26,3 +26,13 @@ func (blk *Block) GetBucketID() uint64 {
 func (blk *Block) String() string {
 	return fmt.Sprintf("Blk(%d-%d-%s)", blk.BucketID, blk.SegmentID, blk.ID.String())
 }
+
+func (blk *Block) Copy() *Block {
+	new_blk := NewBlock(blk.BucketID, blk.SegmentID, blk.ID.ID)
+	new_blk.ID = blk.ID
+	new_blk.TimeStamp = blk.TimeStamp
+	new_blk.State = blk.State
+	new_blk.Count = blk.Count
+
+	return new_blk
+}
