@@ -6,13 +6,29 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func NewOperation(impl IOperation, ctx *OperationContext, handle *md.BucketCacheHandle) *Operation {
+func NewOperation(impl IOperationInternal, ctx *OperationContext,
+	handle *md.BucketCacheHandle, w IOpWorker) *Operation {
 	op := &Operation{
-		Ctx:    ctx,
-		Handle: handle,
-		Impl:   impl,
+		Ctx:     ctx,
+		Handle:  handle,
+		Impl:    impl,
+		ResultC: make(chan error),
+		Worker:  w,
 	}
 	return op
+}
+
+func (op *Operation) Push() {
+	op.Worker.SendOp(op)
+}
+
+func (op *Operation) SetError(err error) {
+	op.ResultC <- err
+}
+
+func (op *Operation) WaitDone() error {
+	err := <-op.ResultC
+	return err
 }
 
 func (op *Operation) preExecute() error {

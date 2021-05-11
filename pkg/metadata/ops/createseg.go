@@ -7,9 +7,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func NewCreateSegmentOperation(ctx *OperationContext, handle *md.BucketCacheHandle) *CreateSegmentOperation {
+func NewCreateSegmentOperation(ctx *OperationContext, handle *md.BucketCacheHandle,
+	w IOpWorker) *CreateSegmentOperation {
 	op := &CreateSegmentOperation{}
-	op.Operation = *NewOperation(op, ctx, handle)
+	op.Operation = *NewOperation(op, ctx, handle, w)
 	return op
 }
 

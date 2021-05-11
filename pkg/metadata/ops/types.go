@@ -13,15 +13,22 @@ type OperationContext struct {
 	CacheVersion uint64
 }
 
-type IOperation interface {
+type IOperationInternal interface {
 	preExecute() error
 	execute() error
 	postExecute() error
+}
+
+type IOperation interface {
+	OnExecute() error
+	SetError(err error)
 }
 
 type Operation struct {
 	Ctx          *OperationContext
 	Handle       *md.BucketCacheHandle
 	LatestHandle *md.BucketCacheHandle
-	Impl         IOperation
+	Impl         IOperationInternal
+	ResultC      chan error
+	Worker       IOpWorker
 }
