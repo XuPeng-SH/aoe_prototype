@@ -83,6 +83,15 @@ func TestCreateBlockOp(t *testing.T) {
 	assert.Nil(t, err)
 	assert.False(t, blk5.IsActive())
 
+	seg, err := new_ss.GetSegment(blk3.SegmentID)
+	assert.Nil(t, err)
+	assert.True(t, seg.IsActive())
+	seg2 := new_ss.Cache.Delta.GetActiveSegment()
+	assert.Equal(t, seg.ID.ID, seg2.ID.ID)
+	blk6, err := seg2.GetActiveBlock()
+	assert.Nil(t, blk6)
+	assert.Nil(t, err)
+
 	opCtx = OperationContext{CacheVersion: new_ss.GetVersion()}
 	opCtx.Block = blk
 	flushop := NewFlushOperation(&opCtx, new_ss, worker)
