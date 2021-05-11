@@ -14,6 +14,14 @@ func NewSegment(id uint64) *Segment {
 	return seg
 }
 
+func (seg *Segment) BlockIDs() map[uint64]ID {
+	ids := make(map[uint64]ID)
+	for _, blk := range seg.Blocks {
+		ids[blk.ID.ID] = blk.ID
+	}
+	return ids
+}
+
 func (seg *Segment) NextBlock() (blk *Block, err error) {
 	blk_id := atomic.LoadUint64(&(seg.NextBlockID))
 	// ok := atomic.CompareAndSwapUint64(&(seg.NextBlockID), blk_id, blk_id+1)

@@ -25,6 +25,24 @@ func (cache *BucketCache) NewBlock(segment_id uint64) (blk *Block, err error) {
 	return blk, err
 }
 
+func (cache *BucketCache) GetSegmentBlockIDs(segment_id uint64) map[uint64]ID {
+	ids := make(map[uint64]ID, 0)
+	if cache.CheckPoint != nil {
+		ids = cache.CheckPoint.GetSegmentBlockIDs(segment_id)
+	}
+
+	if cache.Delta != nil {
+		delta_ids := cache.Delta.GetSegmentBlockIDs(segment_id)
+		for id, id_iter := range delta_ids {
+			_, ok := ids[id]
+			if !ok {
+				ids[id] = id_iter
+			}
+		}
+	}
+	return ids
+}
+
 func (cache *BucketCache) SegmentIDs() map[uint64]ID {
 	ids := make(map[uint64]ID, 0)
 	if cache.CheckPoint != nil {

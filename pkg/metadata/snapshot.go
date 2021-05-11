@@ -16,6 +16,10 @@ func (handle *BucketCacheHandle) String() string {
 	return s
 }
 
+func (handle *BucketCacheHandle) GetSegmentBlockIDs(segment_id uint64) map[uint64]ID {
+	return handle.Cache.GetSegmentBlockIDs(segment_id)
+}
+
 func (handle *BucketCacheHandle) SegmentIDs() map[uint64]ID {
 	return handle.Cache.SegmentIDs()
 }
@@ -42,6 +46,11 @@ func (handle *BucketCacheHandle) NextBlock(segment_id uint64) (blk *Block, err e
 func (handle *BucketCacheHandle) GetNextSegmentID() (id uint64, err error) {
 	id, err = handle.Cache.GetNextSegmentID()
 	return id, err
+}
+
+func (handle *BucketCacheHandle) GetSegment(id uint64) (seg *Segment, err error) {
+	seg, err = handle.Cache.GetSegment(id)
+	return seg, err
 }
 
 func (handle *BucketCacheHandle) GetNextBlockID(segment_id uint64) (id uint64, err error) {

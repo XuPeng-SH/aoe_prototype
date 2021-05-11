@@ -19,6 +19,14 @@ func (bkt *Bucket) GetSegment(segment_id uint64) (seg *Segment, ok bool) {
 	return seg, ok
 }
 
+func (bkt *Bucket) GetSegmentBlockIDs(segment_id uint64) map[uint64]ID {
+	seg, ok := bkt.GetSegment(segment_id)
+	if !ok {
+		return make(map[uint64]ID, 0)
+	}
+	return seg.BlockIDs()
+}
+
 func (bkt *Bucket) SegmentIDs() map[uint64]ID {
 	ids := make(map[uint64]ID)
 	for _, seg := range bkt.Segments {

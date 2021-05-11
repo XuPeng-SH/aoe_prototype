@@ -47,4 +47,11 @@ func TestCreateBlockOp(t *testing.T) {
 	new_ss := md.CacheHolder.GetSnapshot()
 	assert.Equal(t, new_ss.GetVersion(), ss.GetVersion()+1)
 	t.Log(new_ss.String())
+
+	segment, err := new_ss.GetSegment(segment_id)
+	assert.Nil(t, err)
+	t.Log(segment.String())
+	// assert.Equal(t, segment.BlockIDs())
+	t.Log(new_ss.GetSegmentBlockIDs(segment_id))
+	assert.Equal(t, len(new_ss.GetSegmentBlockIDs(segment_id)), 1)
 }
