@@ -13,6 +13,7 @@ type OperationContext struct {
 }
 
 type Operation struct {
-	Ctx    *OperationContext
-	Handle *md.BucketCacheHandle
+	Ctx          *OperationContext
+	Handle       *md.BucketCacheHandle
+	LatestHandle *md.BucketCacheHandle
 }

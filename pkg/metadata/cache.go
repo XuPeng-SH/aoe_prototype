@@ -31,7 +31,7 @@ func (cache *BucketCache) GetSegment(segment_id uint64) (seg *Segment, err error
 	return seg, nil
 }
 
-func (cache *BucketCache) AddDelta(ctx interface{}) (new_cache *BucketCache, err error) {
+func (cache *BucketCache) CopyWithDelta(ctx interface{}) (new_cache *BucketCache, err error) {
 	new_delta := cache.Delta.Copy()
 	new_cache = &BucketCache{
 		CheckPoint: cache.CheckPoint,
@@ -40,14 +40,23 @@ func (cache *BucketCache) AddDelta(ctx interface{}) (new_cache *BucketCache, err
 	}
 
 	switch context := ctx.(type) {
-	case *AddBlockContext:
+	case *CommitAddBlockContext:
 		new_cache.IncDeltaIter()
 		segment, err := new_cache.GetSegment(context.SegmentID.ID)
 		if err != nil {
 			return nil, err
 		}
-		segment.AddBlock(context.Block)
+		err = segment.AddBlock(context.Block)
+		if err != nil {
+			return nil, err
+		}
 		segment.IncIteration()
+	case *CommitAddSegmentContext:
+		new_cache.IncDeltaIter()
+		err = new_cache.Delta.AddSegment(context.Segment)
+		if err != nil {
+			return nil, err
+		}
 	default:
 		return nil, errors.New("not support context")
 	}

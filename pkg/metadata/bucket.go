@@ -1,7 +1,9 @@
 package metadata
 
 import (
-// log "github.com/sirupsen/logrus"
+	"errors"
+	"fmt"
+	// log "github.com/sirupsen/logrus"
 )
 
 func NewBucket() *Bucket {
@@ -14,6 +16,15 @@ func NewBucket() *Bucket {
 func (bkt *Bucket) GetSegment(segment_id uint64) (seg *Segment, ok bool) {
 	seg, ok = bkt.Segments[segment_id]
 	return seg, ok
+}
+
+func (bkt *Bucket) AddSegment(seg *Segment) error {
+	if bkt.NextSegmentID != seg.ID.ID {
+		return errors.New(fmt.Sprintf("AddSegment %d is mismatch with NextSegmentID %d", seg.ID.ID, bkt.NextSegmentID))
+	}
+	bkt.Segments[seg.ID.ID] = seg
+	bkt.NextSegmentID += 1
+	return nil
 }
 
 func (bkt *Bucket) Copy() *Bucket {

@@ -33,6 +33,19 @@ func (op *CreateBlockOperation) execute() error {
 	if op.Ctx.Block.ID.ID != next_blk_id {
 		return errors.New(fmt.Sprintf("Abort CreateBlockOperation due to race condition"))
 	}
+	ctx := md.CommitAddBlockContext{
+		Block:     op.Ctx.Block,
+		SegmentID: md.ID{ID: *op.Ctx.SegmentID},
+	}
+	latest_cache, err := latest_ss.Cache.CopyWithDelta(&ctx)
+	if err != nil {
+		return err
+	}
 
+	_, err = md.CacheHolder.Push(latest_cache)
+	if err != nil {
+		return err
+	}
+	op.LatestHandle = md.CacheHolder.GetSnapshot()
 	return nil
 }

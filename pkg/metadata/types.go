@@ -70,7 +70,8 @@ type Bucket struct {
 	ID
 	TimeStamp
 	State
-	Segments map[uint64]*Segment
+	Segments      map[uint64]*Segment
+	NextSegmentID uint64
 }
 
 type BucketCacheHandle struct {
@@ -116,7 +117,11 @@ func init() {
 	CacheHolder = NewCacheHolder()
 }
 
-type AddBlockContext struct {
+type CommitAddBlockContext struct {
 	Block     *Block
 	SegmentID ID
+}
+
+type CommitAddSegmentContext struct {
+	Segment *Segment
 }
