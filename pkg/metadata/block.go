@@ -30,7 +30,7 @@ func (blk *Block) GetBucketID() uint64 {
 }
 
 func (blk *Block) String() string {
-	return fmt.Sprintf("Blk(%d-%d-%s)", blk.BucketID, blk.SegmentID, blk.ID.String())
+	return fmt.Sprintf("Blk(%d-%d-%s)[%s]", blk.BucketID, blk.SegmentID, blk.ID.String(), blk.State.String())
 }
 
 func (blk *Block) Copy() *Block {

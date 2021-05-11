@@ -125,6 +125,10 @@ type CommitAddBlockContext struct {
 	Block *Block
 }
 
+type CommitFlushBlockContext struct {
+	Block *Block
+}
+
 type CommitAddSegmentContext struct {
 	Segment *Segment
 }

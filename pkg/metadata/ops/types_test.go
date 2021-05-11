@@ -63,11 +63,28 @@ func TestCreateBlockOp(t *testing.T) {
 	// t.Log(new_ss.GetSegmentBlockIDs(segment_id))
 	assert.Equal(t, len(new_ss.GetSegmentBlockIDs(segment_id)), 1)
 	t.Log(new_ss.Cache.CheckPoint.String())
+
+	opCtx = OperationContext{CacheVersion: new_ss.GetVersion()}
+	opCtx.Block = blk
+	flushop := NewFlushOperation(&opCtx, new_ss, worker)
+	flushop.Push()
+	err = flushop.WaitDone()
+	assert.Nil(t, err)
+
+	latest_ss := md.CacheHolder.GetSnapshot()
+	t.Log(ss.String())
+	t.Log(new_ss.String())
+	t.Log(latest_ss.String())
+
 	worker.Stop()
 }
 
 func TestFlush(t *testing.T) {
-	//1. Flush a block
-	//2. Flush a metafile
-	//3. Refresh the cache
+	// worker := NewOperationWorker()
+	// worker.Start()
+
+	// ss := md.CacheHolder.GetSnapshot()
+	// ss.GetSe
+
+	// worker.Stop()
 }

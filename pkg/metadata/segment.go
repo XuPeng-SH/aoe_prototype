@@ -60,6 +60,14 @@ func (seg *Segment) GetNextBlockID() uint64 {
 	return seg.NextBlockID
 }
 
+func (seg *Segment) GetBlock(id uint64) *Block {
+	blk, ok := seg.Blocks[id]
+	if !ok {
+		return nil
+	}
+	return blk
+}
+
 func (seg *Segment) AddBlock(blk *Block) error {
 	if seg.NextBlockID != blk.ID.ID {
 		return errors.New(fmt.Sprintf("AddBlock %d is mismatch with NextBlockID %d", blk.ID.ID, seg.NextBlockID))

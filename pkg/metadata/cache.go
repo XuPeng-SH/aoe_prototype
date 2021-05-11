@@ -3,6 +3,7 @@ package metadata
 import (
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 )
 
 func (cache *BucketCache) NextSegment() (seg *Segment, err error) {
@@ -71,10 +72,24 @@ func (cache *BucketCache) GetSegment(segment_id uint64) (seg *Segment, err error
 	return seg, nil
 }
 
-// func (cache *BucketCache) CopyWithFlush(ctx interface{}) (new_cache *BucketCache, err error) {
-// 	new_ck := cache.Delta.Copy()
-// 	new_cache =
-// }
+func (cache *BucketCache) CopyWithFlush(ctx interface{}) (new_cache *BucketCache, err error) {
+	new_cache = &BucketCache{
+		Delta:      cache.Delta.Copy(),
+		CheckPoint: cache.Delta.ID,
+		Version:    cache.Version + 1,
+	}
+
+	switch context := ctx.(type) {
+	case *CommitFlushBlockContext:
+		err = new_cache.CommitBlock(context.Block)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return nil, errors.New("not support context")
+	}
+	return new_cache, nil
+}
 
 func (cache *BucketCache) CopyWithDelta(ctx interface{}) (new_cache *BucketCache, err error) {
 	new_delta := cache.Delta.Copy()
@@ -117,6 +132,11 @@ func (cache *BucketCache) String() string {
 	return s
 }
 
+func (cache *BucketCache) Serialize() error {
+	log.Infof("Do Serialize")
+	return nil
+}
+
 // Modifier
 func (cache *BucketCache) IncDeltaIter() error {
 	if cache.Delta == nil {
@@ -124,4 +144,17 @@ func (cache *BucketCache) IncDeltaIter() error {
 	}
 	cache.Delta.IncIteration()
 	return nil
+}
+
+func (cache *BucketCache) CommitBlock(blk *Block) error {
+	seg, err := cache.GetSegment(blk.SegmentID)
+	if err != nil {
+		return err
+	}
+	b := seg.GetBlock(seg.ID.ID)
+	if b == nil {
+		return errors.New("No block is found")
+	}
+	err = b.Commit()
+	return err
 }
