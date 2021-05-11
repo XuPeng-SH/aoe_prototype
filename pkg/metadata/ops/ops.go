@@ -35,11 +35,19 @@ func (op *Operation) execute() error {
 }
 
 func (op *Operation) OnExecute() error {
-	err := op.Impl.preExecute()
+	err := op.preExecute()
+	if err != nil {
+		return err
+	}
+	err = op.Impl.preExecute()
 	if err != nil {
 		return err
 	}
 	err = op.Impl.execute()
+	if err != nil {
+		return err
+	}
+	err = op.postExecute()
 	if err != nil {
 		return err
 	}

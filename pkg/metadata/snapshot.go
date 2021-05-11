@@ -2,11 +2,22 @@ package metadata
 
 import (
 	"errors"
+	"fmt"
+
 	log "github.com/sirupsen/logrus"
 )
 
 func (handle *BucketCacheHandle) GetVersion() uint64 {
 	return handle.Cache.Version
+}
+
+func (handle *BucketCacheHandle) String() string {
+	s := fmt.Sprintf("SS (V=%d) %s", handle.GetVersion(), handle.Cache.String())
+	return s
+}
+
+func (handle *BucketCacheHandle) SegmentIDs() map[uint64]ID {
+	return handle.Cache.SegmentIDs()
 }
 
 func (handle *BucketCacheHandle) Close() error {
