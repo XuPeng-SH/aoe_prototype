@@ -6,13 +6,21 @@ import (
 	"sync/atomic"
 )
 
+func NewSegment(id uint64) *Segment {
+	seg := &Segment{
+		ID:     ID{ID: id},
+		Blocks: make(map[uint64]*Block),
+	}
+	return seg
+}
+
 func (seg *Segment) NextBlock() (blk *Block, err error) {
 	blk_id := atomic.LoadUint64(&(seg.NextBlockID))
-	ok := atomic.CompareAndSwapUint64(&(seg.NextBlockID), blk_id, blk_id+1)
-	for ok != true {
-		blk_id = atomic.LoadUint64(&(seg.NextBlockID))
-		ok = atomic.CompareAndSwapUint64(&(seg.NextBlockID), blk_id, blk_id+1)
-	}
+	// ok := atomic.CompareAndSwapUint64(&(seg.NextBlockID), blk_id, blk_id+1)
+	// for ok != true {
+	// 	blk_id = atomic.LoadUint64(&(seg.NextBlockID))
+	// 	ok = atomic.CompareAndSwapUint64(&(seg.NextBlockID), blk_id, blk_id+1)
+	// }
 
 	blk = NewBlock(blk_id)
 	return blk, err

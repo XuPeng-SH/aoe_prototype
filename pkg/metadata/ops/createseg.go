@@ -4,19 +4,38 @@ import (
 	md "aoe/pkg/metadata"
 	"errors"
 	"fmt"
-	// log "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
+
+func NewCreateSegmentOperation(ctx *OperationContext, handle *md.BucketCacheHandle) *CreateSegmentOperation {
+	op := &CreateSegmentOperation{}
+	op.Operation = *NewOperation(op, ctx, handle)
+	return op
+}
 
 type CreateSegmentOperation struct {
 	Operation
 }
 
 func (op *CreateSegmentOperation) CommitNewSegment() (seg *md.Segment, err error) {
+	seg, err = op.Handle.Cache.NextSegment()
+	if err == nil {
+		op.Ctx.Segment = seg
+	}
 	return seg, err
+}
+
+func (op *CreateSegmentOperation) preExecute() error {
+	return nil
+}
+
+func (op *CreateSegmentOperation) postExecute() error {
+	return nil
 }
 
 func (op *CreateSegmentOperation) execute() error {
 	if op.Ctx.Segment == nil {
+		log.Errorf("logic error")
 		return errors.New("logic error")
 	}
 

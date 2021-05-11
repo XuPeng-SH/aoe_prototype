@@ -3,6 +3,7 @@ package metadata
 import (
 	"errors"
 	"fmt"
+	"sync/atomic"
 	// log "github.com/sirupsen/logrus"
 )
 
@@ -18,6 +19,18 @@ func (bkt *Bucket) GetSegment(segment_id uint64) (seg *Segment, ok bool) {
 	return seg, ok
 }
 
+func (bkt *Bucket) NextSegment() (seg *Segment, err error) {
+	seg_id := atomic.LoadUint64(&(bkt.NextSegmentID))
+	// ok := atomic.CompareAndSwapUint64(&(bkt.NextSegmentID), seg_id, seg_id+1)
+	// for ok != true {
+	// 	seg_id = atomic.LoadUint64(&(bkt.NextSegmentID))
+	// 	ok = atomic.CompareAndSwapUint64(&(bkt.NextSegmentID), seg_id, seg_id+1)
+	// }
+
+	seg = NewSegment(seg_id)
+	return seg, err
+}
+
 func (bkt *Bucket) String() string {
 	s := fmt.Sprintf("Buk(%s,NSeg=%d)", bkt.ID.String(), bkt.NextSegmentID)
 	s += "["
@@ -27,7 +40,10 @@ func (bkt *Bucket) String() string {
 		}
 		s += seg.String()
 	}
-	s += "\n]"
+	if len(bkt.Segments) > 0 {
+		s += "\n"
+	}
+	s += "]"
 	return s
 }
 

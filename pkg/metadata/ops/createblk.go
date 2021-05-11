@@ -12,6 +12,7 @@ type CreateBlockOperation struct {
 }
 
 func (op *CreateBlockOperation) CommitNewBlock() (blk *md.Block, err error) {
+	blk, err = op.Handle.Cache.NewBlock(*op.Ctx.SegmentID)
 	return blk, err
 }
 

@@ -28,7 +28,7 @@ func TestCache(t *testing.T) {
 	}
 	version, err := holder.Push(&cache)
 	assert.Nil(t, err)
-	assert.Equal(t, version, uint64(0))
+	assert.Equal(t, version, uint64(1))
 	assert.True(t, holder.Handle.HasRef())
 	assert.Equal(t, holder.Handle.Refs, uint64(1))
 
@@ -48,7 +48,7 @@ func TestCache(t *testing.T) {
 
 	version, err = holder.Push(&cache2)
 	assert.Nil(t, err)
-	assert.Equal(t, version, uint64(1))
+	assert.Equal(t, version, uint64(2))
 
 	{
 		handle := holder.GetSnapshot()

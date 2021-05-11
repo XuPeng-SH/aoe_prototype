@@ -5,6 +5,15 @@ import (
 	"fmt"
 )
 
+func (cache *BucketCache) NextSegment() (seg *Segment, err error) {
+	if cache.Delta != nil {
+		seg, err = cache.Delta.NextSegment()
+		return seg, err
+	}
+	seg, err = cache.CheckPoint.NextSegment()
+	return seg, err
+}
+
 func (cache *BucketCache) NewBlock(segment_id uint64) (blk *Block, err error) {
 	segment, err := cache.GetSegment(segment_id)
 	if err != nil {
@@ -69,6 +78,18 @@ func (cache *BucketCache) CopyWithDelta(ctx interface{}) (new_cache *BucketCache
 		return nil, errors.New("not support context")
 	}
 	return new_cache, err
+}
+
+func (cache *BucketCache) String() string {
+	s := fmt.Sprintf("BCache (V%d) {", cache.Version)
+	if cache.CheckPoint != nil {
+		s += "\n\tCheckPoint: " + cache.CheckPoint.String()
+	}
+	if cache.Delta != nil {
+		s += "\n\tDelta:      " + cache.Delta.String() + "\n"
+	}
+	s += "}"
+	return s
 }
 
 // Modifier

@@ -11,6 +11,11 @@ func NewCacheHolder() *BucketCacheHolder {
 	holder := &BucketCacheHolder{
 		// Snapshots: make(map[uint64]*BucketCacheHandle),
 	}
+	cache := &BucketCache{
+		CheckPoint: &Bucket{},
+		Delta:      &Bucket{},
+	}
+	holder.Push(cache)
 	return holder
 }
 
@@ -39,6 +44,9 @@ func (holder *BucketCacheHolder) Push(cache *BucketCache) (uint64, error) {
 func (holder *BucketCacheHolder) GetSnapshot() *BucketCacheHandle {
 	holder.RLock()
 	defer holder.RUnlock()
+	if holder.Handle == nil {
+		return nil
+	}
 	holder.Handle.Ref()
 	return holder.Handle
 }

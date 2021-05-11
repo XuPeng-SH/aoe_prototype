@@ -1,10 +1,19 @@
 package ops
 
 import (
-	// md "aoe/pkg/metadata"
+	md "aoe/pkg/metadata"
 	"errors"
 	log "github.com/sirupsen/logrus"
 )
+
+func NewOperation(impl IOperation, ctx *OperationContext, handle *md.BucketCacheHandle) *Operation {
+	op := &Operation{
+		Ctx:    ctx,
+		Handle: handle,
+		Impl:   impl,
+	}
+	return op
+}
 
 func (op *Operation) preExecute() error {
 	if op.Ctx == nil {
@@ -26,14 +35,14 @@ func (op *Operation) execute() error {
 }
 
 func (op *Operation) OnExecute() error {
-	err := op.preExecute()
+	err := op.Impl.preExecute()
 	if err != nil {
 		return err
 	}
-	err = op.execute()
+	err = op.Impl.execute()
 	if err != nil {
 		return err
 	}
-	err = op.postExecute()
+	err = op.Impl.postExecute()
 	return err
 }
