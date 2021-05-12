@@ -45,7 +45,7 @@ func (ts *TimeStamp) Deltete(t int64) error {
 func (ts *TimeStamp) Select(t int64) bool {
 	delon := atomic.LoadInt64(&(ts.DeltetedOn))
 	if delon != 0 {
-		if delon < t {
+		if delon <= t {
 			return false
 		}
 	}

@@ -117,9 +117,9 @@ func (seg *Segment) UpdateBlock(blk *Block) (*Block, error) {
 	return seg.Blocks[blk.ID.ID], nil
 }
 
-func (seg *Segment) AddBlock(blk *Block) error {
+func (seg *Segment) RegisterBlock(blk *Block) error {
 	if seg.NextBlockID != blk.ID.ID {
-		return errors.New(fmt.Sprintf("AddBlock %d is mismatch with NextBlockID %d", blk.ID.ID, seg.NextBlockID))
+		return errors.New(fmt.Sprintf("RegisterBlock %d is mismatch with NextBlockID %d", blk.ID.ID, seg.NextBlockID))
 	}
 	seg.Blocks[blk.ID.ID] = blk
 	seg.NextBlockID += 1
