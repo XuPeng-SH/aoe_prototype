@@ -3,6 +3,7 @@ package metadata
 import (
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -48,6 +49,15 @@ func (blk *Block) IsActive() bool {
 
 func (blk *Block) GetID() ID {
 	return blk.ID
+}
+
+// After block is created, it is only updated during flusing
+func (blk *Block) Update(other *Block) error {
+	if blk.ID.ID != other.ID.ID || blk.SegmentID != other.SegmentID || blk.BucketID != blk.BucketID {
+		return errors.New("Cannot merge blks with different IDs")
+	}
+	blk = other.Copy()
+	return nil
 }
 
 func (blk *Block) SetIndex(idx LogIndex) {

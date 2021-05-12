@@ -168,6 +168,13 @@ func (cache *BucketCache) CommitBlock(blk *Block) error {
 	if b == nil {
 		return errors.New("No block is found")
 	}
+	err = b.Update(blk)
+	if err != nil {
+		return err
+	}
 	err = b.Commit()
+	if err != nil {
+		return err
+	}
 	return err
 }
