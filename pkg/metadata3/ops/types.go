@@ -8,8 +8,6 @@ import (
 
 type OperationContext struct {
 	TableID     uint64
-	Block       *md.Block
-	Segment     *md.Segment
 	TmpMetaFile string
 }
 
@@ -28,6 +26,8 @@ type Operation struct {
 	Ctx      *OperationContext
 	MetaInfo *md.MetaInfo
 	Impl     IOperationInternal
-	ResultC  chan error
+	ErrorC   chan error
 	Worker   IOpWorker
+	Err      error
+	Result   interface{}
 }

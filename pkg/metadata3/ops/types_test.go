@@ -2,6 +2,7 @@ package ops
 
 import (
 	md "aoe/pkg/metadata3"
+	// log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -32,10 +33,30 @@ import (
 // 	worker.Stop()
 // }
 
+func TestBasicOps(t *testing.T) {
+	worker := NewOperationWorker()
+	worker.Start()
+
+	opCtx := OperationContext{}
+	op := NewCreateTableOperation(&opCtx, &md.Meta, worker)
+	op.Push()
+	err := op.WaitDone()
+	assert.Nil(t, err)
+
+	tbl := op.GetTable()
+	assert.NotNil(t, tbl)
+
+	t.Log(md.Meta.String())
+	opCtx = OperationContext{TableID: tbl.ID}
+	blkop := NewCreateBlockOperation(&opCtx, &md.Meta, worker)
+	blkop.Push()
+	err = blkop.WaitDone()
+	assert.Nil(t, err)
+
+	worker.Stop()
+}
+
 func TestCreateBlockOp(t *testing.T) {
-	// worker := NewOperationWorker()
-	// worker.Start()
-	// opCtx := OperationContext{CacheVersion: ss.GetVersion()}
 	// op := NewCreateBlockOperation(&opCtx, ss, worker)
 	// blk, err := op.CommitNewBlock()
 	// assert.Nil(t, err)

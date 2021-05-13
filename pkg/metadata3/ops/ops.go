@@ -12,7 +12,7 @@ func NewOperation(impl IOperationInternal, ctx *OperationContext,
 		Ctx:      ctx,
 		MetaInfo: info,
 		Impl:     impl,
-		ResultC:  make(chan error),
+		ErrorC:   make(chan error),
 		Worker:   w,
 	}
 	return op
@@ -23,11 +23,12 @@ func (op *Operation) Push() {
 }
 
 func (op *Operation) SetError(err error) {
-	op.ResultC <- err
+	op.Err = err
+	op.ErrorC <- err
 }
 
 func (op *Operation) WaitDone() error {
-	err := <-op.ResultC
+	err := <-op.ErrorC
 	return err
 }
 

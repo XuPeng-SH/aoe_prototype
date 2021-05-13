@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	Meta = MetaInfo{}
+	Meta = *NewMetaInfo()
 )
 
 func NewMetaInfo() *MetaInfo {

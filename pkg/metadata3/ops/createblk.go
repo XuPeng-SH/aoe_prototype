@@ -24,12 +24,20 @@ func (op *CreateBlockOperation) execute() error {
 
 	seg, err := table.GetInfullSegment()
 	if err != nil {
-		return err
+		seg, err = table.CreateSegment()
+		if err != nil {
+			return err
+		}
+		err = table.RegisterSegment(seg)
+		if err != nil {
+			return err
+		}
 	}
 	blk, err := seg.CreateBlock()
 	if err != nil {
 		return err
 	}
 	err = seg.RegisterBlock(blk)
+	op.Result = blk
 	return err
 }
