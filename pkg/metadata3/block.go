@@ -21,6 +21,8 @@ func NewBlock(table_id, segment_id, id uint64) *Block {
 }
 
 func (blk *Block) GetAppliedIndex() (uint64, error) {
+	blk.RLock()
+	defer blk.RUnlock()
 	if blk.DeleteIndex != nil {
 		return *blk.DeleteIndex, nil
 	}
@@ -36,14 +38,20 @@ func (blk *Block) GetAppliedIndex() (uint64, error) {
 }
 
 func (blk *Block) GetID() uint64 {
+	blk.RLock()
+	defer blk.RUnlock()
 	return blk.ID
 }
 
 func (blk *Block) GetSegmentID() uint64 {
+	blk.RLock()
+	defer blk.RUnlock()
 	return blk.SegmentID
 }
 
 func (blk *Block) SetIndex(idx LogIndex) {
+	blk.Lock()
+	defer blk.Unlock()
 	if blk.Index != nil {
 		if !blk.Index.IsApplied() {
 			panic("logic error")
@@ -71,6 +79,8 @@ func (blk *Block) IsFull() bool {
 }
 
 func (blk *Block) SetCount(count uint64) error {
+	blk.Lock()
+	defer blk.Unlock()
 	if count > blk.MaxRowCount {
 		return errors.New("SetCount exceeds max limit")
 	}
@@ -88,7 +98,34 @@ func (blk *Block) SetCount(count uint64) error {
 	return nil
 }
 
+func (blk *Block) Update(target *Block) error {
+	blk.Lock()
+	defer blk.Unlock()
+	if blk.ID != target.ID || blk.SegmentID != target.SegmentID || blk.TableID != target.TableID {
+		return errors.New("block, segment, table id not matched")
+	}
+
+	if blk.MaxRowCount != target.MaxRowCount {
+		return errors.New("update block MaxRowCount not matched")
+	}
+
+	if blk.DataState > target.DataState {
+		return errors.New(fmt.Sprintf("Cannot Update block from DataState %d to %d", blk.DataState, target.DataState))
+	}
+
+	if blk.Count > target.Count {
+		return errors.New(fmt.Sprintf("Cannot Update block from Count %d to %d", blk.Count, target.Count))
+	}
+
+	// TODO: More checks
+	blk = target.Copy()
+
+	return nil
+}
+
 func (blk *Block) Copy() *Block {
+	blk.RLock()
+	defer blk.RUnlock()
 	new_blk := NewBlock(blk.TableID, blk.SegmentID, blk.ID)
 	new_blk.TimeStamp = blk.TimeStamp
 	new_blk.MaxRowCount = blk.MaxRowCount

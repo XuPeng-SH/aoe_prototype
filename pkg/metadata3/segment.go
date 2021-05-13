@@ -121,6 +121,23 @@ func (seg *Segment) RegisterBlock(blk *Block) error {
 	return nil
 }
 
+func (seg *Segment) TryClose() bool {
+	seg.Lock()
+	defer seg.Unlock()
+	if seg.DataState == CLOSED || seg.DataState == SORTED {
+		return true
+	}
+	if seg.DataState == FULL || len(seg.Blocks) == int(seg.MaxBlockCount) {
+		for _, blk := range seg.Blocks {
+			if !blk.IsFull() {
+				return false
+			}
+		}
+		return true
+	}
+	return false
+}
+
 func (seg *Segment) Copy() *Segment {
 	new_seg := NewSegment(seg.TableID, seg.ID)
 	new_seg.TimeStamp = seg.TimeStamp

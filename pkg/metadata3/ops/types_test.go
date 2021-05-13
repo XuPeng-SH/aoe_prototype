@@ -58,7 +58,7 @@ func TestBasicOps(t *testing.T) {
 
 	blk1 := blkop.GetBlock()
 	assert.NotNil(t, blk1)
-	assert.Equal(t, blk1.DataState, md.Detatched)
+	assert.Equal(t, blk1.GetBoundState(), md.Detatched)
 
 	du := time.Since(now)
 	t.Log(du)

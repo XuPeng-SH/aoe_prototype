@@ -36,6 +36,7 @@ const (
 type IndexType = uint32
 
 type Block struct {
+	sync.RWMutex
 	BoundSate
 	TimeStamp
 	ID          uint64

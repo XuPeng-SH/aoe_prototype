@@ -2,12 +2,12 @@ package ops
 
 import (
 	md "aoe/pkg/metadata3"
-	// "errors"
 	// log "github.com/sirupsen/logrus"
 )
 
 type OperationContext struct {
 	TableID     uint64
+	Block       *md.Block
 	TmpMetaFile string
 }
 
