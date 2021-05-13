@@ -9,7 +9,7 @@ import (
 func NewBucket(table_id, partition_id uint64, ids ...uint64) *Bucket {
 	var id uint64
 	if len(ids) == 0 {
-		id = SEQUENCE.GetTableID()
+		id = Meta.Sequence.GetTableID()
 	} else {
 		id = ids[0]
 	}
@@ -72,7 +72,8 @@ func (bkt *Bucket) SegmentIDs(args ...int64) map[uint64]uint64 {
 }
 
 func (bkt *Bucket) CreateSegment() (seg *Segment, err error) {
-	seg = NewSegment(bkt.TableID, bkt.PartitionID, bkt.ID, SEQUENCE.GetSegmentID())
+	seg = NewSegment(bkt.TableID, bkt.PartitionID, bkt.ID,
+		Meta.Sequence.GetSegmentID())
 	return seg, err
 }
 

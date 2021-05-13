@@ -83,3 +83,10 @@ type Table struct {
 	ID         uint64
 	Partitions map[uint64]*Partition
 }
+
+type MetaInfo struct {
+	sync.RWMutex
+	Sequence Sequence
+	Version  uint64
+	Tables   map[uint64]*Table
+}

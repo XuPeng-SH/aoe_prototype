@@ -9,7 +9,7 @@ import (
 func NewPartition(table_id uint64, ids ...uint64) *Partition {
 	var id uint64
 	if len(ids) == 0 {
-		id = SEQUENCE.GetPartitionID()
+		id = Meta.Sequence.GetPartitionID()
 	} else {
 		id = ids[0]
 	}
@@ -56,7 +56,7 @@ func (p *Partition) BucketIDs(args ...int64) map[uint64]uint64 {
 }
 
 func (p *Partition) CreateBucket() (bkt *Bucket, err error) {
-	bkt = NewBucket(p.TableID, p.ID, SEQUENCE.GetSegmentID())
+	bkt = NewBucket(p.TableID, p.ID, Meta.Sequence.GetSegmentID())
 	return bkt, err
 }
 

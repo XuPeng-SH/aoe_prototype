@@ -9,8 +9,8 @@ import (
 func TestBlock(t *testing.T) {
 	ts1 := NowMicro()
 	time.Sleep(time.Duration(1) * time.Microsecond)
-	blk := NewBlock(SEQUENCE.GetTableID(), SEQUENCE.GetPartitionID(),
-		SEQUENCE.GetBucketID(), SEQUENCE.GetSegmentID(), SEQUENCE.GetBlockID())
+	blk := NewBlock(Meta.Sequence.GetTableID(), Meta.Sequence.GetPartitionID(),
+		Meta.Sequence.GetBucketID(), Meta.Sequence.GetSegmentID(), Meta.Sequence.GetBlockID())
 	time.Sleep(time.Duration(1) * time.Microsecond)
 	ts2 := NowMicro()
 	t.Logf("%d %d %d", ts1, blk.CreatedOn, ts2)
@@ -32,10 +32,10 @@ func TestBlock(t *testing.T) {
 
 func TestSegment(t *testing.T) {
 	t1 := NowMicro()
-	seg1 := NewSegment(SEQUENCE.GetTableID(), SEQUENCE.GetPartitionID(),
-		SEQUENCE.GetBucketID(), SEQUENCE.GetSegmentID())
+	seg1 := NewSegment(Meta.Sequence.GetTableID(), Meta.Sequence.GetPartitionID(),
+		Meta.Sequence.GetBucketID(), Meta.Sequence.GetSegmentID())
 	blk1 := NewBlock(seg1.GetTableID(), seg1.GetPartitionID(), seg1.GetBucketID(),
-		SEQUENCE.GetSegmentID(), SEQUENCE.GetBlockID())
+		Meta.Sequence.GetSegmentID(), Meta.Sequence.GetBlockID())
 	err := seg1.RegisterBlock(blk1)
 	assert.Error(t, err)
 
@@ -46,7 +46,7 @@ func TestSegment(t *testing.T) {
 		assert.Nil(t, err)
 	}
 	blk2 := NewBlock(seg1.GetTableID(), seg1.GetPartitionID(), seg1.GetBucketID(),
-		seg1.GetID(), SEQUENCE.GetBlockID())
+		seg1.GetID(), Meta.Sequence.GetBlockID())
 	err = seg1.RegisterBlock(blk2)
 	assert.Error(t, err)
 	t.Log(err)
@@ -65,7 +65,7 @@ func TestSegment(t *testing.T) {
 }
 
 func TestBucket(t *testing.T) {
-	bkt := NewBucket(SEQUENCE.GetTableID(), SEQUENCE.GetPartitionID())
+	bkt := NewBucket(Meta.Sequence.GetTableID(), Meta.Sequence.GetPartitionID())
 	seg, err := bkt.CreateSegment()
 	assert.Nil(t, err)
 
@@ -78,7 +78,7 @@ func TestBucket(t *testing.T) {
 }
 
 func TestPartition(t *testing.T) {
-	p := NewPartition(SEQUENCE.GetTableID())
+	p := NewPartition(Meta.Sequence.GetTableID())
 	bkt, err := p.CreateBucket()
 	assert.Nil(t, err)
 

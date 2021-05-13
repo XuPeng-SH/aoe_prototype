@@ -9,7 +9,7 @@ import (
 func NewTable(ids ...uint64) *Table {
 	var id uint64
 	if len(ids) == 0 {
-		id = SEQUENCE.GetTableID()
+		id = Meta.Sequence.GetTableID()
 	} else {
 		id = ids[0]
 	}
@@ -55,7 +55,7 @@ func (t *Table) PartitionIDs(args ...int64) map[uint64]uint64 {
 }
 
 func (t *Table) CreatePartition() (p *Partition, err error) {
-	p = NewPartition(t.ID, SEQUENCE.GetPartitionID())
+	p = NewPartition(t.ID, Meta.Sequence.GetPartitionID())
 	return p, err
 }
 
