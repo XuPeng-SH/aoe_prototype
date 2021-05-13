@@ -9,9 +9,11 @@ const (
 	BLOCK_ROW_COUNT = 16
 )
 
-func NewBlock(bucket_id, segment_id, id uint64) *Block {
+func NewBlock(table_id, partition_id, bucket_id, segment_id, id uint64) *Block {
 	blk := &Block{
 		ID:          id,
+		TableID:     table_id,
+		PartitionID: partition_id,
 		BucketID:    bucket_id,
 		SegmentID:   segment_id,
 		TimeStamp:   *NewTimeStamp(),

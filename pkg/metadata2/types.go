@@ -29,6 +29,8 @@ type Block struct {
 	ID          uint64
 	SegmentID   uint64
 	BucketID    uint64
+	PartitionID uint64
+	TableID     uint64
 	MaxRowCount uint64
 	Count       uint64
 	Index       *LogIndex
@@ -37,9 +39,11 @@ type Block struct {
 }
 
 type Sequence struct {
-	NextBlockID   uint64
-	NextSegmentID uint64
-	NextBucketID  uint64
+	NextBlockID     uint64
+	NextSegmentID   uint64
+	NextBucketID    uint64
+	NextPartitionID uint64
+	NextTableID     uint64
 }
 
 type Segment struct {
@@ -48,6 +52,8 @@ type Segment struct {
 	TimeStamp
 	ID            uint64
 	BucketID      uint64
+	PartitionID   uint64
+	TableID       uint64
 	MaxBlockCount uint64
 	Blocks        map[uint64]*Block
 }
@@ -55,6 +61,23 @@ type Segment struct {
 type Bucket struct {
 	sync.RWMutex
 	TimeStamp
-	ID       uint64
-	Segments map[uint64]*Segment
+	ID          uint64
+	PartitionID uint64
+	TableID     uint64
+	Segments    map[uint64]*Segment
+}
+
+type Partition struct {
+	sync.RWMutex
+	TimeStamp
+	ID      uint64
+	TableID uint64
+	Buckets map[uint64]*Bucket
+}
+
+type Table struct {
+	sync.RWMutex
+	TimeStamp
+	ID         uint64
+	Partitions map[uint64]*Partition
 }

@@ -9,15 +9,25 @@ const (
 	SEGMENT_BLOCK_COUNT = 4
 )
 
-func NewSegment(bucket_id, id uint64) *Segment {
+func NewSegment(table_id, partition_id, bucket_id, id uint64) *Segment {
 	seg := &Segment{
 		ID:            id,
+		TableID:       table_id,
+		PartitionID:   partition_id,
 		BucketID:      bucket_id,
 		Blocks:        make(map[uint64]*Block),
 		TimeStamp:     *NewTimeStamp(),
 		MaxBlockCount: SEGMENT_BLOCK_COUNT,
 	}
 	return seg
+}
+
+func (seg *Segment) GetTableID() uint64 {
+	return seg.TableID
+}
+
+func (seg *Segment) GetPartitionID() uint64 {
+	return seg.PartitionID
 }
 
 func (seg *Segment) GetBucketID() uint64 {
@@ -48,7 +58,7 @@ func (seg *Segment) BlockIDs(args ...interface{}) map[uint64]uint64 {
 }
 
 func (seg *Segment) CreateBlock() (blk *Block, err error) {
-	blk = NewBlock(seg.BucketID, seg.ID, SEQUENCE.GetBlockID())
+	blk = NewBlock(seg.TableID, seg.PartitionID, seg.BucketID, seg.ID, SEQUENCE.GetBlockID())
 	return blk, err
 }
 
