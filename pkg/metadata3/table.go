@@ -1,4 +1,4 @@
-package md2
+package md3
 
 import (
 	"errors"
@@ -75,7 +75,7 @@ func (tbl *Table) CreateSegment() (seg *Segment, err error) {
 }
 
 func (tbl *Table) String() string {
-	s := fmt.Sprintf("Buk(%d)", tbl.ID)
+	s := fmt.Sprintf("Tbl(%d)", tbl.ID)
 	s += "["
 	for i, seg := range tbl.Segments {
 		if i != 0 {

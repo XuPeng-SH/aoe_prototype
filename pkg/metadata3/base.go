@@ -1,4 +1,4 @@
-package md2
+package md3
 
 import (
 	"errors"
@@ -7,20 +7,8 @@ import (
 	"time"
 )
 
-var (
-	// SEQUENCE = Sequence{}
-	Meta = MetaInfo{}
-)
-
 func NowMicro() int64 {
 	return (time.Now().UnixNano() / 1000)
-}
-
-func NewMetaInfo() *MetaInfo {
-	info := &MetaInfo{
-		Tables: make(map[uint64]*Table),
-	}
-	return info
 }
 
 func NewTimeStamp() *TimeStamp {

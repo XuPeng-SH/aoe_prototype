@@ -1,4 +1,4 @@
-package md2
+package md3
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -71,4 +71,17 @@ func TestTable(t *testing.T) {
 	assert.Nil(t, err)
 	t.Log(bkt.String())
 	assert.Equal(t, seg.GetBoundState(), Attached)
+}
+
+func TestInfo(t *testing.T) {
+	info := NewMetaInfo()
+	tbl, err := info.CreateTable()
+	assert.Nil(t, err)
+
+	assert.Equal(t, tbl.GetBoundState(), STANDLONE)
+
+	err = info.RegisterTable(tbl)
+	assert.Nil(t, err)
+	t.Log(info.String())
+	assert.Equal(t, tbl.GetBoundState(), Attached)
 }

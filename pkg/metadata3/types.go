@@ -1,4 +1,4 @@
-package md2
+package md3
 
 import "sync"
 
@@ -62,7 +62,7 @@ type Table struct {
 
 type MetaInfo struct {
 	sync.RWMutex
-	Sequence Sequence
-	Version  uint64
-	Tables   map[uint64]*Table
+	Sequence   Sequence
+	CheckPoint uint64
+	Tables     map[uint64]*Table
 }
