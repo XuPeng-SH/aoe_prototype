@@ -52,30 +52,6 @@ func (seg *Segment) CreateBlock() (blk *Block, err error) {
 	return blk, err
 }
 
-// func (seg *Segment) GetActiveBlock() (*Block, error) {
-// 	if !seg.IsActive() {
-// 		return nil, errors.New("segment is closed")
-// 	}
-// 	min_blk_id := seg.NextBlockID
-// 	for blk_id, itblk := range seg.Blocks {
-// 		if blk_id < min_blk_id && itblk.IsActive() {
-// 			min_blk_id = blk_id
-// 		}
-// 	}
-// 	if min_blk_id == seg.NextBlockID {
-// 		// Need create new block for this segment
-// 		return nil, nil
-// 	}
-// 	return seg.Blocks[min_blk_id], nil
-// }
-
-// func (seg *Segment) IsActive() bool {
-// 	if seg.DataState == EMPTY || seg.DataState == PARTIAL {
-// 		return true
-// 	}
-// 	return false
-// }
-
 func (seg *Segment) String() string {
 	s := fmt.Sprintf("Seg(%d-%d)", seg.BucketID, seg.ID)
 	s += "["
@@ -89,7 +65,7 @@ func (seg *Segment) String() string {
 	return s
 }
 
-func (seg *Segment) GetBlock(id uint64) (blk *Block, err error) {
+func (seg *Segment) ReferenceBlock(id uint64) (blk *Block, err error) {
 	seg.RLock()
 	defer seg.RUnlock()
 	blk, ok := seg.Blocks[id]
@@ -99,44 +75,28 @@ func (seg *Segment) GetBlock(id uint64) (blk *Block, err error) {
 	return blk, nil
 }
 
-// func (seg *Segment) UpdateBlock(blk *Block) (*Block, error) {
-// 	target_blk := seg.GetBlock(blk.ID.ID)
-// 	if target_blk == nil {
-// 		return nil, errors.New("Update block not found")
-// 	}
-// 	if target_blk.DataState >= blk.DataState {
-// 		return nil, errors.New("Cannot update with higher DataState")
-// 	}
-// 	seg.Blocks[blk.ID.ID] = blk.Copy()
-// 	if !blk.IsActive() {
-// 		full_blocks := 0
-// 		for _, itblk := range seg.Blocks {
-// 			if !itblk.IsActive() {
-// 				full_blocks++
-// 			}
-// 		}
-// 		if full_blocks < int(seg.MaxBlockCount) {
-// 			seg.DataState = PARTIAL
-// 		} else {
-// 			seg.DataState = FULL
-// 		}
-// 	}
-// 	return seg.Blocks[blk.ID.ID], nil
-// }
-
 func (seg *Segment) RegisterBlock(blk *Block) error {
-	seg.Lock()
-	defer seg.Unlock()
 	if blk.GetBucketID() != seg.GetBucketID() {
 		return errors.New(fmt.Sprintf("bucket id mismatch %d:%d", seg.GetBucketID(), blk.GetSegmentID()))
 	}
 	if blk.GetSegmentID() != seg.GetID() {
 		return errors.New(fmt.Sprintf("segment id mismatch %d:%d", seg.GetID(), blk.GetSegmentID()))
 	}
+	seg.Lock()
+	defer seg.Unlock()
+
+	err := blk.Attach()
+	if err != nil {
+		return err
+	}
 	if len(seg.Blocks) == int(seg.MaxBlockCount) {
 		return errors.New(fmt.Sprintf("Cannot add block into full segment %d", seg.ID))
 	}
-	seg.Blocks[blk.ID] = blk
+	_, ok := seg.Blocks[blk.ID]
+	if ok {
+		return errors.New(fmt.Sprintf("Duplicate block %d found in segment %d", blk.GetID(), seg.ID))
+	}
+	seg.Blocks[blk.GetID()] = blk
 	return nil
 }
 

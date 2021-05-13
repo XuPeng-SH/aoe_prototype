@@ -57,6 +57,26 @@ func (ts *TimeStamp) String() string {
 	return s
 }
 
+func (state *BoundSate) GetBoundState() BoundSate {
+	return *state
+}
+
+func (state *BoundSate) Detach() error {
+	if *state == Detatched || *state == STANDLONE {
+		return errors.New("detatched or stalone already")
+	}
+	*state = Detatched
+	return nil
+}
+
+func (state *BoundSate) Attach() error {
+	if *state == Attached {
+		return errors.New("alreay attached")
+	}
+	*state = Attached
+	return nil
+}
+
 func (seq *Sequence) GetSegmentID() uint64 {
 	return atomic.AddUint64(&(seq.NextSegmentID), uint64(1))
 }
@@ -66,5 +86,5 @@ func (seq *Sequence) GetBlockID() uint64 {
 }
 
 func (seq *Sequence) GetBucketID() uint64 {
-	return atomic.AddUint64(&(seq.NextBucketUD), uint64(1))
+	return atomic.AddUint64(&(seq.NextBucketID), uint64(1))
 }

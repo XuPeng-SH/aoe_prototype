@@ -15,7 +15,16 @@ type TimeStamp struct {
 	DeltetedOn int64
 }
 
+type BoundSate uint8
+
+const (
+	STANDLONE BoundSate = iota
+	Attached
+	Detatched
+)
+
 type Block struct {
+	BoundSate
 	TimeStamp
 	ID          uint64
 	SegmentID   uint64
@@ -30,10 +39,11 @@ type Block struct {
 type Sequence struct {
 	NextBlockID   uint64
 	NextSegmentID uint64
-	NextBucketUD  uint64
+	NextBucketID  uint64
 }
 
 type Segment struct {
+	BoundSate
 	sync.RWMutex
 	TimeStamp
 	ID            uint64
@@ -43,6 +53,8 @@ type Segment struct {
 }
 
 type Bucket struct {
+	sync.RWMutex
 	TimeStamp
-	ID uint64
+	ID       uint64
+	Segments map[uint64]*Segment
 }
