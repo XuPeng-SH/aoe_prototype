@@ -148,6 +148,22 @@ func (tbl *Table) RegisterSegment(seg *Segment) error {
 	return nil
 }
 
+func (tbl *Table) GetMaxSegIDAndBlkID() (uint64, uint64) {
+	blkid := uint64(0)
+	segid := uint64(0)
+	for sid, seg := range tbl.Segments {
+		max_blkid := seg.GetMaxBlkID()
+		if max_blkid > blkid {
+			blkid = max_blkid
+		}
+		if sid > segid {
+			segid = sid
+		}
+	}
+
+	return segid, blkid
+}
+
 func (tbl *Table) Copy(ts ...int64) *Table {
 	var t int64
 	if len(ts) == 0 {

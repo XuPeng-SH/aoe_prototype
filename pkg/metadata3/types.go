@@ -80,4 +80,5 @@ type MetaInfo struct {
 	Sequence   Sequence
 	CheckPoint uint64
 	Tables     map[uint64]*Table
+	Conf       MetaConf
 }

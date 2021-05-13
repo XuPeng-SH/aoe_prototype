@@ -138,6 +138,17 @@ func (seg *Segment) TryClose() bool {
 	return false
 }
 
+func (seg *Segment) GetMaxBlkID() uint64 {
+	blkid := uint64(0)
+	for bid, _ := range seg.Blocks {
+		if bid > blkid {
+			blkid = bid
+		}
+	}
+
+	return blkid
+}
+
 func (seg *Segment) Copy(ts ...int64) *Segment {
 	var t int64
 	if len(ts) == 0 {

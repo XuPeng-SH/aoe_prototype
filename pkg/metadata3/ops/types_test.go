@@ -80,6 +80,9 @@ func TestBasicOps(t *testing.T) {
 	de_info, err := md.Deserialize(r)
 	assert.Nil(t, err)
 	assert.NotNil(t, de_info)
+	assert.Equal(t, md.Meta.Sequence.NextBlockID, de_info.Sequence.NextBlockID)
+	assert.Equal(t, md.Meta.Sequence.NextSegmentID, de_info.Sequence.NextSegmentID)
+	assert.Equal(t, md.Meta.Sequence.NextTableID, de_info.Sequence.NextTableID)
 
 	r.Close()
 

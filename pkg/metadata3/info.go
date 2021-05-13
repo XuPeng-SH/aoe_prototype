@@ -1,23 +1,45 @@
 package md3
 
 import (
-	// "encoding/json"
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
-	"github.com/vmihailenco/msgpack/v5"
 	"io"
+	"os"
+	"path"
+
+	"github.com/vmihailenco/msgpack/v5"
+	// log "github.com/sirupsen/logrus"
+)
+
+const (
+	META_FILE_NAME = "META"
 )
 
 var (
 	Meta = *NewMetaInfo()
 )
 
+type MetaConf struct {
+	Dir string
+}
+
 func NewMetaInfo() *MetaInfo {
 	info := &MetaInfo{
 		Tables: make(map[uint64]*Table),
 	}
 	return info
+}
+
+func InitMeta(conf *MetaConf) error {
+	r, err := os.OpenFile(path.Join(conf.Dir, META_FILE_NAME), os.O_RDONLY, 0666)
+	defer r.Close()
+	if err != nil {
+		return err
+	}
+	info, err := Deserialize(r)
+	info.Conf = *conf
+	Meta = *info
+	return err
 }
 
 func (info *MetaInfo) ReferenceTable(table_id uint64) (tbl *Table, err error) {
@@ -124,8 +146,27 @@ func (info *MetaInfo) Serialize(w io.Writer) error {
 }
 
 func Deserialize(r io.Reader) (info *MetaInfo, err error) {
-	log.Info("")
 	info = NewMetaInfo()
 	err = msgpack.NewDecoder(r).Decode(info)
+	if err != nil {
+		return nil, err
+	}
+	// TODO: make it faster
+	info.Sequence.NextBlockID = 0
+	info.Sequence.NextSegmentID = 0
+	info.Sequence.NextTableID = 0
+	for k, tbl := range info.Tables {
+		max_tbl_segid, max_tbl_blkid := tbl.GetMaxSegIDAndBlkID()
+		if k > info.Sequence.NextTableID {
+			info.Sequence.NextTableID = k
+		}
+		if max_tbl_segid > info.Sequence.NextSegmentID {
+			info.Sequence.NextSegmentID = max_tbl_segid
+		}
+		if max_tbl_blkid > info.Sequence.NextBlockID {
+			info.Sequence.NextBlockID = max_tbl_blkid
+		}
+	}
+
 	return info, err
 }
