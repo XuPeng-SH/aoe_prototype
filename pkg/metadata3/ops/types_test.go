@@ -2,9 +2,10 @@ package ops
 
 import (
 	md "aoe/pkg/metadata3"
-	// log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
+	// log "github.com/sirupsen/logrus"
 )
 
 // func TestCreateSegmentOp(t *testing.T) {
@@ -37,6 +38,8 @@ func TestBasicOps(t *testing.T) {
 	worker := NewOperationWorker()
 	worker.Start()
 
+	now := time.Now()
+
 	opCtx := OperationContext{}
 	op := NewCreateTableOperation(&opCtx, &md.Meta, worker)
 	op.Push()
@@ -52,6 +55,13 @@ func TestBasicOps(t *testing.T) {
 	blkop.Push()
 	err = blkop.WaitDone()
 	assert.Nil(t, err)
+
+	blk1 := blkop.GetBlock()
+	assert.NotNil(t, blk1)
+	assert.Equal(t, blk1.DataState, md.Detatched)
+
+	du := time.Since(now)
+	t.Log(du)
 
 	worker.Stop()
 }
