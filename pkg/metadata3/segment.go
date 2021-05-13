@@ -138,12 +138,21 @@ func (seg *Segment) TryClose() bool {
 	return false
 }
 
-func (seg *Segment) Copy() *Segment {
+func (seg *Segment) Copy(ts ...int64) *Segment {
+	var t int64
+	if len(ts) == 0 {
+		t = NowMicro()
+	} else {
+		t = ts[0]
+	}
 	new_seg := NewSegment(seg.TableID, seg.ID)
 	new_seg.TimeStamp = seg.TimeStamp
 	new_seg.MaxBlockCount = seg.MaxBlockCount
 	new_seg.DataState = seg.DataState
 	for k, v := range seg.Blocks {
+		if !v.Select(t) {
+			continue
+		}
 		blk, _ := seg.CloneBlock(v.ID)
 		new_seg.Blocks[k] = blk
 	}

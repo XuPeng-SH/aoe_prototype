@@ -25,14 +25,15 @@ func (tbl *Table) GetID() uint64 {
 	return tbl.ID
 }
 
-func (tbl *Table) CloneSegment(segment_id uint64) (seg *Segment, err error) {
+func (tbl *Table) CloneSegment(segment_id uint64, ts ...int64) (seg *Segment, err error) {
 	tbl.RLock()
-	defer tbl.RUnlock()
 	seg, err = tbl.referenceSegmentNoLock(segment_id)
 	if err != nil {
+		tbl.RUnlock()
 		return nil, err
 	}
-	seg = seg.Copy()
+	tbl.RUnlock()
+	seg = seg.Copy(ts...)
 	err = seg.Detach()
 	return seg, err
 }
@@ -145,4 +146,25 @@ func (tbl *Table) RegisterSegment(seg *Segment) error {
 	}
 	tbl.Segments[seg.GetID()] = seg
 	return nil
+}
+
+func (tbl *Table) Copy(ts ...int64) *Table {
+	var t int64
+	if len(ts) == 0 {
+		t = NowMicro()
+	} else {
+		t = ts[0]
+	}
+	new_tbl := NewTable(tbl.ID)
+	new_tbl.TimeStamp = tbl.TimeStamp
+	new_tbl.BoundSate = tbl.BoundSate
+	for k, v := range tbl.Segments {
+		if !v.Select(t) {
+			continue
+		}
+		seg, _ := tbl.CloneSegment(v.ID)
+		new_tbl.Segments[k] = seg
+	}
+
+	return new_tbl
 }

@@ -97,3 +97,22 @@ func (info *MetaInfo) RegisterTable(tbl *Table) error {
 	info.Tables[tbl.ID] = tbl
 	return nil
 }
+
+func (info *MetaInfo) Copy(ts ...int64) *MetaInfo {
+	var t int64
+	if len(ts) == 0 {
+		t = NowMicro()
+	} else {
+		t = ts[0]
+	}
+	new_info := NewMetaInfo()
+	for k, v := range info.Tables {
+		if !v.Select(t) {
+			continue
+		}
+		tbl := v.Copy(ts...)
+		new_info.Tables[k] = tbl
+	}
+
+	return new_info
+}

@@ -82,6 +82,10 @@ func TestBasicOps(t *testing.T) {
 	assert.Equal(t, blk3.DataState, md.FULL)
 	assert.Equal(t, blk1.Count, blk3.Count)
 
+	t.Log(md.Meta.String())
+	info_copy := md.Meta.Copy()
+	t.Log(info_copy.String())
+
 	du := time.Since(now)
 	t.Log(du)
 
