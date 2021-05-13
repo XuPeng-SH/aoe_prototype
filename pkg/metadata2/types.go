@@ -59,6 +59,7 @@ type Segment struct {
 }
 
 type Bucket struct {
+	BoundSate
 	sync.RWMutex
 	TimeStamp
 	ID          uint64
@@ -68,6 +69,7 @@ type Bucket struct {
 }
 
 type Partition struct {
+	BoundSate
 	sync.RWMutex
 	TimeStamp
 	ID      uint64

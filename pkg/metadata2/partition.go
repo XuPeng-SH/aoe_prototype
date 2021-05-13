@@ -1,110 +1,103 @@
 package md2
 
-// import (
-// 	"errors"
-// 	"fmt"
-// 	// log "github.com/sirupsen/logrus"
-// )
+import (
+	"errors"
+	"fmt"
+	// log "github.com/sirupsen/logrus"
+)
 
-// func NewPartition(ids ...uint64) *Bucket {
-// 	var id uint64
-// 	if len(ids) == 0 {
-// 		id = SEQUENCE.NextBucketID
-// 	} else {
-// 		id = ids[0]
-// 	}
-// 	bkt := &Bucket{
-// 		ID:        id,
-// 		Segments:  make(map[uint64]*Segment),
-// 		TimeStamp: *NewTimeStamp(),
-// 	}
-// 	return bkt
-// }
+func NewPartition(table_id uint64, ids ...uint64) *Partition {
+	var id uint64
+	if len(ids) == 0 {
+		id = SEQUENCE.GetPartitionID()
+	} else {
+		id = ids[0]
+	}
+	p := &Partition{
+		ID:        id,
+		TableID:   table_id,
+		Buckets:   make(map[uint64]*Bucket),
+		TimeStamp: *NewTimeStamp(),
+	}
+	return p
+}
 
-// func (bkt *Bucket) ReferenceSegment(segment_id uint64) (seg *Segment, err error) {
-// 	bkt.RLock()
-// 	defer bkt.RUnlock()
-// 	seg, err = bkt.referenceSegmentNoLock(segment_id)
-// 	return seg, err
-// }
+func (p *Partition) GetID() uint64 {
+	return p.ID
+}
 
-// func (bkt *Bucket) referenceSegmentNoLock(segment_id uint64) (seg *Segment, err error) {
-// 	seg, ok := bkt.Segments[segment_id]
-// 	if !ok {
-// 		return nil, errors.New(fmt.Sprintf("specified segment %d not found in bucket %d", segment_id, bkt.ID))
-// 	}
-// 	return seg, nil
-// }
+func (p *Partition) ReferenceBucket(bucket_id uint64) (bkt *Bucket, err error) {
+	p.RLock()
+	defer p.RUnlock()
+	bkt, ok := p.Buckets[bucket_id]
+	if !ok {
+		return nil, errors.New(fmt.Sprintf("specified bucket %d not found in partition %d", bucket_id, p.ID))
+	}
+	return bkt, nil
+}
 
-// func (bkt *Bucket) GetSegmentBlockIDs(segment_id uint64, args ...int64) map[uint64]uint64 {
-// 	bkt.RLock()
-// 	seg, err := bkt.referenceSegmentNoLock(segment_id)
-// 	bkt.RUnlock()
-// 	if err == nil {
-// 		return make(map[uint64]uint64, 0)
-// 	}
-// 	return seg.BlockIDs(args)
-// }
+func (p *Partition) BucketIDs(args ...int64) map[uint64]uint64 {
+	var ts int64
+	if len(args) == 0 {
+		ts = NowMicro()
+	} else {
+		ts = args[0]
+	}
+	ids := make(map[uint64]uint64)
+	p.RLock()
+	defer p.RUnlock()
+	for _, bkt := range p.Buckets {
+		if !bkt.Select(ts) {
+			continue
+		}
+		ids[bkt.GetID()] = bkt.GetID()
+	}
+	return ids
+}
 
-// func (bkt *Bucket) SegmentIDs(args ...int64) map[uint64]uint64 {
-// 	var ts int64
-// 	if len(args) == 0 {
-// 		ts = NowMicro()
-// 	} else {
-// 		ts = args[0]
-// 	}
-// 	ids := make(map[uint64]uint64)
-// 	bkt.RLock()
-// 	defer bkt.RUnlock()
-// 	for _, seg := range bkt.Segments {
-// 		if !seg.Select(ts) {
-// 			continue
-// 		}
-// 		ids[seg.ID] = seg.ID
-// 	}
-// 	return ids
-// }
+func (p *Partition) CreateBucket() (bkt *Bucket, err error) {
+	bkt = NewBucket(p.TableID, p.ID, SEQUENCE.GetSegmentID())
+	return bkt, err
+}
 
-// func (bkt *Bucket) CreateSegment() (seg *Segment, err error) {
-// 	seg = NewSegment(bkt.ID, SEQUENCE.GetSegmentID())
-// 	return seg, err
-// }
+func (p *Partition) String() string {
+	s := fmt.Sprintf("Pat(%d-%d)", p.TableID, p.ID)
+	s += "["
+	for i, bkt := range p.Buckets {
+		if i != 0 {
+			s += "\n"
+		}
+		s += bkt.String()
+	}
+	if len(p.Buckets) > 0 {
+		s += "\n"
+	}
+	s += "]"
+	return s
+}
 
-// func (bkt *Bucket) String() string {
-// 	s := fmt.Sprintf("Buk(%d)", bkt.ID)
-// 	s += "["
-// 	for i, seg := range bkt.Segments {
-// 		if i != 0 {
-// 			s += "\n"
-// 		}
-// 		s += seg.String()
-// 	}
-// 	if len(bkt.Segments) > 0 {
-// 		s += "\n"
-// 	}
-// 	s += "]"
-// 	return s
-// }
+func (p *Partition) RegisterBucket(bkt *Bucket) error {
+	if p.ID != bkt.PartitionID {
+		return errors.New(fmt.Sprintf("partition id mismatch %d:%d", p.ID, bkt.PartitionID))
+	}
+	if p.TableID != bkt.TableID {
+		return errors.New(fmt.Sprintf("table id mismatch %d:%d", p.TableID, bkt.TableID))
+	}
+	p.Lock()
+	defer p.Unlock()
 
-// func (bkt *Bucket) RegisterSegment(seg *Segment) error {
-// 	if bkt.ID != seg.GetBucketID() {
-// 		return errors.New(fmt.Sprintf("bucket id mismatch %d:%d", bkt.ID, seg.GetBucketID()))
-// 	}
-// 	bkt.Lock()
-// 	defer bkt.Unlock()
+	err := bkt.Attach()
+	if err != nil {
+		return err
+	}
 
-// 	err := seg.Attach()
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	_, ok := bkt.Segments[seg.ID]
-// 	if ok {
-// 		return errors.New(fmt.Sprintf("Duplicate segment %d found in bucket %d", seg.GetID(), bkt.ID))
-// 	}
-// 	bkt.Segments[seg.GetID()] = seg
-// 	return nil
-// }
+	_, ok := p.Buckets[bkt.ID]
+	if ok {
+		return errors.New(fmt.Sprintf("Duplicate bucket %d found in partition %d", bkt.ID, p.ID))
+	}
+	p.Buckets[bkt.ID] = bkt
+	return nil
+}
 
 // // func (bkt *Bucket) Copy() *Bucket {
 // // 	new_bkt := NewBucket()

@@ -76,3 +76,29 @@ func TestBucket(t *testing.T) {
 	t.Log(bkt.String())
 	assert.Equal(t, seg.GetBoundState(), Attached)
 }
+
+func TestPartition(t *testing.T) {
+	p := NewPartition(SEQUENCE.GetTableID())
+	bkt, err := p.CreateBucket()
+	assert.Nil(t, err)
+
+	assert.Equal(t, bkt.GetBoundState(), STANDLONE)
+
+	err = p.RegisterBucket(bkt)
+	assert.Nil(t, err)
+	t.Log(p.String())
+	assert.Equal(t, bkt.GetBoundState(), Attached)
+}
+
+func TestTable(t *testing.T) {
+	tbl := NewTable()
+	p, err := tbl.CreatePartition()
+	assert.Nil(t, err)
+
+	assert.Equal(t, p.GetBoundState(), STANDLONE)
+
+	err = tbl.RegisterPartition(p)
+	assert.Nil(t, err)
+	t.Log(tbl.String())
+	assert.Equal(t, p.GetBoundState(), Attached)
+}

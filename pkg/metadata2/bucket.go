@@ -9,7 +9,7 @@ import (
 func NewBucket(table_id, partition_id uint64, ids ...uint64) *Bucket {
 	var id uint64
 	if len(ids) == 0 {
-		id = SEQUENCE.NextBucketID
+		id = SEQUENCE.GetTableID()
 	} else {
 		id = ids[0]
 	}
@@ -21,6 +21,10 @@ func NewBucket(table_id, partition_id uint64, ids ...uint64) *Bucket {
 		TimeStamp:   *NewTimeStamp(),
 	}
 	return bkt
+}
+
+func (bkt *Bucket) GetID() uint64 {
+	return bkt.ID
 }
 
 func (bkt *Bucket) ReferenceSegment(segment_id uint64) (seg *Segment, err error) {
