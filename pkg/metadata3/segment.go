@@ -65,6 +65,18 @@ func (seg *Segment) String() string {
 	return s
 }
 
+func (seg *Segment) CloneBlock(id uint64) (blk *Block, err error) {
+	seg.RLock()
+	defer seg.RUnlock()
+	rblk, ok := seg.Blocks[id]
+	if !ok {
+		return nil, errors.New(fmt.Sprintf("block %d not found in segment %d", id, seg.ID))
+	}
+	blk = rblk.Copy()
+	err = blk.Detach()
+	return blk, err
+}
+
 func (seg *Segment) ReferenceBlock(id uint64) (blk *Block, err error) {
 	seg.RLock()
 	defer seg.RUnlock()
@@ -98,4 +110,16 @@ func (seg *Segment) RegisterBlock(blk *Block) error {
 	}
 	seg.Blocks[blk.GetID()] = blk
 	return nil
+}
+
+func (seg *Segment) Copy() *Segment {
+	new_seg := NewSegment(seg.TableID, seg.ID)
+	new_seg.TimeStamp = seg.TimeStamp
+	new_seg.MaxBlockCount = seg.MaxBlockCount
+	for k, v := range seg.Blocks {
+		blk, _ := seg.CloneBlock(v.ID)
+		new_seg.Blocks[k] = blk
+	}
+
+	return new_seg
 }

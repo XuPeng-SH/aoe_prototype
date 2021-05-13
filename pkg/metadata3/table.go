@@ -25,6 +25,18 @@ func (tbl *Table) GetID() uint64 {
 	return tbl.ID
 }
 
+func (tbl *Table) CloneSegment(segment_id uint64) (seg *Segment, err error) {
+	tbl.RLock()
+	defer tbl.RUnlock()
+	seg, err = tbl.referenceSegmentNoLock(segment_id)
+	if err != nil {
+		return nil, err
+	}
+	seg = seg.Copy()
+	err = seg.Detach()
+	return seg, err
+}
+
 func (tbl *Table) ReferenceSegment(segment_id uint64) (seg *Segment, err error) {
 	tbl.RLock()
 	defer tbl.RUnlock()

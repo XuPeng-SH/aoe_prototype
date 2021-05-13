@@ -80,3 +80,16 @@ func (blk *Block) SetCount(count uint64) error {
 	blk.Count = count
 	return nil
 }
+
+func (blk *Block) Copy() *Block {
+	new_blk := NewBlock(blk.TableID, blk.SegmentID, blk.ID)
+	new_blk.TimeStamp = blk.TimeStamp
+	new_blk.MaxRowCount = blk.MaxRowCount
+	new_blk.BoundSate = blk.BoundSate
+	new_blk.Count = blk.Count
+	new_blk.Index = blk.Index
+	new_blk.PrevIndex = blk.PrevIndex
+	new_blk.DeleteIndex = blk.DeleteIndex
+
+	return new_blk
+}
