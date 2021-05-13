@@ -60,6 +60,28 @@ func TestBasicOps(t *testing.T) {
 	assert.NotNil(t, blk1)
 	assert.Equal(t, blk1.GetBoundState(), md.Detatched)
 
+	assert.Equal(t, blk1.DataState, md.EMPTY)
+	blk1.SetCount(blk1.MaxRowCount)
+	assert.Equal(t, blk1.DataState, md.FULL)
+
+	blk2, err := md.Meta.ReferenceBlock(blk1.TableID, blk1.SegmentID, blk1.ID)
+	assert.Nil(t, err)
+	assert.Equal(t, blk2.DataState, md.EMPTY)
+	assert.Equal(t, blk2.Count, uint64(0))
+
+	opCtx = OperationContext{Block: blk1}
+	updateop := NewUpdateOperation(&opCtx, &md.Meta, worker)
+	updateop.Push()
+	err = updateop.WaitDone()
+	assert.Nil(t, err)
+
+	blk3, err := md.Meta.ReferenceBlock(blk1.TableID, blk1.SegmentID, blk1.ID)
+	assert.Nil(t, err)
+	t.Log(blk1.Count)
+	t.Log(blk3.Count)
+	assert.Equal(t, blk3.DataState, md.FULL)
+	assert.Equal(t, blk1.Count, blk3.Count)
+
 	du := time.Since(now)
 	t.Log(du)
 

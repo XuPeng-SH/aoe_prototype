@@ -28,6 +28,19 @@ func (info *MetaInfo) ReferenceTable(table_id uint64) (tbl *Table, err error) {
 	return tbl, nil
 }
 
+func (info *MetaInfo) ReferenceBlock(table_id, segment_id, block_id uint64) (blk *Block, err error) {
+	info.RLock()
+	tbl, ok := info.Tables[table_id]
+	if !ok {
+		info.RUnlock()
+		return nil, errors.New(fmt.Sprintf("specified table %d not found in info", table_id))
+	}
+	info.RUnlock()
+	blk, err = tbl.ReferenceBlock(segment_id, block_id)
+
+	return blk, err
+}
+
 func (info *MetaInfo) TableIDs(args ...int64) map[uint64]uint64 {
 	var ts int64
 	if len(args) == 0 {

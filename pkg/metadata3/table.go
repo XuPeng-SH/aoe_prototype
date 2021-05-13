@@ -37,6 +37,20 @@ func (tbl *Table) CloneSegment(segment_id uint64) (seg *Segment, err error) {
 	return seg, err
 }
 
+func (tbl *Table) ReferenceBlock(segment_id, block_id uint64) (blk *Block, err error) {
+	tbl.RLock()
+	seg, err := tbl.referenceSegmentNoLock(segment_id)
+	if err != nil {
+		tbl.RUnlock()
+		return nil, err
+	}
+	tbl.RUnlock()
+
+	blk, err = seg.ReferenceBlock(block_id)
+
+	return blk, err
+}
+
 func (tbl *Table) ReferenceSegment(segment_id uint64) (seg *Segment, err error) {
 	tbl.RLock()
 	defer tbl.RUnlock()

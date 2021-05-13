@@ -4,7 +4,7 @@ import (
 	md "aoe/pkg/metadata3"
 	"errors"
 	"fmt"
-	// log "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func NewUpdateOperation(ctx *OperationContext, info *md.MetaInfo,
@@ -20,6 +20,7 @@ type UpdateOperation struct {
 
 func (op *UpdateOperation) updateBlock(blk *md.Block) error {
 	if blk.BoundSate != md.Detatched {
+		log.Errorf("")
 		return errors.New(fmt.Sprintf("Block %d BoundSate should be %d", blk.ID, md.Detatched))
 	}
 

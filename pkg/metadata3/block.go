@@ -3,6 +3,7 @@ package md3
 import (
 	"errors"
 	"fmt"
+	// log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -116,9 +117,7 @@ func (blk *Block) Update(target *Block) error {
 	if blk.Count > target.Count {
 		return errors.New(fmt.Sprintf("Cannot Update block from Count %d to %d", blk.Count, target.Count))
 	}
-
-	// TODO: More checks
-	blk = target.Copy()
+	target.copyNoLock(blk)
 
 	return nil
 }
@@ -126,7 +125,18 @@ func (blk *Block) Update(target *Block) error {
 func (blk *Block) Copy() *Block {
 	blk.RLock()
 	defer blk.RUnlock()
-	new_blk := NewBlock(blk.TableID, blk.SegmentID, blk.ID)
+	var new_blk *Block
+	new_blk = blk.copyNoLock(new_blk)
+	return new_blk
+}
+
+func (blk *Block) copyNoLock(new_blk *Block) *Block {
+	if new_blk == nil {
+		new_blk = NewBlock(blk.TableID, blk.SegmentID, blk.ID)
+	}
+	new_blk.ID = blk.ID
+	new_blk.SegmentID = blk.SegmentID
+	new_blk.TableID = blk.TableID
 	new_blk.TimeStamp = blk.TimeStamp
 	new_blk.MaxRowCount = blk.MaxRowCount
 	new_blk.BoundSate = blk.BoundSate
