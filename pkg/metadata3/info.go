@@ -1,10 +1,12 @@
 package md3
 
 import (
+	// "encoding/json"
 	"errors"
 	"fmt"
-	// "sync/atomic"
-	// "time"
+	log "github.com/sirupsen/logrus"
+	"github.com/vmihailenco/msgpack/v5"
+	"io"
 )
 
 var (
@@ -115,4 +117,15 @@ func (info *MetaInfo) Copy(ts ...int64) *MetaInfo {
 	}
 
 	return new_info
+}
+
+func (info *MetaInfo) Serialize(w io.Writer) error {
+	return msgpack.NewEncoder(w).Encode(info)
+}
+
+func Deserialize(r io.Reader) (info *MetaInfo, err error) {
+	log.Info("")
+	info = NewMetaInfo()
+	err = msgpack.NewDecoder(r).Decode(info)
+	return info, err
 }

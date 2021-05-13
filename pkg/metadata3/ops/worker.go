@@ -58,7 +58,7 @@ func (w *OperationWorker) SendOp(op IOperation) {
 }
 
 func (w *OperationWorker) onOperation(op IOperation) {
-	log.Info("OpWorker: onOperation")
+	// log.Info("OpWorker: onOperation")
 	err := op.OnExecute()
 	op.SetError(err)
 }
