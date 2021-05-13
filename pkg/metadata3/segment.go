@@ -109,6 +109,15 @@ func (seg *Segment) RegisterBlock(blk *Block) error {
 		return errors.New(fmt.Sprintf("Duplicate block %d found in segment %d", blk.GetID(), seg.ID))
 	}
 	seg.Blocks[blk.GetID()] = blk
+	if len(seg.Blocks) == int(seg.MaxBlockCount) {
+		if blk.IsFull() {
+			seg.DataState = CLOSED
+		} else {
+			seg.DataState = FULL
+		}
+	} else {
+		seg.DataState = PARTIAL
+	}
 	return nil
 }
 
@@ -116,6 +125,7 @@ func (seg *Segment) Copy() *Segment {
 	new_seg := NewSegment(seg.TableID, seg.ID)
 	new_seg.TimeStamp = seg.TimeStamp
 	new_seg.MaxBlockCount = seg.MaxBlockCount
+	new_seg.DataState = seg.DataState
 	for k, v := range seg.Blocks {
 		blk, _ := seg.CloneBlock(v.ID)
 		new_seg.Blocks[k] = blk

@@ -23,6 +23,18 @@ const (
 	Detatched
 )
 
+type DataState = uint8
+
+const (
+	EMPTY   DataState = iota
+	PARTIAL           // Block: 0 < Count < MaxRowCount, Segment: 0 < len(Blocks) < MaxBlockCount
+	FULL              // Block: Count == MaxRowCount, Segment: len(Blocks) == MaxBlockCount
+	CLOSED            // Segment only. Already FULL and all blocks are FULL
+	SORTED            // Segment only. Merge sorted
+)
+
+type IndexType = uint32
+
 type Block struct {
 	BoundSate
 	TimeStamp
@@ -34,6 +46,7 @@ type Block struct {
 	Index       *LogIndex
 	PrevIndex   *LogIndex
 	DeleteIndex *uint64
+	DataState   DataState
 }
 
 type Sequence struct {
@@ -50,6 +63,7 @@ type Segment struct {
 	TableID       uint64
 	MaxBlockCount uint64
 	Blocks        map[uint64]*Block
+	DataState     DataState
 }
 
 type Table struct {

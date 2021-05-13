@@ -78,6 +78,13 @@ func (blk *Block) SetCount(count uint64) error {
 		return errors.New("SetCount cannot set smaller count")
 	}
 	blk.Count = count
+	if count == 0 {
+		blk.DataState = EMPTY
+	} else if count < blk.MaxRowCount {
+		blk.DataState = PARTIAL
+	} else {
+		blk.DataState = FULL
+	}
 	return nil
 }
 
@@ -90,6 +97,7 @@ func (blk *Block) Copy() *Block {
 	new_blk.Index = blk.Index
 	new_blk.PrevIndex = blk.PrevIndex
 	new_blk.DeleteIndex = blk.DeleteIndex
+	new_blk.DataState = blk.DataState
 
 	return new_blk
 }

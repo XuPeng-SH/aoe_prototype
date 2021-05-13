@@ -106,7 +106,7 @@ func (cache *BucketCache) CopyWithDelta(ctx interface{}) (new_cache *BucketCache
 		if err != nil {
 			return nil, err
 		}
-		err = segment.AddBlock(context.Block)
+		// err = segment.AddBlock(context.Block)
 		if err != nil {
 			return nil, err
 		}

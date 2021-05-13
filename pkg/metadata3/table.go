@@ -86,6 +86,17 @@ func (tbl *Table) CreateSegment() (seg *Segment, err error) {
 	return seg, err
 }
 
+func (tbl *Table) GetInfullSegment() (seg *Segment, err error) {
+	tbl.RLock()
+	defer tbl.RUnlock()
+	for _, seg := range tbl.Segments {
+		if seg.DataState == EMPTY || seg.DataState == PARTIAL {
+			return seg, nil
+		}
+	}
+	return nil, errors.New(fmt.Sprintf("no infull segment found in table %d", tbl.ID))
+}
+
 func (tbl *Table) String() string {
 	s := fmt.Sprintf("Tbl(%d)", tbl.ID)
 	s += "["
