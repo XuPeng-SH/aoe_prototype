@@ -3,7 +3,6 @@ package memtable
 import (
 	"aoe/pkg/engine"
 	md "aoe/pkg/engine/metadata"
-	"aoe/pkg/engine/ops"
 	mops "aoe/pkg/engine/ops/meta"
 	todo "aoe/pkg/mock"
 	"sync"
@@ -36,7 +35,7 @@ func NewCollection(opts *engine.Options, id uint64) ICollection {
 }
 
 func (c *Collection) onNoBlock() (blk *md.Block, err error) {
-	ctx := ops.OpCtx{TableID: c.ID}
+	ctx := mops.OpCtx{TableID: c.ID}
 	op := mops.NewCreateBlockOperation(&ctx, c.Opts.Meta.Info, c.Opts.Meta.Updater)
 	op.Push()
 	err = op.WaitDone()

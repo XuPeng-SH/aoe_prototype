@@ -2,20 +2,19 @@ package meta
 
 import (
 	md "aoe/pkg/engine/metadata"
-	"aoe/pkg/engine/ops"
 	iworker "aoe/pkg/engine/worker/base"
 	// log "github.com/sirupsen/logrus"
 )
 
-func NewCreateBlockOperation(ctx *ops.OpCtx, info *md.MetaInfo,
+func NewCreateBlockOperation(ctx *OpCtx, info *md.MetaInfo,
 	w iworker.IOpWorker) *CreateBlkOp {
 	op := &CreateBlkOp{}
-	op.Op = *ops.NewOp(op, ctx, info, w)
+	op.Op = *NewOp(op, ctx, info, w)
 	return op
 }
 
 type CreateBlkOp struct {
-	ops.Op
+	Op
 }
 
 func (op *CreateBlkOp) GetBlock() *md.Block {

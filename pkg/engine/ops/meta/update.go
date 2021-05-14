@@ -2,22 +2,21 @@ package meta
 
 import (
 	md "aoe/pkg/engine/metadata"
-	"aoe/pkg/engine/ops"
 	iworker "aoe/pkg/engine/worker/base"
 	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 )
 
-func NewUpdateOp(ctx *ops.OpCtx, info *md.MetaInfo,
+func NewUpdateOp(ctx *OpCtx, info *md.MetaInfo,
 	w iworker.IOpWorker) *UpdateOp {
 	op := &UpdateOp{}
-	op.Op = *ops.NewOp(op, ctx, info, w)
+	op.Op = *NewOp(op, ctx, info, w)
 	return op
 }
 
 type UpdateOp struct {
-	ops.Op
+	Op
 }
 
 func (op *UpdateOp) updateBlock(blk *md.Block) error {

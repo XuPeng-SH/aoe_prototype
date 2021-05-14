@@ -3,7 +3,6 @@ package memtable
 import (
 	"aoe/pkg/engine"
 	md "aoe/pkg/engine/metadata"
-	"aoe/pkg/engine/ops"
 	mops "aoe/pkg/engine/ops/meta"
 	util "aoe/pkg/metadata"
 	todo "aoe/pkg/mock"
@@ -68,7 +67,7 @@ func (mt *MemTable) Flush() error {
 	if err != nil {
 		return err
 	}
-	ctx := ops.OpCtx{Block: mt.Meta}
+	ctx := mops.OpCtx{Block: mt.Meta}
 	op := mops.NewUpdateOp(&ctx, mt.Opts.Meta.Info, mt.Opts.Meta.Updater)
 	op.Push()
 	err = op.WaitDone()

@@ -3,7 +3,6 @@ package memtable
 import (
 	"aoe/pkg/engine"
 	md "aoe/pkg/engine/metadata"
-	"aoe/pkg/engine/ops"
 	mops "aoe/pkg/engine/ops/meta"
 	todo "aoe/pkg/mock"
 	"github.com/stretchr/testify/assert"
@@ -38,7 +37,7 @@ func TestCollection(t *testing.T) {
 
 	opts.Meta.Updater.Start()
 
-	opCtx := ops.OpCtx{}
+	opCtx := mops.OpCtx{}
 	op := mops.NewCreateTblOp(&opCtx, opts.Meta.Info, opts.Meta.Updater)
 	op.Push()
 	err := op.WaitDone()

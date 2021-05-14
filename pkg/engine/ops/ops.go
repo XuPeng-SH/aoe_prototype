@@ -1,21 +1,15 @@
 package ops
 
 import (
-	md "aoe/pkg/engine/metadata"
 	iops "aoe/pkg/engine/ops/base"
 	iworker "aoe/pkg/engine/worker/base"
-	"errors"
 	// log "github.com/sirupsen/logrus"
 )
 
-func NewOp(impl iops.IOpInternal, ctx *OpCtx,
-	info *md.MetaInfo, w iworker.IOpWorker) *Op {
+func NewOp(impl iops.IOpInternal, w iworker.IOpWorker) *Op {
 	op := &Op{
-		Ctx:      ctx,
-		MetaInfo: info,
-		Impl:     impl,
-		ErrorC:   make(chan error),
-		Worker:   w,
+		Impl:   impl,
+		Worker: w,
 	}
 	return op
 }
@@ -35,9 +29,6 @@ func (op *Op) WaitDone() error {
 }
 
 func (op *Op) PreExecute() error {
-	if op.Ctx == nil {
-		return errors.New("No context specified")
-	}
 	return nil
 }
 

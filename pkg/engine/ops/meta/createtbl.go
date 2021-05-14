@@ -2,20 +2,19 @@ package meta
 
 import (
 	md "aoe/pkg/engine/metadata"
-	"aoe/pkg/engine/ops"
 	iworker "aoe/pkg/engine/worker/base"
 	// log "github.com/sirupsen/logrus"
 )
 
-func NewCreateTblOp(ctx *ops.OpCtx, info *md.MetaInfo,
+func NewCreateTblOp(ctx *OpCtx, info *md.MetaInfo,
 	w iworker.IOpWorker) *CreateTblOp {
 	op := &CreateTblOp{}
-	op.Op = *ops.NewOp(op, ctx, info, w)
+	op.Op = *NewOp(op, ctx, info, w)
 	return op
 }
 
 type CreateTblOp struct {
-	ops.Op
+	Op
 }
 
 func (op *CreateTblOp) GetTable() *md.Table {
