@@ -7,6 +7,7 @@ import (
 	mops "aoe/pkg/engine/ops/meta"
 	util "aoe/pkg/metadata"
 	todo "aoe/pkg/mock"
+	log "github.com/sirupsen/logrus"
 	"sync"
 )
 
@@ -59,6 +60,9 @@ func (mt *MemTable) Append(c *todo.Chunk, offset uint64, index *md.LogIndex) (n 
 // If crashed before Step 2, the untracked block file will be cleanup at startup.
 // If crashed before Step 3, same as above.
 func (mt *MemTable) Flush() error {
+	log.Infof("Flush memtable %d", mt.Meta.ID)
+	return nil
+	// TODO
 	err := mt.W.Write(mt)
 	if err != nil {
 		return err

@@ -10,6 +10,7 @@ func NewOp(impl iops.IOpInternal, w iworker.IOpWorker) *Op {
 	op := &Op{
 		Impl:   impl,
 		Worker: w,
+		// ErrorC: make(chan error, 1000),
 	}
 	return op
 }

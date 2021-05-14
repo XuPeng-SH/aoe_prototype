@@ -41,9 +41,5 @@ func (op *FlushBlkOp) Execute() error {
 		return err
 	}
 
-	go func() {
-		// ckctx := md.OpCtx{Block: mem.GetMeta()}
-		// ckop := md.UpdateBlockOp()
-	}()
 	return nil
 }

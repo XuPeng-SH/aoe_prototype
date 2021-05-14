@@ -4,8 +4,10 @@ import (
 	"aoe/pkg/engine"
 	imem "aoe/pkg/engine/memtable/base"
 	md "aoe/pkg/engine/metadata"
+	dops "aoe/pkg/engine/ops/data"
 	mops "aoe/pkg/engine/ops/meta"
 	todo "aoe/pkg/mock"
+	log "github.com/sirupsen/logrus"
 	"sync"
 )
 
@@ -49,6 +51,7 @@ func (c *Collection) onNoMutableTable() (tbl imem.IMemTable, err error) {
 		return nil, err
 	}
 	tbl = NewMemTable(c.Opts, blk)
+	c.mem.MemTables = append(c.mem.MemTables, tbl)
 	return tbl, err
 }
 
@@ -77,8 +80,15 @@ func (c *Collection) Append(ck *todo.Chunk, index *md.LogIndex) (err error) {
 		if mut.IsFull() {
 			mut, err = c.onNoMutableTable()
 			if err != nil {
+				log.Error(err)
 				return err
 			}
+			go func() {
+				ctx := dops.OpCtx{Collection: c}
+				op := dops.NewFlushBlkOp(&ctx, c.Opts.Data.Flusher)
+				op.Push()
+				op.WaitDone()
+			}()
 		}
 	}
 	c.mem.Unlock()

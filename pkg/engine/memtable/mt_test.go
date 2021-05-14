@@ -7,6 +7,7 @@ import (
 	todo "aoe/pkg/mock"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 )
 
 func TestManager(t *testing.T) {
@@ -36,6 +37,9 @@ func TestCollection(t *testing.T) {
 	opts.FillDefaults()
 
 	opts.Meta.Updater.Start()
+	opts.Meta.Flusher.Start()
+	opts.Data.Flusher.Start()
+	opts.Data.Sorter.Start()
 
 	opCtx := mops.OpCtx{}
 	op := mops.NewCreateTblOp(&opCtx, opts.Meta.Info, opts.Meta.Updater)
@@ -57,6 +61,10 @@ func TestCollection(t *testing.T) {
 	assert.Nil(t, err)
 	// assert.Equal(t, len(tbl.Segments()), expect_blks/md.Meta.MaxRowCount)
 	t.Log(tbl.String())
+	time.Sleep(time.Duration(1) * time.Millisecond)
 
 	opts.Meta.Updater.Stop()
+	opts.Meta.Flusher.Stop()
+	opts.Data.Flusher.Stop()
+	opts.Data.Sorter.Stop()
 }

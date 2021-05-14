@@ -13,6 +13,10 @@ const (
 	QUIT Cmd = iota
 )
 
+const (
+	QUEUE_SIZE = 10000
+)
+
 var (
 	_ iw.IOpWorker = (*OpWorker)(nil)
 )
@@ -23,10 +27,20 @@ type OpWorker struct {
 	Done bool
 }
 
-func NewOpWorker() *OpWorker {
+func NewOpWorker(args ...int) *OpWorker {
+	var l int
+	if len(args) == 0 {
+		l = QUEUE_SIZE
+	} else {
+		l = args[0]
+		if l < 0 {
+			log.Warnf("Create OpWorker with negtive queue size %d", l)
+			l = QUEUE_SIZE
+		}
+	}
 	worker := &OpWorker{
-		OpC:  make(chan iops.IOp),
-		CmdC: make(chan Cmd),
+		OpC:  make(chan iops.IOp, l),
+		CmdC: make(chan Cmd, l),
 	}
 	return worker
 }
@@ -63,6 +77,8 @@ func (w *OpWorker) onCmd(cmd Cmd) {
 	switch cmd {
 	case QUIT:
 		log.Infof("Quit OpWorker")
+		close(w.CmdC)
+		close(w.OpC)
 		w.Done = true
 	default:
 		panic(fmt.Sprintf("Unsupported cmd %d", cmd))
