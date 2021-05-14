@@ -47,7 +47,7 @@ func TestCollection(t *testing.T) {
 	manager := NewManager(opts)
 	c0, _ := manager.RegisterCollection(tbl.ID)
 	expect_blks := uint64(20)
-	insert := todo.NewChunk(expect_blks*md.BLOCK_ROW_COUNT, nil)
+	insert := todo.NewChunk(expect_blks*opts.Meta.Conf.BlockMaxRows, nil)
 	insert.Count = insert.Capacity
 	index := &md.LogIndex{
 		ID:       uint64(0),

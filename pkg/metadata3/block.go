@@ -10,13 +10,13 @@ const (
 	BLOCK_ROW_COUNT = 16
 )
 
-func NewBlock(table_id, segment_id, id uint64) *Block {
+func NewBlock(table_id, segment_id, id, capacity uint64) *Block {
 	blk := &Block{
 		ID:          id,
 		TableID:     table_id,
 		SegmentID:   segment_id,
 		TimeStamp:   *NewTimeStamp(),
-		MaxRowCount: BLOCK_ROW_COUNT,
+		MaxRowCount: capacity,
 	}
 	return blk
 }
@@ -135,7 +135,7 @@ func (blk *Block) Copy() *Block {
 
 func (blk *Block) copyNoLock(new_blk *Block) *Block {
 	if new_blk == nil {
-		new_blk = NewBlock(blk.TableID, blk.SegmentID, blk.ID)
+		new_blk = NewBlock(blk.TableID, blk.SegmentID, blk.ID, blk.MaxRowCount)
 	}
 	new_blk.ID = blk.ID
 	new_blk.SegmentID = blk.SegmentID

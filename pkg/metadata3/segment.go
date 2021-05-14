@@ -48,7 +48,7 @@ func (seg *Segment) BlockIDs(args ...interface{}) map[uint64]uint64 {
 }
 
 func (seg *Segment) CreateBlock() (blk *Block, err error) {
-	blk = NewBlock(seg.TableID, seg.ID, Meta.Sequence.GetBlockID())
+	blk = NewBlock(seg.TableID, seg.ID, Meta.Sequence.GetBlockID(), Meta.Conf.BlockMaxRows)
 	return blk, err
 }
 

@@ -36,7 +36,7 @@ func (o *Options) FillDefaults() *Options {
 		}
 	}
 	if o.Meta.Info == nil {
-		o.Meta.Info = md.NewMetaInfo()
+		o.Meta.Info = md.NewMetaInfo(o.Meta.Conf)
 	}
 
 	if o.Data.Flusher == nil {

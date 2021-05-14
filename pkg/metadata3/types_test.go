@@ -9,7 +9,7 @@ import (
 func TestBlock(t *testing.T) {
 	ts1 := NowMicro()
 	time.Sleep(time.Duration(1) * time.Microsecond)
-	blk := NewBlock(Meta.Sequence.GetTableID(), Meta.Sequence.GetSegmentID(), Meta.Sequence.GetBlockID())
+	blk := NewBlock(Meta.Sequence.GetTableID(), Meta.Sequence.GetSegmentID(), Meta.Sequence.GetBlockID(), Meta.Conf.BlockMaxRows)
 	time.Sleep(time.Duration(1) * time.Microsecond)
 	ts2 := NowMicro()
 	t.Logf("%d %d %d", ts1, blk.CreatedOn, ts2)
@@ -32,7 +32,7 @@ func TestBlock(t *testing.T) {
 func TestSegment(t *testing.T) {
 	t1 := NowMicro()
 	seg1 := NewSegment(Meta.Sequence.GetTableID(), Meta.Sequence.GetSegmentID())
-	blk1 := NewBlock(seg1.GetTableID(), Meta.Sequence.GetSegmentID(), Meta.Sequence.GetBlockID())
+	blk1 := NewBlock(seg1.GetTableID(), Meta.Sequence.GetSegmentID(), Meta.Sequence.GetBlockID(), Meta.Conf.BlockMaxRows)
 	err := seg1.RegisterBlock(blk1)
 	assert.Error(t, err)
 
@@ -42,7 +42,7 @@ func TestSegment(t *testing.T) {
 		err = seg1.RegisterBlock(blk1)
 		assert.Nil(t, err)
 	}
-	blk2 := NewBlock(seg1.GetTableID(), seg1.GetID(), Meta.Sequence.GetBlockID())
+	blk2 := NewBlock(seg1.GetTableID(), seg1.GetID(), Meta.Sequence.GetBlockID(), Meta.Conf.BlockMaxRows)
 	err = seg1.RegisterBlock(blk2)
 	assert.Error(t, err)
 	t.Log(err)
@@ -74,7 +74,12 @@ func TestTable(t *testing.T) {
 }
 
 func TestInfo(t *testing.T) {
-	info := NewMetaInfo()
+	conf := &Configuration{
+		BlockMaxRows:     BLOCK_ROW_COUNT,
+		SegmentMaxBlocks: SEGMENT_BLOCK_COUNT,
+		Dir:              "/tmp",
+	}
+	info := NewMetaInfo(conf)
 	tbl, err := info.CreateTable()
 	assert.Nil(t, err)
 

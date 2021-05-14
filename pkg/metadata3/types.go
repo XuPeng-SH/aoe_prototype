@@ -77,9 +77,16 @@ type Table struct {
 	Segments map[uint64]*Segment
 }
 
+type Configuration struct {
+	Dir              string
+	BlockMaxRows     uint64
+	SegmentMaxBlocks uint64
+}
+
 type MetaInfo struct {
 	sync.RWMutex
 	Sequence   Sequence
 	CheckPoint uint64
 	Tables     map[uint64]*Table
+	Conf       *Configuration
 }

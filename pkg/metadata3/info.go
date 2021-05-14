@@ -16,18 +16,21 @@ const (
 )
 
 var (
-	Meta = *NewMetaInfo()
+	Meta = *NewMetaInfo(nil)
 )
 
-type Configuration struct {
-	Dir              string
-	BlockMaxRows     uint64
-	SegmentMaxBlocks uint64
+func init() {
+	Meta.Conf = &Configuration{
+		Dir:              "/tmp",
+		BlockMaxRows:     BLOCK_ROW_COUNT,
+		SegmentMaxBlocks: SEGMENT_BLOCK_COUNT,
+	}
 }
 
-func NewMetaInfo() *MetaInfo {
+func NewMetaInfo(conf *Configuration) *MetaInfo {
 	info := &MetaInfo{
 		Tables: make(map[uint64]*Table),
+		Conf:   conf,
 	}
 	return info
 }
@@ -131,7 +134,7 @@ func (info *MetaInfo) Copy(ts ...int64) *MetaInfo {
 	} else {
 		t = ts[0]
 	}
-	new_info := NewMetaInfo()
+	new_info := NewMetaInfo(info.Conf)
 	for k, v := range info.Tables {
 		if !v.Select(t) {
 			continue
@@ -148,7 +151,9 @@ func (info *MetaInfo) Serialize(w io.Writer) error {
 }
 
 func Deserialize(r io.Reader) (info *MetaInfo, err error) {
-	info = NewMetaInfo()
+	info = &MetaInfo{
+		Tables: make(map[uint64]*Table),
+	}
 	err = msgpack.NewDecoder(r).Decode(info)
 	if err != nil {
 		return nil, err
