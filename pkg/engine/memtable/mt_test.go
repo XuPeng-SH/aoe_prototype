@@ -60,8 +60,8 @@ func TestCollection(t *testing.T) {
 	err = c0.Append(insert, index)
 	assert.Nil(t, err)
 	// assert.Equal(t, len(tbl.Segments()), expect_blks/md.Meta.MaxRowCount)
-	t.Log(tbl.String())
 	time.Sleep(time.Duration(1) * time.Millisecond)
+	t.Log(tbl.String())
 
 	opts.Meta.Updater.Stop()
 	opts.Meta.Flusher.Stop()

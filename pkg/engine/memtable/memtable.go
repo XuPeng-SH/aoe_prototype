@@ -31,6 +31,7 @@ func NewMemTable(opts *engine.Options, meta *md.Block) imem.IMemTable {
 		Data: todo.NewChunk(meta.MaxRowCount, meta),
 		Full: false,
 		Opts: opts,
+		W:    opts.Data.Writer,
 	}
 
 	return mt
@@ -45,6 +46,7 @@ func (mt *MemTable) Append(c *todo.Chunk, offset uint64, index *md.LogIndex) (n 
 	}
 	index.Count += n
 	mt.Meta.SetIndex(*index)
+	mt.Meta.Count += n
 	if mt.Data.GetCount() == mt.Meta.MaxRowCount {
 		mt.Full = true
 	}
@@ -60,11 +62,10 @@ func (mt *MemTable) Append(c *todo.Chunk, offset uint64, index *md.LogIndex) (n 
 // If crashed before Step 2, the untracked block file will be cleanup at startup.
 // If crashed before Step 3, same as above.
 func (mt *MemTable) Flush() error {
-	log.Infof("Flush memtable %d", mt.Meta.ID)
-	return nil
-	// TODO
+	log.Infof("Start flushing memtable %d", mt.Meta.ID)
 	err := mt.W.Write(mt)
 	if err != nil {
+		log.Errorf("flushing memtable %d error: %s", mt.Meta.ID, err)
 		return err
 	}
 	ctx := mops.OpCtx{Block: mt.Meta}
@@ -72,10 +73,12 @@ func (mt *MemTable) Flush() error {
 	op.Push()
 	err = op.WaitDone()
 	if err != nil {
+		log.Errorf("flushing memtable %d error: %s", mt.Meta.ID, err)
 		return err
 	}
 	// TODO
 	// mt.Listener.Send(DO_CHECKPOINT)
+	log.Infof("Finish flushing memtable %d", mt.Meta.ID)
 	return nil
 }
 

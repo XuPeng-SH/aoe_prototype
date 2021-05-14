@@ -4,6 +4,7 @@ import (
 	md "aoe/pkg/engine/metadata"
 	w "aoe/pkg/engine/worker"
 	iw "aoe/pkg/engine/worker/base"
+	todo "aoe/pkg/mock"
 )
 
 type Options struct {
@@ -17,6 +18,7 @@ type Options struct {
 	Data struct {
 		Flusher iw.IOpWorker
 		Sorter  iw.IOpWorker
+		Writer  todo.DataWriter
 	}
 }
 
@@ -38,6 +40,10 @@ func (o *Options) FillDefaults() *Options {
 	}
 	if o.Meta.Info == nil {
 		o.Meta.Info = md.NewMetaInfo(o.Meta.Conf)
+	}
+
+	if o.Data.Writer == nil {
+		o.Data.Writer = todo.NewDataWriter()
 	}
 
 	if o.Data.Flusher == nil {

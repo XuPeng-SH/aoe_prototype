@@ -38,3 +38,15 @@ func (c *Chunk) GetCount() uint64 {
 type DataWriter interface {
 	Write(obj interface{}) error
 }
+
+func NewDataWriter() DataWriter {
+	w := &MockDataWriter{}
+	return w
+}
+
+type MockDataWriter struct {
+}
+
+func (w *MockDataWriter) Write(obj interface{}) error {
+	return nil
+}
