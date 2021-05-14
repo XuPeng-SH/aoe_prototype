@@ -6,10 +6,10 @@ import (
 	// log "github.com/sirupsen/logrus"
 )
 
-func NewTable(ids ...uint64) *Table {
+func NewTable(info *MetaInfo, ids ...uint64) *Table {
 	var id uint64
 	if len(ids) == 0 {
-		id = Meta.Sequence.GetTableID()
+		id = info.Sequence.GetTableID()
 	} else {
 		id = ids[0]
 	}
@@ -17,6 +17,7 @@ func NewTable(ids ...uint64) *Table {
 		ID:        id,
 		Segments:  make(map[uint64]*Segment),
 		TimeStamp: *NewTimeStamp(),
+		Info:      info,
 	}
 	return tbl
 }
@@ -97,7 +98,7 @@ func (tbl *Table) SegmentIDs(args ...int64) map[uint64]uint64 {
 }
 
 func (tbl *Table) CreateSegment() (seg *Segment, err error) {
-	seg = NewSegment(tbl.ID, Meta.Sequence.GetSegmentID())
+	seg = NewSegment(tbl.Info, tbl.ID, tbl.Info.Sequence.GetSegmentID())
 	return seg, err
 }
 
@@ -171,7 +172,7 @@ func (tbl *Table) Copy(ts ...int64) *Table {
 	} else {
 		t = ts[0]
 	}
-	new_tbl := NewTable(tbl.ID)
+	new_tbl := NewTable(tbl.Info, tbl.ID)
 	new_tbl.TimeStamp = tbl.TimeStamp
 	new_tbl.BoundSate = tbl.BoundSate
 	for k, v := range tbl.Segments {

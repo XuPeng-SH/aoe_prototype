@@ -7,9 +7,15 @@ import (
 )
 
 func TestBlock(t *testing.T) {
+	conf := &Configuration{
+		BlockMaxRows:     BLOCK_ROW_COUNT,
+		SegmentMaxBlocks: SEGMENT_BLOCK_COUNT,
+		Dir:              "/tmp",
+	}
+	info := NewMetaInfo(conf)
 	ts1 := NowMicro()
 	time.Sleep(time.Duration(1) * time.Microsecond)
-	blk := NewBlock(Meta.Sequence.GetTableID(), Meta.Sequence.GetSegmentID(), Meta.Sequence.GetBlockID(), Meta.Conf.BlockMaxRows)
+	blk := NewBlock(info.Sequence.GetTableID(), info.Sequence.GetSegmentID(), info.Sequence.GetBlockID(), info.Conf.BlockMaxRows)
 	time.Sleep(time.Duration(1) * time.Microsecond)
 	ts2 := NowMicro()
 	t.Logf("%d %d %d", ts1, blk.CreatedOn, ts2)
@@ -30,9 +36,15 @@ func TestBlock(t *testing.T) {
 }
 
 func TestSegment(t *testing.T) {
+	conf := &Configuration{
+		BlockMaxRows:     BLOCK_ROW_COUNT,
+		SegmentMaxBlocks: SEGMENT_BLOCK_COUNT,
+		Dir:              "/tmp",
+	}
+	info := NewMetaInfo(conf)
 	t1 := NowMicro()
-	seg1 := NewSegment(Meta.Sequence.GetTableID(), Meta.Sequence.GetSegmentID())
-	blk1 := NewBlock(seg1.GetTableID(), Meta.Sequence.GetSegmentID(), Meta.Sequence.GetBlockID(), Meta.Conf.BlockMaxRows)
+	seg1 := NewSegment(info, info.Sequence.GetTableID(), info.Sequence.GetSegmentID())
+	blk1 := NewBlock(seg1.GetTableID(), info.Sequence.GetSegmentID(), info.Sequence.GetBlockID(), info.Conf.BlockMaxRows)
 	err := seg1.RegisterBlock(blk1)
 	assert.Error(t, err)
 
@@ -42,7 +54,7 @@ func TestSegment(t *testing.T) {
 		err = seg1.RegisterBlock(blk1)
 		assert.Nil(t, err)
 	}
-	blk2 := NewBlock(seg1.GetTableID(), seg1.GetID(), Meta.Sequence.GetBlockID(), Meta.Conf.BlockMaxRows)
+	blk2 := NewBlock(seg1.GetTableID(), seg1.GetID(), info.Sequence.GetBlockID(), info.Conf.BlockMaxRows)
 	err = seg1.RegisterBlock(blk2)
 	assert.Error(t, err)
 	t.Log(err)
@@ -61,7 +73,13 @@ func TestSegment(t *testing.T) {
 }
 
 func TestTable(t *testing.T) {
-	bkt := NewTable()
+	conf := &Configuration{
+		BlockMaxRows:     BLOCK_ROW_COUNT,
+		SegmentMaxBlocks: SEGMENT_BLOCK_COUNT,
+		Dir:              "/tmp",
+	}
+	info := NewMetaInfo(conf)
+	bkt := NewTable(info)
 	seg, err := bkt.CreateSegment()
 	assert.Nil(t, err)
 

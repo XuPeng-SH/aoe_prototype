@@ -9,14 +9,26 @@ import (
 	// log "github.com/sirupsen/logrus"
 )
 
+func createInfo() *md.MetaInfo {
+	conf := &md.Configuration{
+		BlockMaxRows:     md.BLOCK_ROW_COUNT,
+		SegmentMaxBlocks: md.SEGMENT_BLOCK_COUNT,
+		Dir:              "/tmp",
+	}
+	info := md.NewMetaInfo(conf)
+	return info
+}
+
 func TestBasicOps(t *testing.T) {
 	worker := NewOperationWorker()
 	worker.Start()
 
+	info := createInfo()
+
 	now := time.Now()
 
 	opCtx := OperationContext{}
-	op := NewCreateTableOperation(&opCtx, &md.Meta, worker)
+	op := NewCreateTableOperation(&opCtx, info, worker)
 	op.Push()
 	err := op.WaitDone()
 	assert.Nil(t, err)
@@ -24,9 +36,9 @@ func TestBasicOps(t *testing.T) {
 	tbl := op.GetTable()
 	assert.NotNil(t, tbl)
 
-	t.Log(md.Meta.String())
+	t.Log(info.String())
 	opCtx = OperationContext{TableID: tbl.ID}
-	blkop := NewCreateBlockOperation(&opCtx, &md.Meta, worker)
+	blkop := NewCreateBlockOperation(&opCtx, info, worker)
 	blkop.Push()
 	err = blkop.WaitDone()
 	assert.Nil(t, err)
@@ -39,25 +51,25 @@ func TestBasicOps(t *testing.T) {
 	blk1.SetCount(blk1.MaxRowCount)
 	assert.Equal(t, blk1.DataState, md.FULL)
 
-	blk2, err := md.Meta.ReferenceBlock(blk1.TableID, blk1.SegmentID, blk1.ID)
+	blk2, err := info.ReferenceBlock(blk1.TableID, blk1.SegmentID, blk1.ID)
 	assert.Nil(t, err)
 	assert.Equal(t, blk2.DataState, md.EMPTY)
 	assert.Equal(t, blk2.Count, uint64(0))
 
 	opCtx = OperationContext{Block: blk1}
-	updateop := NewUpdateOperation(&opCtx, &md.Meta, worker)
+	updateop := NewUpdateOperation(&opCtx, info, worker)
 	updateop.Push()
 	err = updateop.WaitDone()
 	assert.Nil(t, err)
 
-	blk3, err := md.Meta.ReferenceBlock(blk1.TableID, blk1.SegmentID, blk1.ID)
+	blk3, err := info.ReferenceBlock(blk1.TableID, blk1.SegmentID, blk1.ID)
 	assert.Nil(t, err)
 	assert.Equal(t, blk3.DataState, md.FULL)
 	assert.Equal(t, blk1.Count, blk3.Count)
 
 	for i := 0; i < 100; i++ {
 		opCtx = OperationContext{TableID: blk1.TableID}
-		blkop = NewCreateBlockOperation(&opCtx, &md.Meta, worker)
+		blkop = NewCreateBlockOperation(&opCtx, info, worker)
 		blkop.Push()
 		err = blkop.WaitDone()
 		assert.Nil(t, err)
@@ -65,7 +77,7 @@ func TestBasicOps(t *testing.T) {
 	du := time.Since(now)
 	t.Log(du)
 
-	info_copy := md.Meta.Copy()
+	info_copy := info.Copy()
 
 	path := "/tmp/tttttt"
 	w, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0666)
@@ -80,9 +92,9 @@ func TestBasicOps(t *testing.T) {
 	de_info, err := md.Deserialize(r)
 	assert.Nil(t, err)
 	assert.NotNil(t, de_info)
-	assert.Equal(t, md.Meta.Sequence.NextBlockID, de_info.Sequence.NextBlockID)
-	assert.Equal(t, md.Meta.Sequence.NextSegmentID, de_info.Sequence.NextSegmentID)
-	assert.Equal(t, md.Meta.Sequence.NextTableID, de_info.Sequence.NextTableID)
+	assert.Equal(t, info.Sequence.NextBlockID, de_info.Sequence.NextBlockID)
+	assert.Equal(t, info.Sequence.NextSegmentID, de_info.Sequence.NextSegmentID)
+	assert.Equal(t, info.Sequence.NextTableID, de_info.Sequence.NextTableID)
 
 	r.Close()
 

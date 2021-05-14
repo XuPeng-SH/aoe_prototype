@@ -1,13 +1,13 @@
 package md3
 
 import (
+	dump "encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	// "os"
 	// "path"
-
-	"github.com/vmihailenco/msgpack/v5"
+	// dump "github.com/vmihailenco/msgpack/v5"
 	// log "github.com/sirupsen/logrus"
 )
 
@@ -15,17 +15,17 @@ const (
 	META_FILE_NAME = "META"
 )
 
-var (
-	Meta = *NewMetaInfo(nil)
-)
+// var (
+// 	Meta = *NewMetaInfo(nil)
+// )
 
-func init() {
-	Meta.Conf = &Configuration{
-		Dir:              "/tmp",
-		BlockMaxRows:     BLOCK_ROW_COUNT,
-		SegmentMaxBlocks: SEGMENT_BLOCK_COUNT,
-	}
-}
+// func init() {
+// 	Meta.Conf = &Configuration{
+// 		Dir:              "/tmp",
+// 		BlockMaxRows:     BLOCK_ROW_COUNT,
+// 		SegmentMaxBlocks: SEGMENT_BLOCK_COUNT,
+// 	}
+// }
 
 func NewMetaInfo(conf *Configuration) *MetaInfo {
 	info := &MetaInfo{
@@ -90,7 +90,7 @@ func (info *MetaInfo) TableIDs(args ...int64) map[uint64]uint64 {
 }
 
 func (info *MetaInfo) CreateTable() (tbl *Table, err error) {
-	tbl = NewTable(Meta.Sequence.GetTableID())
+	tbl = NewTable(info, info.Sequence.GetTableID())
 	return tbl, err
 }
 
@@ -147,14 +147,14 @@ func (info *MetaInfo) Copy(ts ...int64) *MetaInfo {
 }
 
 func (info *MetaInfo) Serialize(w io.Writer) error {
-	return msgpack.NewEncoder(w).Encode(info)
+	return dump.NewEncoder(w).Encode(info)
 }
 
 func Deserialize(r io.Reader) (info *MetaInfo, err error) {
 	info = &MetaInfo{
 		Tables: make(map[uint64]*Table),
 	}
-	err = msgpack.NewDecoder(r).Decode(info)
+	err = dump.NewDecoder(r).Decode(info)
 	if err != nil {
 		return nil, err
 	}

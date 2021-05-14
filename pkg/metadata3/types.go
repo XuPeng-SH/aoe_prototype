@@ -67,6 +67,7 @@ type Segment struct {
 	MaxBlockCount uint64
 	Blocks        map[uint64]*Block
 	DataState     DataState
+	Info          *MetaInfo `json:"-"`
 }
 
 type Table struct {
@@ -75,6 +76,7 @@ type Table struct {
 	TimeStamp
 	ID       uint64
 	Segments map[uint64]*Segment
+	Info     *MetaInfo `json:"-"`
 }
 
 type Configuration struct {
@@ -85,8 +87,8 @@ type Configuration struct {
 
 type MetaInfo struct {
 	sync.RWMutex
-	Sequence   Sequence
+	Sequence   Sequence       `json:"-"`
+	Conf       *Configuration `json:"-"`
 	CheckPoint uint64
 	Tables     map[uint64]*Table
-	Conf       *Configuration
 }
