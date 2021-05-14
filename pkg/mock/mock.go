@@ -2,7 +2,7 @@ package mock
 
 import (
 	md "aoe/pkg/metadata3"
-	ops "aoe/pkg/metadata3/ops"
+	// ops "aoe/pkg/metadata3/ops"
 )
 
 func NewChunk(capacity uint64, meta *md.Block) *Chunk {
@@ -37,12 +37,4 @@ func (c *Chunk) GetCount() uint64 {
 
 type DataWriter interface {
 	Write(obj interface{}) error
-}
-
-var (
-	MetaWorker = ops.NewOperationWorker()
-)
-
-func init() {
-	MetaWorker.Start()
 }

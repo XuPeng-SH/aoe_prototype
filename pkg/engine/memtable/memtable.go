@@ -1,6 +1,7 @@
 package memtable
 
 import (
+	"aoe/pkg/engine"
 	util "aoe/pkg/metadata"
 	md "aoe/pkg/metadata3"
 	ops "aoe/pkg/metadata3/ops"
@@ -14,6 +15,7 @@ type IMemTable interface {
 }
 
 type MemTable struct {
+	Opts *engine.Options
 	util.RefProxy
 	sync.RWMutex
 	W    todo.DataWriter
@@ -26,11 +28,12 @@ var (
 	_ IMemTable = (*MemTable)(nil)
 )
 
-func NewMemTable(meta *md.Block) IMemTable {
+func NewMemTable(opts *engine.Options, meta *md.Block) IMemTable {
 	mt := &MemTable{
 		Meta: meta,
 		Data: todo.NewChunk(meta.MaxRowCount, meta),
 		Full: false,
+		Opts: opts,
 	}
 
 	return mt
@@ -65,7 +68,7 @@ func (mt *MemTable) Flush() error {
 		return err
 	}
 	ctx := ops.OperationContext{Block: mt.Meta}
-	op := ops.NewUpdateOperation(&ctx, &md.Meta, todo.MetaWorker)
+	op := ops.NewUpdateOperation(&ctx, &md.Meta, mt.Opts.Meta.Worker)
 	op.Push()
 	err = op.WaitDone()
 	if err != nil {

@@ -32,14 +32,18 @@ func TestManager(t *testing.T) {
 }
 
 func TestCollection(t *testing.T) {
+	opts := new(engine.Options)
+	opts.FillDefaults()
+
+	opts.Meta.Worker.Start()
+
 	opCtx := ops.OperationContext{}
-	op := ops.NewCreateTableOperation(&opCtx, &md.Meta, todo.MetaWorker)
+	op := ops.NewCreateTableOperation(&opCtx, &md.Meta, opts.Meta.Worker)
 	op.Push()
 	err := op.WaitDone()
 	assert.Nil(t, err)
 	tbl := op.GetTable()
 
-	opts := &engine.Options{}
 	manager := NewManager(opts)
 	c0, _ := manager.RegisterCollection(tbl.ID)
 	expect_blks := uint64(20)
@@ -53,4 +57,6 @@ func TestCollection(t *testing.T) {
 	assert.Nil(t, err)
 	// assert.Equal(t, len(tbl.Segments()), expect_blks/md.Meta.MaxRowCount)
 	t.Log(tbl.String())
+
+	opts.Meta.Worker.Stop()
 }

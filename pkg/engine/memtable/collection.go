@@ -36,7 +36,7 @@ func NewCollection(opts *engine.Options, id uint64) ICollection {
 
 func (c *Collection) onNoBlock() (blk *md.Block, err error) {
 	ctx := ops.OperationContext{TableID: c.ID}
-	op := ops.NewCreateBlockOperation(&ctx, &md.Meta, todo.MetaWorker)
+	op := ops.NewCreateBlockOperation(&ctx, &md.Meta, c.Opts.Meta.Worker)
 	op.Push()
 	err = op.WaitDone()
 	if err != nil {
@@ -51,7 +51,7 @@ func (c *Collection) onNoMutableTable() (tbl IMemTable, err error) {
 	if err != nil {
 		return nil, err
 	}
-	tbl = NewMemTable(blk)
+	tbl = NewMemTable(c.Opts, blk)
 	return tbl, err
 }
 
