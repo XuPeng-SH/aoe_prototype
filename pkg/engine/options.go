@@ -8,6 +8,10 @@ import (
 )
 
 type Options struct {
+	Mon struct {
+		Collector iw.IOpWorker
+	}
+
 	Meta struct {
 		Flusher iw.IOpWorker
 		Updater iw.IOpWorker
@@ -26,6 +30,11 @@ func (o *Options) FillDefaults() *Options {
 	if o == nil {
 		o = &Options{}
 	}
+
+	if o.Mon.Collector == nil {
+		o.Mon.Collector = w.NewOpWorker()
+	}
+
 	if o.Meta.Flusher == nil {
 		o.Meta.Flusher = w.NewOpWorker()
 	}
