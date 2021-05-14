@@ -97,6 +97,20 @@ func (tbl *Table) SegmentIDs(args ...int64) map[uint64]uint64 {
 	return ids
 }
 
+func (tbl *Table) SetInfo(info *MetaInfo) error {
+	if tbl.Info == nil {
+		tbl.Info = info
+		for _, seg := range tbl.Segments {
+			err := seg.SetInfo(info)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 func (tbl *Table) CreateSegment() (seg *Segment, err error) {
 	seg = NewSegment(tbl.Info, tbl.ID, tbl.Info.Sequence.GetSegmentID())
 	return seg, err

@@ -90,6 +90,19 @@ func (seg *Segment) ReferenceBlock(id uint64) (blk *Block, err error) {
 	return blk, nil
 }
 
+func (seg *Segment) SetInfo(info *MetaInfo) error {
+	if seg.Info == nil {
+		seg.Info = info
+		// for _, blk := range seg.Blocks {
+		// 	if blk.Info == nil {
+		// 		blk.Info = info
+		// 	}
+		// }
+	}
+
+	return nil
+}
+
 func (seg *Segment) RegisterBlock(blk *Block) error {
 	if blk.TableID != seg.TableID {
 		return errors.New(fmt.Sprintf("table id mismatch %d:%d", seg.TableID, blk.TableID))
