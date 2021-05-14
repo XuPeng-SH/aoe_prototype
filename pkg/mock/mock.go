@@ -1,7 +1,7 @@
 package mock
 
 import (
-	md "aoe/pkg/metadata3"
+	md "aoe/pkg/engine/metadata"
 	// ops "aoe/pkg/metadata3/ops"
 )
 

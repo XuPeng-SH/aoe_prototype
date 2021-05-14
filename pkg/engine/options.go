@@ -1,9 +1,9 @@
 package engine
 
 import (
+	md "aoe/pkg/engine/metadata"
 	w "aoe/pkg/engine/worker"
 	iw "aoe/pkg/engine/worker/base"
-	md "aoe/pkg/metadata3"
 )
 
 type Options struct {

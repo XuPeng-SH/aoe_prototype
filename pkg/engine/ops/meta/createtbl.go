@@ -1,9 +1,9 @@
 package meta
 
 import (
+	md "aoe/pkg/engine/metadata"
 	"aoe/pkg/engine/ops"
 	iworker "aoe/pkg/engine/worker/base"
-	md "aoe/pkg/metadata3"
 	// log "github.com/sirupsen/logrus"
 )
 

@@ -2,10 +2,10 @@ package memtable
 
 import (
 	"aoe/pkg/engine"
+	md "aoe/pkg/engine/metadata"
 	"aoe/pkg/engine/ops"
 	mops "aoe/pkg/engine/ops/meta"
 	util "aoe/pkg/metadata"
-	md "aoe/pkg/metadata3"
 	todo "aoe/pkg/mock"
 	"sync"
 )

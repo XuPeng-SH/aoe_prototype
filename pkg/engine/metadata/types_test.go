@@ -1,4 +1,4 @@
-package md3
+package md
 
 import (
 	"github.com/stretchr/testify/assert"

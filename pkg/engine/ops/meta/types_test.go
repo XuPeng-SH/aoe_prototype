@@ -1,9 +1,9 @@
 package meta
 
 import (
+	md "aoe/pkg/engine/metadata"
 	"aoe/pkg/engine/ops"
 	w "aoe/pkg/engine/worker"
-	md "aoe/pkg/metadata3"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
