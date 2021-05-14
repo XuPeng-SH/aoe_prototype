@@ -45,7 +45,7 @@ func (mt *MemTable) Append(c *todo.Chunk, offset uint64, index *md.LogIndex) (n 
 	}
 	index.Count += n
 	mt.Meta.SetIndex(*index)
-	if mt.Data.Count() == mt.Meta.MaxRowCount {
+	if mt.Data.GetCount() == mt.Meta.MaxRowCount {
 		mt.Full = true
 	}
 	return n, err

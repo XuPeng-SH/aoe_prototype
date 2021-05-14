@@ -10,6 +10,7 @@ type IManager interface {
 	GetCollection(id uint64) ICollection
 	RegisterCollection(id uint64) (c ICollection, err error)
 	UnregisterCollection(id uint64) (c ICollection, err error)
+	CollectionIDs() map[uint64]uint64
 }
 
 type Manager struct {
@@ -24,9 +25,18 @@ var (
 
 func NewManager(opts *engine.Options) IManager {
 	m := &Manager{
-		Opts: opts,
+		Opts:        opts,
+		Collections: make(map[uint64]ICollection),
 	}
 	return m
+}
+
+func (m *Manager) CollectionIDs() map[uint64]uint64 {
+	ids := make(map[uint64]uint64)
+	for k, _ := range m.Collections {
+		ids[k] = k
+	}
+	return ids
 }
 
 func (m *Manager) GetCollection(id uint64) ICollection {

@@ -74,7 +74,7 @@ func (c *Collection) Append(ck *todo.Chunk, index *md.LogIndex) (err error) {
 			return err
 		}
 		offset += n
-		if offset == ck.Count() {
+		if offset == ck.GetCount() {
 			break
 		}
 		if mut.IsFull() {

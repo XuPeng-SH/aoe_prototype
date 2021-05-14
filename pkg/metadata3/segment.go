@@ -55,11 +55,13 @@ func (seg *Segment) CreateBlock() (blk *Block, err error) {
 func (seg *Segment) String() string {
 	s := fmt.Sprintf("Seg(%d-%d)", seg.TableID, seg.ID)
 	s += "["
-	for i, blk := range seg.Blocks {
-		if i != 0 {
-			s += ","
+	pos := 0
+	for _, blk := range seg.Blocks {
+		if pos != 0 {
+			s += "<-->"
 		}
 		s += blk.String()
+		pos++
 	}
 	s += "]"
 	return s

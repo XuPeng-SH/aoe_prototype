@@ -72,6 +72,9 @@ func (blk *Block) String() string {
 	if blk.IsDeleted() {
 		s += "[D]"
 	}
+	if blk.Count == blk.MaxRowCount {
+		s += "[F]"
+	}
 	return s
 }
 

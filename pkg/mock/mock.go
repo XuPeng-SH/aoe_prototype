@@ -6,18 +6,33 @@ import (
 )
 
 func NewChunk(capacity uint64, meta *md.Block) *Chunk {
-	return nil
+	c := &Chunk{
+		Capacity: capacity,
+		Count:    0,
+	}
+	return c
 }
 
 type Chunk struct {
+	Capacity uint64
+	Count    uint64
 }
 
 func (c *Chunk) Append(o *Chunk, offset uint64) (n uint64, err error) {
+	max := c.Capacity - c.Count
+	o_max := o.Count - offset
+	if max >= o_max {
+		n = o_max
+		c.Count += o_max
+	} else {
+		n = max
+		c.Count += max
+	}
 	return n, err
 }
 
-func (c *Chunk) Count() uint64 {
-	return uint64(0)
+func (c *Chunk) GetCount() uint64 {
+	return c.Count
 }
 
 type DataWriter interface {
