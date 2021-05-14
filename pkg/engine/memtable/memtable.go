@@ -2,17 +2,13 @@ package memtable
 
 import (
 	"aoe/pkg/engine"
+	imem "aoe/pkg/engine/memtable/base"
 	md "aoe/pkg/engine/metadata"
 	mops "aoe/pkg/engine/ops/meta"
 	util "aoe/pkg/metadata"
 	todo "aoe/pkg/mock"
 	"sync"
 )
-
-type IMemTable interface {
-	Append(c *todo.Chunk, offset uint64, index *md.LogIndex) (n uint64, err error)
-	IsFull() bool
-}
 
 type MemTable struct {
 	Opts *engine.Options
@@ -25,10 +21,10 @@ type MemTable struct {
 }
 
 var (
-	_ IMemTable = (*MemTable)(nil)
+	_ imem.IMemTable = (*MemTable)(nil)
 )
 
-func NewMemTable(opts *engine.Options, meta *md.Block) IMemTable {
+func NewMemTable(opts *engine.Options, meta *md.Block) imem.IMemTable {
 	mt := &MemTable{
 		Meta: meta,
 		Data: todo.NewChunk(meta.MaxRowCount, meta),
@@ -77,6 +73,10 @@ func (mt *MemTable) Flush() error {
 	// TODO
 	// mt.Listener.Send(DO_CHECKPOINT)
 	return nil
+}
+
+func (mt *MemTable) GetMeta() *md.Block {
+	return mt.Meta
 }
 
 func (mt *MemTable) IsFull() bool {
