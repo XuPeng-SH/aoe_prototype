@@ -7,16 +7,16 @@ import (
 	// log "github.com/sirupsen/logrus"
 )
 
-type OperationContext struct {
+type OpCtx struct {
 	TableID     uint64
 	Block       *md.Block
 	TmpMetaFile string
 }
 
-type Operation struct {
-	Ctx      *OperationContext
+type Op struct {
+	Ctx      *OpCtx
 	MetaInfo *md.MetaInfo
-	Impl     iops.IOperationInternal
+	Impl     iops.IOpInternal
 	ErrorC   chan error
 	Worker   iworker.IOpWorker
 	Err      error

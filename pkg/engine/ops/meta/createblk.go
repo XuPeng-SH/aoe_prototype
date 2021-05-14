@@ -7,25 +7,25 @@ import (
 	// log "github.com/sirupsen/logrus"
 )
 
-func NewCreateBlockOperation(ctx *ops.OperationContext, info *md.MetaInfo,
-	w iworker.IOpWorker) *CreateBlockOperation {
-	op := &CreateBlockOperation{}
-	op.Operation = *ops.NewOperation(op, ctx, info, w)
+func NewCreateBlockOperation(ctx *ops.OpCtx, info *md.MetaInfo,
+	w iworker.IOpWorker) *CreateBlkOp {
+	op := &CreateBlkOp{}
+	op.Op = *ops.NewOp(op, ctx, info, w)
 	return op
 }
 
-type CreateBlockOperation struct {
-	ops.Operation
+type CreateBlkOp struct {
+	ops.Op
 }
 
-func (op *CreateBlockOperation) GetBlock() *md.Block {
+func (op *CreateBlkOp) GetBlock() *md.Block {
 	if op.Err != nil {
 		return nil
 	}
 	return op.Result.(*md.Block)
 }
 
-func (op *CreateBlockOperation) Execute() error {
+func (op *CreateBlkOp) Execute() error {
 	table, err := op.MetaInfo.ReferenceTable(op.Ctx.TableID)
 	if err != nil {
 		return err

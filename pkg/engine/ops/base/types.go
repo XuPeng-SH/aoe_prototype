@@ -2,13 +2,13 @@ package base
 
 import ()
 
-type IOperationInternal interface {
+type IOpInternal interface {
 	PreExecute() error
 	Execute() error
 	PostExecute() error
 }
 
-type IOperation interface {
+type IOp interface {
 	OnExecute() error
 	SetError(err error)
 }

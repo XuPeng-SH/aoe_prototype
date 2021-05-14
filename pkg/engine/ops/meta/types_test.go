@@ -22,15 +22,15 @@ func createInfo() *md.MetaInfo {
 }
 
 func TestBasicOps(t *testing.T) {
-	worker := w.NewOperationWorker()
+	worker := w.NewOpWorker()
 	worker.Start()
 
 	info := createInfo()
 
 	now := time.Now()
 
-	opCtx := ops.OperationContext{}
-	op := NewCreateTableOperation(&opCtx, info, worker)
+	opCtx := ops.OpCtx{}
+	op := NewCreateTblOp(&opCtx, info, worker)
 	op.Push()
 	err := op.WaitDone()
 	assert.Nil(t, err)
@@ -39,7 +39,7 @@ func TestBasicOps(t *testing.T) {
 	assert.NotNil(t, tbl)
 
 	t.Log(info.String())
-	opCtx = ops.OperationContext{TableID: tbl.ID}
+	opCtx = ops.OpCtx{TableID: tbl.ID}
 	blkop := NewCreateBlockOperation(&opCtx, info, worker)
 	blkop.Push()
 	err = blkop.WaitDone()
@@ -58,8 +58,8 @@ func TestBasicOps(t *testing.T) {
 	assert.Equal(t, blk2.DataState, md.EMPTY)
 	assert.Equal(t, blk2.Count, uint64(0))
 
-	opCtx = ops.OperationContext{Block: blk1}
-	updateop := NewUpdateOperation(&opCtx, info, worker)
+	opCtx = ops.OpCtx{Block: blk1}
+	updateop := NewUpdateOp(&opCtx, info, worker)
 	updateop.Push()
 	err = updateop.WaitDone()
 	assert.Nil(t, err)
@@ -70,7 +70,7 @@ func TestBasicOps(t *testing.T) {
 	assert.Equal(t, blk1.Count, blk3.Count)
 
 	for i := 0; i < 100; i++ {
-		opCtx = ops.OperationContext{TableID: blk1.TableID}
+		opCtx = ops.OpCtx{TableID: blk1.TableID}
 		blkop = NewCreateBlockOperation(&opCtx, info, worker)
 		blkop.Push()
 		err = blkop.WaitDone()

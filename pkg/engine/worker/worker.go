@@ -14,30 +14,30 @@ const (
 )
 
 var (
-	_ iw.IOpWorker = (*OperationWorker)(nil)
+	_ iw.IOpWorker = (*OpWorker)(nil)
 )
 
-type OperationWorker struct {
-	OperationC chan iops.IOperation
-	CmdC       chan Cmd
-	Done       bool
+type OpWorker struct {
+	OpC  chan iops.IOp
+	CmdC chan Cmd
+	Done bool
 }
 
-func NewOperationWorker() *OperationWorker {
-	worker := &OperationWorker{
-		OperationC: make(chan iops.IOperation),
-		CmdC:       make(chan Cmd),
+func NewOpWorker() *OpWorker {
+	worker := &OpWorker{
+		OpC:  make(chan iops.IOp),
+		CmdC: make(chan Cmd),
 	}
 	return worker
 }
 
-func (w *OperationWorker) Start() {
+func (w *OpWorker) Start() {
 	log.Infof("Start OpWorker")
 	go func() {
 		for !w.Done {
 			select {
-			case op := <-w.OperationC:
-				w.onOperation(op)
+			case op := <-w.OpC:
+				w.onOp(op)
 			case cmd := <-w.CmdC:
 				w.onCmd(cmd)
 			}
@@ -45,21 +45,21 @@ func (w *OperationWorker) Start() {
 	}()
 }
 
-func (w *OperationWorker) Stop() {
+func (w *OpWorker) Stop() {
 	w.CmdC <- QUIT
 }
 
-func (w *OperationWorker) SendOp(op iops.IOperation) {
-	w.OperationC <- op
+func (w *OpWorker) SendOp(op iops.IOp) {
+	w.OpC <- op
 }
 
-func (w *OperationWorker) onOperation(op iops.IOperation) {
-	// log.Info("OpWorker: onOperation")
+func (w *OpWorker) onOp(op iops.IOp) {
+	// log.Info("OpWorker: onOp")
 	err := op.OnExecute()
 	op.SetError(err)
 }
 
-func (w *OperationWorker) onCmd(cmd Cmd) {
+func (w *OpWorker) onCmd(cmd Cmd) {
 	switch cmd {
 	case QUIT:
 		log.Infof("Quit OpWorker")

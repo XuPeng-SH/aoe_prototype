@@ -8,9 +8,9 @@ import (
 	// log "github.com/sirupsen/logrus"
 )
 
-func NewOperation(impl iops.IOperationInternal, ctx *OperationContext,
-	info *md.MetaInfo, w iworker.IOpWorker) *Operation {
-	op := &Operation{
+func NewOp(impl iops.IOpInternal, ctx *OpCtx,
+	info *md.MetaInfo, w iworker.IOpWorker) *Op {
+	op := &Op{
 		Ctx:      ctx,
 		MetaInfo: info,
 		Impl:     impl,
@@ -20,36 +20,36 @@ func NewOperation(impl iops.IOperationInternal, ctx *OperationContext,
 	return op
 }
 
-func (op *Operation) Push() {
+func (op *Op) Push() {
 	op.Worker.SendOp(op)
 }
 
-func (op *Operation) SetError(err error) {
+func (op *Op) SetError(err error) {
 	op.Err = err
 	op.ErrorC <- err
 }
 
-func (op *Operation) WaitDone() error {
+func (op *Op) WaitDone() error {
 	err := <-op.ErrorC
 	return err
 }
 
-func (op *Operation) PreExecute() error {
+func (op *Op) PreExecute() error {
 	if op.Ctx == nil {
 		return errors.New("No context specified")
 	}
 	return nil
 }
 
-func (op *Operation) PostExecute() error {
+func (op *Op) PostExecute() error {
 	return nil
 }
 
-func (op *Operation) Execute() error {
+func (op *Op) Execute() error {
 	return nil
 }
 
-func (op *Operation) OnExecute() error {
+func (op *Op) OnExecute() error {
 	err := op.PreExecute()
 	if err != nil {
 		return err

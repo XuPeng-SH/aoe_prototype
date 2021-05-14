@@ -7,5 +7,5 @@ import (
 type IOpWorker interface {
 	Start()
 	Stop()
-	SendOp(ops.IOperation)
+	SendOp(ops.IOp)
 }

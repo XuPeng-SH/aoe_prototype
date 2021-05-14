@@ -38,8 +38,8 @@ func TestCollection(t *testing.T) {
 
 	opts.Meta.Updater.Start()
 
-	opCtx := ops.OperationContext{}
-	op := mops.NewCreateTableOperation(&opCtx, opts.Meta.Info, opts.Meta.Updater)
+	opCtx := ops.OpCtx{}
+	op := mops.NewCreateTblOp(&opCtx, opts.Meta.Info, opts.Meta.Updater)
 	op.Push()
 	err := op.WaitDone()
 	assert.Nil(t, err)

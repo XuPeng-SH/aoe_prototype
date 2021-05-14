@@ -25,10 +25,10 @@ func (o *Options) FillDefaults() *Options {
 		o = &Options{}
 	}
 	if o.Meta.Flusher == nil {
-		o.Meta.Flusher = w.NewOperationWorker()
+		o.Meta.Flusher = w.NewOpWorker()
 	}
 	if o.Meta.Updater == nil {
-		o.Meta.Updater = w.NewOperationWorker()
+		o.Meta.Updater = w.NewOpWorker()
 	}
 	if o.Meta.Conf == nil {
 		o.Meta.Conf = &md.Configuration{
@@ -41,11 +41,11 @@ func (o *Options) FillDefaults() *Options {
 	}
 
 	if o.Data.Flusher == nil {
-		o.Data.Flusher = w.NewOperationWorker()
+		o.Data.Flusher = w.NewOpWorker()
 	}
 
 	if o.Data.Sorter == nil {
-		o.Data.Sorter = w.NewOperationWorker()
+		o.Data.Sorter = w.NewOpWorker()
 	}
 	return o
 }

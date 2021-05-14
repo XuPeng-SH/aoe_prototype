@@ -7,23 +7,23 @@ import (
 	// log "github.com/sirupsen/logrus"
 )
 
-func NewCreateTableOperation(ctx *ops.OperationContext, info *md.MetaInfo,
-	w iworker.IOpWorker) *CreateTableOperation {
-	op := &CreateTableOperation{}
-	op.Operation = *ops.NewOperation(op, ctx, info, w)
+func NewCreateTblOp(ctx *ops.OpCtx, info *md.MetaInfo,
+	w iworker.IOpWorker) *CreateTblOp {
+	op := &CreateTblOp{}
+	op.Op = *ops.NewOp(op, ctx, info, w)
 	return op
 }
 
-type CreateTableOperation struct {
-	ops.Operation
+type CreateTblOp struct {
+	ops.Op
 }
 
-func (op *CreateTableOperation) GetTable() *md.Table {
+func (op *CreateTblOp) GetTable() *md.Table {
 	tbl := op.Result.(*md.Table)
 	return tbl
 }
 
-func (op *CreateTableOperation) Execute() error {
+func (op *CreateTblOp) Execute() error {
 	tbl, err := op.MetaInfo.CreateTable()
 	if err != nil {
 		return err

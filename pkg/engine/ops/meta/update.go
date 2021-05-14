@@ -9,18 +9,18 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-func NewUpdateOperation(ctx *ops.OperationContext, info *md.MetaInfo,
-	w iworker.IOpWorker) *UpdateOperation {
-	op := &UpdateOperation{}
-	op.Operation = *ops.NewOperation(op, ctx, info, w)
+func NewUpdateOp(ctx *ops.OpCtx, info *md.MetaInfo,
+	w iworker.IOpWorker) *UpdateOp {
+	op := &UpdateOp{}
+	op.Op = *ops.NewOp(op, ctx, info, w)
 	return op
 }
 
-type UpdateOperation struct {
-	ops.Operation
+type UpdateOp struct {
+	ops.Op
 }
 
-func (op *UpdateOperation) updateBlock(blk *md.Block) error {
+func (op *UpdateOp) updateBlock(blk *md.Block) error {
 	if blk.BoundSate != md.Detatched {
 		log.Errorf("")
 		return errors.New(fmt.Sprintf("Block %d BoundSate should be %d", blk.ID, md.Detatched))
@@ -51,7 +51,7 @@ func (op *UpdateOperation) updateBlock(blk *md.Block) error {
 	return nil
 }
 
-func (op *UpdateOperation) Execute() error {
+func (op *UpdateOp) Execute() error {
 	if op.Ctx.Block != nil {
 		return op.updateBlock(op.Ctx.Block)
 	}
