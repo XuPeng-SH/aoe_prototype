@@ -1,6 +1,8 @@
 package ops
 
 import (
+	iops "aoe/pkg/engine/ops/base"
+	iw "aoe/pkg/engine/worker/base"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 )
@@ -11,25 +13,19 @@ const (
 	QUIT Cmd = iota
 )
 
-type IOpWorker interface {
-	Start()
-	Stop()
-	SendOp(IOperation)
-}
-
 var (
-	_ IOpWorker = (*OperationWorker)(nil)
+	_ iw.IOpWorker = (*OperationWorker)(nil)
 )
 
 type OperationWorker struct {
-	OperationC chan IOperation
+	OperationC chan iops.IOperation
 	CmdC       chan Cmd
 	Done       bool
 }
 
 func NewOperationWorker() *OperationWorker {
 	worker := &OperationWorker{
-		OperationC: make(chan IOperation),
+		OperationC: make(chan iops.IOperation),
 		CmdC:       make(chan Cmd),
 	}
 	return worker
@@ -53,11 +49,11 @@ func (w *OperationWorker) Stop() {
 	w.CmdC <- QUIT
 }
 
-func (w *OperationWorker) SendOp(op IOperation) {
+func (w *OperationWorker) SendOp(op iops.IOperation) {
 	w.OperationC <- op
 }
 
-func (w *OperationWorker) onOperation(op IOperation) {
+func (w *OperationWorker) onOperation(op iops.IOperation) {
 	// log.Info("OpWorker: onOperation")
 	err := op.OnExecute()
 	op.SetError(err)

@@ -1,19 +1,21 @@
-package ops
+package meta
 
 import (
+	"aoe/pkg/engine/ops"
+	iworker "aoe/pkg/engine/worker/base"
 	md "aoe/pkg/metadata3"
 	// log "github.com/sirupsen/logrus"
 )
 
-func NewCreateTableOperation(ctx *OperationContext, info *md.MetaInfo,
-	w IOpWorker) *CreateTableOperation {
+func NewCreateTableOperation(ctx *ops.OperationContext, info *md.MetaInfo,
+	w iworker.IOpWorker) *CreateTableOperation {
 	op := &CreateTableOperation{}
-	op.Operation = *NewOperation(op, ctx, info, w)
+	op.Operation = *ops.NewOperation(op, ctx, info, w)
 	return op
 }
 
 type CreateTableOperation struct {
-	Operation
+	ops.Operation
 }
 
 func (op *CreateTableOperation) GetTable() *md.Table {
@@ -21,7 +23,7 @@ func (op *CreateTableOperation) GetTable() *md.Table {
 	return tbl
 }
 
-func (op *CreateTableOperation) execute() error {
+func (op *CreateTableOperation) Execute() error {
 	tbl, err := op.MetaInfo.CreateTable()
 	if err != nil {
 		return err

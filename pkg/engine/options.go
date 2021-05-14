@@ -1,21 +1,22 @@
 package engine
 
 import (
+	w "aoe/pkg/engine/worker"
+	iw "aoe/pkg/engine/worker/base"
 	md "aoe/pkg/metadata3"
-	"aoe/pkg/metadata3/ops"
 )
 
 type Options struct {
 	Meta struct {
-		Flusher ops.IOpWorker
-		Updater ops.IOpWorker
+		Flusher iw.IOpWorker
+		Updater iw.IOpWorker
 		Conf    *md.Configuration
 		Info    *md.MetaInfo
 	}
 
 	Data struct {
-		Flusher ops.IOpWorker
-		Sorter  ops.IOpWorker
+		Flusher iw.IOpWorker
+		Sorter  iw.IOpWorker
 	}
 }
 
@@ -24,10 +25,10 @@ func (o *Options) FillDefaults() *Options {
 		o = &Options{}
 	}
 	if o.Meta.Flusher == nil {
-		o.Meta.Flusher = ops.NewOperationWorker()
+		o.Meta.Flusher = w.NewOperationWorker()
 	}
 	if o.Meta.Updater == nil {
-		o.Meta.Updater = ops.NewOperationWorker()
+		o.Meta.Updater = w.NewOperationWorker()
 	}
 	if o.Meta.Conf == nil {
 		o.Meta.Conf = &md.Configuration{
@@ -40,11 +41,11 @@ func (o *Options) FillDefaults() *Options {
 	}
 
 	if o.Data.Flusher == nil {
-		o.Data.Flusher = ops.NewOperationWorker()
+		o.Data.Flusher = w.NewOperationWorker()
 	}
 
 	if o.Data.Sorter == nil {
-		o.Data.Sorter = ops.NewOperationWorker()
+		o.Data.Sorter = w.NewOperationWorker()
 	}
 	return o
 }

@@ -1,6 +1,8 @@
 package ops
 
 import (
+	iops "aoe/pkg/engine/ops/base"
+	iworker "aoe/pkg/engine/worker/base"
 	md "aoe/pkg/metadata3"
 	// log "github.com/sirupsen/logrus"
 )
@@ -11,23 +13,12 @@ type OperationContext struct {
 	TmpMetaFile string
 }
 
-type IOperationInternal interface {
-	preExecute() error
-	execute() error
-	postExecute() error
-}
-
-type IOperation interface {
-	OnExecute() error
-	SetError(err error)
-}
-
 type Operation struct {
 	Ctx      *OperationContext
 	MetaInfo *md.MetaInfo
-	Impl     IOperationInternal
+	Impl     iops.IOperationInternal
 	ErrorC   chan error
-	Worker   IOpWorker
+	Worker   iworker.IOpWorker
 	Err      error
 	Result   interface{}
 }

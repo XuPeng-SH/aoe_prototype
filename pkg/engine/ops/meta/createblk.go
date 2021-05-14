@@ -1,19 +1,22 @@
-package ops
+package meta
 
 import (
+	// iops "aoe/pkg/engine/ops/base"
+	"aoe/pkg/engine/ops"
+	iworker "aoe/pkg/engine/worker/base"
 	md "aoe/pkg/metadata3"
 	// log "github.com/sirupsen/logrus"
 )
 
-func NewCreateBlockOperation(ctx *OperationContext, info *md.MetaInfo,
-	w IOpWorker) *CreateBlockOperation {
+func NewCreateBlockOperation(ctx *ops.OperationContext, info *md.MetaInfo,
+	w iworker.IOpWorker) *CreateBlockOperation {
 	op := &CreateBlockOperation{}
-	op.Operation = *NewOperation(op, ctx, info, w)
+	op.Operation = *ops.NewOperation(op, ctx, info, w)
 	return op
 }
 
 type CreateBlockOperation struct {
-	Operation
+	ops.Operation
 }
 
 func (op *CreateBlockOperation) GetBlock() *md.Block {
@@ -23,7 +26,7 @@ func (op *CreateBlockOperation) GetBlock() *md.Block {
 	return op.Result.(*md.Block)
 }
 
-func (op *CreateBlockOperation) execute() error {
+func (op *CreateBlockOperation) Execute() error {
 	table, err := op.MetaInfo.ReferenceTable(op.Ctx.TableID)
 	if err != nil {
 		return err

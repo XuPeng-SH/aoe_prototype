@@ -1,21 +1,23 @@
-package ops
+package meta
 
 import (
+	"aoe/pkg/engine/ops"
+	iworker "aoe/pkg/engine/worker/base"
 	md "aoe/pkg/metadata3"
 	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 )
 
-func NewUpdateOperation(ctx *OperationContext, info *md.MetaInfo,
-	w IOpWorker) *UpdateOperation {
+func NewUpdateOperation(ctx *ops.OperationContext, info *md.MetaInfo,
+	w iworker.IOpWorker) *UpdateOperation {
 	op := &UpdateOperation{}
-	op.Operation = *NewOperation(op, ctx, info, w)
+	op.Operation = *ops.NewOperation(op, ctx, info, w)
 	return op
 }
 
 type UpdateOperation struct {
-	Operation
+	ops.Operation
 }
 
 func (op *UpdateOperation) updateBlock(blk *md.Block) error {
@@ -49,7 +51,7 @@ func (op *UpdateOperation) updateBlock(blk *md.Block) error {
 	return nil
 }
 
-func (op *UpdateOperation) execute() error {
+func (op *UpdateOperation) Execute() error {
 	if op.Ctx.Block != nil {
 		return op.updateBlock(op.Ctx.Block)
 	}
