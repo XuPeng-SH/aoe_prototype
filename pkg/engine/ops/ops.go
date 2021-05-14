@@ -40,7 +40,7 @@ func (op *Op) Execute() error {
 	return nil
 }
 
-func (op *Op) OnExecute() error {
+func (op *Op) OnExec() error {
 	err := op.PreExecute()
 	if err != nil {
 		return err

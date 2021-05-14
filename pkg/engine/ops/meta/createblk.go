@@ -6,7 +6,7 @@ import (
 	// log "github.com/sirupsen/logrus"
 )
 
-func NewCreateBlockOperation(ctx *OpCtx, info *md.MetaInfo,
+func NewCreateBlkOp(ctx *OpCtx, info *md.MetaInfo,
 	w iworker.IOpWorker) *CreateBlkOp {
 	op := &CreateBlkOp{}
 	op.Op = *NewOp(op, ctx, info, w)

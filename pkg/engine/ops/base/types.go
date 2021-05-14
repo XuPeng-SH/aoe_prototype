@@ -9,6 +9,6 @@ type IOpInternal interface {
 }
 
 type IOp interface {
-	OnExecute() error
+	OnExec() error
 	SetError(err error)
 }
