@@ -68,7 +68,7 @@ func (mt *MemTable) Flush() error {
 		return err
 	}
 	ctx := ops.OperationContext{Block: mt.Meta}
-	op := ops.NewUpdateOperation(&ctx, &md.Meta, mt.Opts.Meta.Worker)
+	op := ops.NewUpdateOperation(&ctx, &md.Meta, mt.Opts.Meta.Updater)
 	op.Push()
 	err = op.WaitDone()
 	if err != nil {

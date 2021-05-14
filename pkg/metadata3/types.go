@@ -1,6 +1,8 @@
 package md3
 
-import "sync"
+import (
+	"sync"
+)
 
 type LogIndex struct {
 	ID       uint64
@@ -80,5 +82,4 @@ type MetaInfo struct {
 	Sequence   Sequence
 	CheckPoint uint64
 	Tables     map[uint64]*Table
-	Conf       MetaConf
 }

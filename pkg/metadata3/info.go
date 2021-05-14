@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
-	"path"
+	// "os"
+	// "path"
 
 	"github.com/vmihailenco/msgpack/v5"
 	// log "github.com/sirupsen/logrus"
@@ -19,8 +19,10 @@ var (
 	Meta = *NewMetaInfo()
 )
 
-type MetaConf struct {
-	Dir string
+type Configuration struct {
+	Dir              string
+	BlockMaxRows     uint64
+	SegmentMaxBlocks uint64
 }
 
 func NewMetaInfo() *MetaInfo {
@@ -30,17 +32,17 @@ func NewMetaInfo() *MetaInfo {
 	return info
 }
 
-func InitMeta(conf *MetaConf) error {
-	r, err := os.OpenFile(path.Join(conf.Dir, META_FILE_NAME), os.O_RDONLY, 0666)
-	defer r.Close()
-	if err != nil {
-		return err
-	}
-	info, err := Deserialize(r)
-	info.Conf = *conf
-	Meta = *info
-	return err
-}
+// func InitMeta(conf *Configuration) error {
+// 	r, err := os.OpenFile(path.Join(conf.Dir, META_FILE_NAME), os.O_RDONLY, 0666)
+// 	defer r.Close()
+// 	if err != nil {
+// 		return err
+// 	}
+// 	info, err := Deserialize(r)
+// 	info.Conf = *conf
+// 	Meta = *info
+// 	return err
+// }
 
 func (info *MetaInfo) ReferenceTable(table_id uint64) (tbl *Table, err error) {
 	info.RLock()

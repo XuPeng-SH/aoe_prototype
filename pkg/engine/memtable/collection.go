@@ -36,7 +36,7 @@ func NewCollection(opts *engine.Options, id uint64) ICollection {
 
 func (c *Collection) onNoBlock() (blk *md.Block, err error) {
 	ctx := ops.OperationContext{TableID: c.ID}
-	op := ops.NewCreateBlockOperation(&ctx, &md.Meta, c.Opts.Meta.Worker)
+	op := ops.NewCreateBlockOperation(&ctx, &md.Meta, c.Opts.Meta.Updater)
 	op.Push()
 	err = op.WaitDone()
 	if err != nil {

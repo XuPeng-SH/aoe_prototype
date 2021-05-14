@@ -35,10 +35,10 @@ func TestCollection(t *testing.T) {
 	opts := new(engine.Options)
 	opts.FillDefaults()
 
-	opts.Meta.Worker.Start()
+	opts.Meta.Updater.Start()
 
 	opCtx := ops.OperationContext{}
-	op := ops.NewCreateTableOperation(&opCtx, &md.Meta, opts.Meta.Worker)
+	op := ops.NewCreateTableOperation(&opCtx, &md.Meta, opts.Meta.Updater)
 	op.Push()
 	err := op.WaitDone()
 	assert.Nil(t, err)
@@ -58,5 +58,5 @@ func TestCollection(t *testing.T) {
 	// assert.Equal(t, len(tbl.Segments()), expect_blks/md.Meta.MaxRowCount)
 	t.Log(tbl.String())
 
-	opts.Meta.Worker.Stop()
+	opts.Meta.Updater.Stop()
 }
