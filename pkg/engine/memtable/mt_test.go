@@ -59,6 +59,7 @@ func TestCollection(t *testing.T) {
 	batch_size := uint64(4)
 	step := expect_blks / batch_size
 	var waitgroup sync.WaitGroup
+	seq := uint64(0)
 	for expect_blks > 0 {
 		thisStep := step
 		if expect_blks < step {
@@ -68,17 +69,19 @@ func TestCollection(t *testing.T) {
 			expect_blks -= step
 		}
 		waitgroup.Add(1)
-		go func(wg *sync.WaitGroup) {
+		logid := seq
+		seq++
+		go func(id uint64, wg *sync.WaitGroup) {
 			defer wg.Done()
 			insert := todo.NewChunk(thisStep*opts.Meta.Conf.BlockMaxRows, nil)
 			insert.Count = insert.Capacity
 			index := &md.LogIndex{
-				ID:       uint64(0),
+				ID:       id,
 				Capacity: insert.GetCount(),
 			}
 			err = c0.Append(insert, index)
 			assert.Nil(t, err)
-		}(&waitgroup)
+		}(logid, &waitgroup)
 	}
 	waitgroup.Wait()
 	assert.Equal(t, len(tbl.SegmentIDs()), int(blks/opts.Meta.Info.Conf.SegmentMaxBlocks))

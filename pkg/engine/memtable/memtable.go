@@ -7,7 +7,7 @@ import (
 	mops "aoe/pkg/engine/ops/meta"
 	util "aoe/pkg/metadata"
 	todo "aoe/pkg/mock"
-	// log "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"sync"
 )
 
@@ -45,6 +45,7 @@ func (mt *MemTable) Append(c *todo.Chunk, offset uint64, index *md.LogIndex) (n 
 		return n, err
 	}
 	index.Count = n
+	log.Info(index.String())
 	mt.Meta.SetIndex(*index)
 	mt.Meta.Count += n
 	if mt.Data.GetCount() == mt.Meta.MaxRowCount {

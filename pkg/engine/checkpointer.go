@@ -33,6 +33,7 @@ func (ck *Checkpointer) PreCommit(info *md.MetaInfo) error {
 	if err != nil {
 		return err
 	}
+	// log.Infof(info.String())
 	err = info.Serialize(w)
 	if err != nil {
 		return err

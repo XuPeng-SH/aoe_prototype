@@ -68,15 +68,7 @@ func (c *Collection) Append(ck *todo.Chunk, index *md.LogIndex) (err error) {
 		mut = c.mem.MemTables[size-1]
 	}
 	offset := uint64(0)
-	for !index.IsApplied() {
-		n, err := mut.Append(ck, offset, index)
-		if err != nil {
-			return err
-		}
-		offset += n
-		if offset == ck.GetCount() {
-			break
-		}
+	for {
 		if mut.IsFull() {
 			mut, err = c.onNoMutableTable()
 			if err != nil {
@@ -89,6 +81,17 @@ func (c *Collection) Append(ck *todo.Chunk, index *md.LogIndex) (err error) {
 				op.Push()
 				op.WaitDone()
 			}()
+		}
+		n, err := mut.Append(ck, offset, index)
+		if err != nil {
+			return err
+		}
+		offset += n
+		if offset == ck.GetCount() {
+			break
+		}
+		if index.IsApplied() {
+			break
 		}
 		index.Start += n
 		index.Count = uint64(0)
