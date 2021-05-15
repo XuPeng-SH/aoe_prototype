@@ -83,7 +83,7 @@ func TestCollection(t *testing.T) {
 	waitgroup.Wait()
 	assert.Equal(t, len(tbl.SegmentIDs()), int(blks/opts.Meta.Info.Conf.SegmentMaxBlocks))
 	// t.Log(opts.Meta.Info.String())
-	time.Sleep(time.Duration(1) * time.Millisecond)
+	time.Sleep(time.Duration(1000) * time.Millisecond)
 
 	opts.Meta.Updater.Stop()
 	opts.Meta.Flusher.Stop()

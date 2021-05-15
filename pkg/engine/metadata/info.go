@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sync/atomic"
 	// "os"
 	// "path"
 	// dump "github.com/vmihailenco/msgpack/v5"
@@ -94,6 +95,13 @@ func (info *MetaInfo) CreateTable() (tbl *Table, err error) {
 	return tbl, err
 }
 
+func (info *MetaInfo) UpdateCheckpoint(id uint64) error {
+	if !atomic.CompareAndSwapUint64(&info.CheckPoint, id-1, id) {
+		return errors.New(fmt.Sprintf("Cannot update checkpoint to %d", id))
+	}
+	return nil
+}
+
 func (info *MetaInfo) String() string {
 	s := fmt.Sprintf("Info(ck=%d)", info.CheckPoint)
 	s += "["
@@ -135,6 +143,7 @@ func (info *MetaInfo) Copy(ts ...int64) *MetaInfo {
 		t = ts[0]
 	}
 	new_info := NewMetaInfo(info.Conf)
+	new_info.CheckPoint = info.CheckPoint
 	for k, v := range info.Tables {
 		if !v.Select(t) {
 			continue

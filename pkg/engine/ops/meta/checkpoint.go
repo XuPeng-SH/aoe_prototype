@@ -6,7 +6,7 @@ import (
 	iworker "aoe/pkg/engine/worker/base"
 	"errors"
 	"fmt"
-	// log "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 func NewCheckpointOp(ckpointer *engine.Checkpointer, ctx *OpCtx, info *md.MetaInfo,
@@ -25,16 +25,24 @@ func (op *CheckpointOp) Execute() (err error) {
 	ts := md.NowMicro()
 	meta := op.MetaInfo.Copy(ts)
 	if meta == nil {
-		err = errors.New(fmt.Sprintf("CheckPoint error"))
+		errMsg := fmt.Sprintf("CheckPoint error")
+		log.Error(errMsg)
+		err = errors.New(errMsg)
 		return err
 	}
 	meta.CheckPoint += 1
-	err = op.Checkpointer.Commit(meta)
-	return err
-	// tmpfile, err :=  op.CheckpointWriter(meta)
-	// if err := nil {
-	// 	return err
-	// }
-	// err = CommitCheckpoint(tmpfile)
+	err = op.Checkpointer.PreCommit(meta)
+	if err != nil {
+		return err
+	}
+	err = op.Checkpointer.Commit()
+	if err != nil {
+		return err
+	}
+	err = op.MetaInfo.UpdateCheckpoint(meta.CheckPoint)
+	if err != nil {
+		panic(err)
+	}
+
 	return err
 }
