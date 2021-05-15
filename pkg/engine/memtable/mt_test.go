@@ -2,11 +2,12 @@ package memtable
 
 import (
 	"aoe/pkg/engine"
-	e "aoe/pkg/engine/event"
+	// e "aoe/pkg/engine/event"
 	md "aoe/pkg/engine/metadata"
 	mops "aoe/pkg/engine/ops/meta"
 	todo "aoe/pkg/mock"
 	"github.com/stretchr/testify/assert"
+	"sync"
 	"testing"
 	"time"
 )
@@ -35,7 +36,7 @@ func TestManager(t *testing.T) {
 
 func TestCollection(t *testing.T) {
 	opts := new(engine.Options)
-	opts.EventListener = e.NewLoggingEventListener()
+	// opts.EventListener = e.NewLoggingEventListener()
 	opts.FillDefaults()
 
 	opts.Meta.Updater.Start()
@@ -52,18 +53,36 @@ func TestCollection(t *testing.T) {
 
 	manager := NewManager(opts)
 	c0, _ := manager.RegisterCollection(tbl.ID)
-	expect_blks := uint64(20)
-	insert := todo.NewChunk(expect_blks*opts.Meta.Conf.BlockMaxRows, nil)
-	insert.Count = insert.Capacity
-	index := &md.LogIndex{
-		ID:       uint64(0),
-		Capacity: insert.GetCount(),
+	blks := uint64(20)
+	expect_blks := blks
+	batch_size := uint64(4)
+	step := expect_blks / batch_size
+	var waitgroup sync.WaitGroup
+	for expect_blks > 0 {
+		thisStep := step
+		if expect_blks < step {
+			thisStep = expect_blks
+			expect_blks = 0
+		} else {
+			expect_blks -= step
+		}
+		waitgroup.Add(1)
+		go func(wg *sync.WaitGroup) {
+			defer wg.Done()
+			insert := todo.NewChunk(thisStep*opts.Meta.Conf.BlockMaxRows, nil)
+			insert.Count = insert.Capacity
+			index := &md.LogIndex{
+				ID:       uint64(0),
+				Capacity: insert.GetCount(),
+			}
+			err = c0.Append(insert, index)
+			assert.Nil(t, err)
+		}(&waitgroup)
 	}
-	err = c0.Append(insert, index)
-	assert.Nil(t, err)
-	// assert.Equal(t, len(tbl.Segments()), expect_blks/md.Meta.MaxRowCount)
+	waitgroup.Wait()
+	assert.Equal(t, len(tbl.SegmentIDs()), int(blks/opts.Meta.Info.Conf.SegmentMaxBlocks))
+	// t.Log(opts.Meta.Info.String())
 	time.Sleep(time.Duration(1) * time.Millisecond)
-	t.Log(tbl.String())
 
 	opts.Meta.Updater.Stop()
 	opts.Meta.Flusher.Stop()
