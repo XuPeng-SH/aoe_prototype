@@ -16,10 +16,11 @@ type Options struct {
 	}
 
 	Meta struct {
-		Flusher iw.IOpWorker
-		Updater iw.IOpWorker
-		Conf    *md.Configuration
-		Info    *md.MetaInfo
+		Flusher      iw.IOpWorker
+		Updater      iw.IOpWorker
+		Checkpointer *Checkpointer
+		Conf         *md.Configuration
+		Info         *md.MetaInfo
 	}
 
 	Data struct {
@@ -29,7 +30,7 @@ type Options struct {
 	}
 }
 
-func (o *Options) FillDefaults() *Options {
+func (o *Options) FillDefaults(dirname string) *Options {
 	if o == nil {
 		o = &Options{}
 	}
@@ -53,6 +54,10 @@ func (o *Options) FillDefaults() *Options {
 	}
 	if o.Meta.Info == nil {
 		o.Meta.Info = md.NewMetaInfo(o.Meta.Conf)
+	}
+
+	if o.Meta.Checkpointer == nil {
+		o.Meta.Checkpointer = NewCheckpointer(o, dirname)
 	}
 
 	if o.Data.Writer == nil {

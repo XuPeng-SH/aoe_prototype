@@ -18,7 +18,7 @@ type EventListener struct {
 func (l *EventListener) FillDefaults() {
 	if l.BackgroundErrorCB == nil {
 		l.BackgroundErrorCB = func(err error) {
-			log.Errorf("BackgroundError %s", err)
+			log.Errorf("BackgroundError %v", err)
 		}
 	}
 

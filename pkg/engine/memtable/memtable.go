@@ -76,6 +76,16 @@ func (mt *MemTable) Flush() error {
 		mt.Opts.EventListener.BackgroundErrorCB(err)
 		return err
 	}
+	go func() {
+		ctx := mops.OpCtx{}
+		op := mops.NewCheckpointOp(mt.Opts.Meta.Checkpointer, &ctx,
+			mt.Opts.Meta.Info, mt.Opts.Meta.Flusher)
+		op.Push()
+		err := op.WaitDone()
+		if err != nil {
+			mt.Opts.EventListener.BackgroundErrorCB(err)
+		}
+	}()
 	mt.Opts.EventListener.FlushBlockEndCB(mt)
 	return nil
 }

@@ -37,7 +37,8 @@ func TestManager(t *testing.T) {
 func TestCollection(t *testing.T) {
 	opts := new(engine.Options)
 	// opts.EventListener = e.NewLoggingEventListener()
-	opts.FillDefaults()
+	dirname := "/tmp"
+	opts.FillDefaults(dirname)
 
 	opts.Meta.Updater.Start()
 	opts.Meta.Flusher.Start()

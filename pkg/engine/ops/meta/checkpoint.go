@@ -1,6 +1,7 @@
 package meta
 
 import (
+	"aoe/pkg/engine"
 	md "aoe/pkg/engine/metadata"
 	iworker "aoe/pkg/engine/worker/base"
 	"errors"
@@ -8,16 +9,16 @@ import (
 	// log "github.com/sirupsen/logrus"
 )
 
-func NewCheckpointOp(ctx *OpCtx, info *md.MetaInfo,
+func NewCheckpointOp(ckpointer *engine.Checkpointer, ctx *OpCtx, info *md.MetaInfo,
 	w iworker.IOpWorker) *CheckpointOp {
-	op := &CheckpointOp{}
+	op := &CheckpointOp{Checkpointer: ckpointer}
 	op.Op = *NewOp(op, ctx, info, w)
 	return op
 }
 
 type CheckpointOp struct {
 	Op
-	// Checkpointer *Checkpointer
+	Checkpointer *engine.Checkpointer
 }
 
 func (op *CheckpointOp) Execute() (err error) {
@@ -28,7 +29,7 @@ func (op *CheckpointOp) Execute() (err error) {
 		return err
 	}
 	meta.CheckPoint += 1
-	// err = op.Checkpointer.Commit(meta)
+	err = op.Checkpointer.Commit(meta)
 	return err
 	// tmpfile, err :=  op.CheckpointWriter(meta)
 	// if err := nil {
