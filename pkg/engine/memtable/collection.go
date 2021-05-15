@@ -68,7 +68,7 @@ func (c *Collection) Append(ck *todo.Chunk, index *md.LogIndex) (err error) {
 		mut = c.mem.MemTables[size-1]
 	}
 	offset := uint64(0)
-	for {
+	for !index.IsApplied() {
 		n, err := mut.Append(ck, offset, index)
 		if err != nil {
 			return err
@@ -90,6 +90,8 @@ func (c *Collection) Append(ck *todo.Chunk, index *md.LogIndex) (err error) {
 				op.WaitDone()
 			}()
 		}
+		index.Start += n
+		index.Count = uint64(0)
 	}
 	c.mem.Unlock()
 	return nil
