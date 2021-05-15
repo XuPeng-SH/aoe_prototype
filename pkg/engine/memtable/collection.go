@@ -7,7 +7,7 @@ import (
 	dops "aoe/pkg/engine/ops/data"
 	mops "aoe/pkg/engine/ops/meta"
 	todo "aoe/pkg/mock"
-	log "github.com/sirupsen/logrus"
+	// log "github.com/sirupsen/logrus"
 	"sync"
 )
 
@@ -80,7 +80,7 @@ func (c *Collection) Append(ck *todo.Chunk, index *md.LogIndex) (err error) {
 		if mut.IsFull() {
 			mut, err = c.onNoMutableTable()
 			if err != nil {
-				log.Error(err)
+				c.Opts.EventListener.BackgroundErrorCB(err)
 				return err
 			}
 			go func() {

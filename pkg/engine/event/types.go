@@ -39,6 +39,6 @@ func (l *EventListener) FillDefaults() {
 	}
 
 	if l.CheckpointEndCB == nil {
-		l.CheckpointStartCB = func(info *md.MetaInfo) {}
+		l.CheckpointEndCB = func(info *md.MetaInfo) {}
 	}
 }

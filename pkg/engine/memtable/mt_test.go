@@ -2,6 +2,7 @@ package memtable
 
 import (
 	"aoe/pkg/engine"
+	e "aoe/pkg/engine/event"
 	md "aoe/pkg/engine/metadata"
 	mops "aoe/pkg/engine/ops/meta"
 	todo "aoe/pkg/mock"
@@ -34,6 +35,7 @@ func TestManager(t *testing.T) {
 
 func TestCollection(t *testing.T) {
 	opts := new(engine.Options)
+	opts.EventListener = e.NewLoggingEventListener()
 	opts.FillDefaults()
 
 	opts.Meta.Updater.Start()

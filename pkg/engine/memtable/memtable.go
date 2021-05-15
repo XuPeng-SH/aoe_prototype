@@ -7,7 +7,7 @@ import (
 	mops "aoe/pkg/engine/ops/meta"
 	util "aoe/pkg/metadata"
 	todo "aoe/pkg/mock"
-	log "github.com/sirupsen/logrus"
+	// log "github.com/sirupsen/logrus"
 	"sync"
 )
 
@@ -62,10 +62,10 @@ func (mt *MemTable) Append(c *todo.Chunk, offset uint64, index *md.LogIndex) (n 
 // If crashed before Step 2, the untracked block file will be cleanup at startup.
 // If crashed before Step 3, same as above.
 func (mt *MemTable) Flush() error {
-	log.Infof("Start flushing memtable %d", mt.Meta.ID)
+	mt.Opts.EventListener.FlushBlockBeginCB(mt)
 	err := mt.W.Write(mt)
 	if err != nil {
-		log.Errorf("flushing memtable %d error: %s", mt.Meta.ID, err)
+		mt.Opts.EventListener.BackgroundErrorCB(err)
 		return err
 	}
 	ctx := mops.OpCtx{Block: mt.Meta}
@@ -73,12 +73,10 @@ func (mt *MemTable) Flush() error {
 	op.Push()
 	err = op.WaitDone()
 	if err != nil {
-		log.Errorf("flushing memtable %d error: %s", mt.Meta.ID, err)
+		mt.Opts.EventListener.BackgroundErrorCB(err)
 		return err
 	}
-	// TODO
-	// mt.Listener.Send(DO_CHECKPOINT)
-	log.Infof("Finish flushing memtable %d", mt.Meta.ID)
+	mt.Opts.EventListener.FlushBlockEndCB(mt)
 	return nil
 }
 

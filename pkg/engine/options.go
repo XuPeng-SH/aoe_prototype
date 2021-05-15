@@ -1,6 +1,7 @@
 package engine
 
 import (
+	e "aoe/pkg/engine/event"
 	md "aoe/pkg/engine/metadata"
 	w "aoe/pkg/engine/worker"
 	iw "aoe/pkg/engine/worker/base"
@@ -8,6 +9,8 @@ import (
 )
 
 type Options struct {
+	EventListener e.EventListener
+
 	Mon struct {
 		Collector iw.IOpWorker
 	}
@@ -30,6 +33,7 @@ func (o *Options) FillDefaults() *Options {
 	if o == nil {
 		o = &Options{}
 	}
+	o.EventListener.FillDefaults()
 
 	if o.Mon.Collector == nil {
 		o.Mon.Collector = w.NewOpWorker()
