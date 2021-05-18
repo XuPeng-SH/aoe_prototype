@@ -27,3 +27,10 @@ func (b *Buffer) Close() error {
 func (buf *Buffer) Clear() {
 	util.MemsetRepeatByte(buf.Node.Data, byte(0))
 }
+
+func (buf *Buffer) GetCapacity() uint64 {
+	if buf.Node == nil || buf.Node.Data == nil {
+		return 0
+	}
+	return buf.DataSize + buf.HeaderSize
+}

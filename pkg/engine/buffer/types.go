@@ -21,8 +21,8 @@ type Node struct {
 
 type IBuffer interface {
 	io.Closer
-	// Clear()
-	// GetCapacity() uint64
+	Clear()
+	GetCapacity() uint64
 }
 
 type Buffer struct {

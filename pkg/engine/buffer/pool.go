@@ -10,7 +10,7 @@ type SimpleMemoryPool struct {
 	Usage    uint64
 }
 
-func NewSimpleMemortPool(capacity uint64) IMemoryPool {
+func NewSimpleMemoryPool(capacity uint64) IMemoryPool {
 	pool := &SimpleMemoryPool{
 		Capacity: capacity,
 	}
