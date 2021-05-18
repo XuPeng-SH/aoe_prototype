@@ -58,6 +58,7 @@ func (c *Collection) onNoMutableTable() (tbl imem.IMemTable, err error) {
 func (c *Collection) Append(ck *todo.Chunk, index *md.LogIndex) (err error) {
 	var mut imem.IMemTable
 	c.mem.Lock()
+	defer c.mem.Unlock()
 	size := len(c.mem.MemTables)
 	if size == 0 {
 		mut, err = c.onNoMutableTable()
@@ -96,7 +97,6 @@ func (c *Collection) Append(ck *todo.Chunk, index *md.LogIndex) (err error) {
 		index.Start += n
 		index.Count = uint64(0)
 	}
-	c.mem.Unlock()
 	return nil
 }
 
