@@ -10,7 +10,7 @@ import (
 )
 
 func NewNodeHandle(ctx *NodeHandleCtx) nif.INodeHandle {
-	size := uint64(0)
+	size := ctx.Size
 	state := nif.NODE_UNLOAD
 	if ctx.Buff != nil {
 		size = uint64(ctx.Buff.GetCapacity())

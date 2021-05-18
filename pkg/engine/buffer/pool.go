@@ -50,7 +50,7 @@ func (pool *SimpleMemoryPool) MakeNode(size uint64) (node *Node) {
 		}
 	}
 	buf := make([]byte, size)
-	return &Node{Data: buf, Pool: pool, Size: size}
+	return &Node{Data: buf, Pool: pool}
 }
 
 func (pool *SimpleMemoryPool) FreeNode(node *Node) {
@@ -63,4 +63,8 @@ func (pool *SimpleMemoryPool) FreeNode(node *Node) {
 		panic("")
 	}
 	node.Data = nil
+}
+
+func (n *Node) Size() uint64 {
+	return uint64(len(n.Data))
 }

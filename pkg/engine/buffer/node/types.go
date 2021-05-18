@@ -11,6 +11,7 @@ import (
 type NodeBuffer struct {
 	buf.IBuffer
 	ID layout.BlockId
+	// Type nif.BufferType
 }
 
 type NodeHandleCtx struct {
@@ -18,6 +19,7 @@ type NodeHandleCtx struct {
 	Buff        buf.IBuffer
 	Destroyable bool
 	Manager     mgrif.IBufferManager
+	Size        uint64
 }
 
 type NodeHandle struct {

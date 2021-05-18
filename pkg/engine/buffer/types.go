@@ -14,7 +14,6 @@ type IMemoryPool interface {
 
 type Node struct {
 	Data     []byte
-	Size     uint64
 	Capacity uint64
 	Pool     IMemoryPool
 }

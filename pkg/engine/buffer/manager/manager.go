@@ -15,7 +15,6 @@ var (
 )
 
 func NewBufferManager(capacity uint64, evict_q_size ...uint64) mgrif.IBufferManager {
-
 	mgr := &BufferManager{
 		IMemoryPool: buf.NewSimpleMemoryPool(capacity),
 		Nodes:       make(map[layout.BlockId]nif.INodeHandle),
@@ -25,8 +24,42 @@ func NewBufferManager(capacity uint64, evict_q_size ...uint64) mgrif.IBufferMana
 	return mgr
 }
 
-func (mgr *BufferManager) GetPool() buf.IMemoryPool {
-	return mgr.IMemoryPool
+func (mgr *BufferManager) RegisterMemory(capacity uint64, node_id layout.BlockId, spillable bool) nif.INodeHandle {
+	{
+		mgr.RLock()
+		defer mgr.RUnlock()
+
+		handle, ok := mgr.Nodes[node_id]
+		if ok {
+			if !handle.IsClosed() {
+				return handle
+			}
+		}
+	}
+
+	pNode := mgr.makePoolNode(capacity)
+	if pNode == nil {
+		return nil
+	}
+	ctx := node.NodeHandleCtx{
+		ID:      node_id,
+		Manager: mgr,
+		Buff:    node.NewNodeBuffer(node_id, pNode),
+	}
+	handle := node.NewNodeHandle(&ctx)
+
+	mgr.Lock()
+	defer mgr.Unlock()
+	handle, ok := mgr.Nodes[node_id]
+	if ok {
+		if !handle.IsClosed() {
+			go func() { mgr.FreeNode(pNode) }()
+			return handle
+		}
+	}
+
+	mgr.Nodes[node_id] = handle
+	return nil
 }
 
 func (mgr *BufferManager) RegisterNode(node_id layout.BlockId) nif.INodeHandle {
@@ -42,30 +75,23 @@ func (mgr *BufferManager) RegisterNode(node_id layout.BlockId) nif.INodeHandle {
 	ctx := node.NodeHandleCtx{
 		ID:      node_id,
 		Manager: mgr,
+		Size:    nif.NODE_ALLOC_SIZE,
 	}
 	handle = node.NewNodeHandle(&ctx)
 	mgr.Nodes[node_id] = handle
 	return handle
 }
 
-// func (mgr *BufferManager) GetUsage() uint64 {
-// 	return mgr.IMemoryPool.GetUsage()
+// // Temp only can SetCapacity with larger size
+// func (mgr *BufferManager) SetCapacity(capacity uint64) error {
+// 	mgr.Lock()
+// 	defer mgr.Unlock()
+// 	// if !mgr.makeSpace(0, capacity) {
+// 	// 	panic(fmt.Sprintf("Cannot makeSpace(%d,%d)", 0, capacity))
+// 	// }
+// 	// types.AtomicStore(&(mgr.Capacity), capacity)
+// 	return mgr.IMemoryPool.SetCapacity(capacity)
 // }
-
-// func (mgr *BufferManager) GetCapacity() uint64 {
-// 	return mgr.Pool.GetCapacity()
-// }
-
-// Temp only can SetCapacity with larger size
-func (mgr *BufferManager) SetCapacity(capacity uint64) error {
-	mgr.Lock()
-	defer mgr.Unlock()
-	// if !mgr.makeSpace(0, capacity) {
-	// 	panic(fmt.Sprintf("Cannot makeSpace(%d,%d)", 0, capacity))
-	// }
-	// types.AtomicStore(&(mgr.Capacity), capacity)
-	return mgr.SetCapacity(capacity)
-}
 
 func (mgr *BufferManager) UnregisterNode(node_id layout.BlockId, can_destroy bool) {
 	// if node_id.IsTransientBlock() {

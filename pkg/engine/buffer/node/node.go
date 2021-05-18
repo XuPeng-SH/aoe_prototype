@@ -28,3 +28,7 @@ func NewNodeBuffer(id layout.BlockId, node *buf.Node) iface.INodeBuffer {
 func (nb *NodeBuffer) GetID() layout.BlockId {
 	return nb.ID
 }
+
+// func (nb *NodeBuffer) GetType() iface.BufferType {
+// 	return nb.Type
+// }

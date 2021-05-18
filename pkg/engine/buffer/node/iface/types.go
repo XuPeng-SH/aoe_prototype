@@ -8,6 +8,12 @@ import (
 	"sync/atomic"
 )
 
+var (
+	NODE_HEAD_SIZE  uint64 = 32
+	NODE_ALLOC_SIZE uint64 = 256 * 1024
+	NODE_DATA_SIZE         = NODE_ALLOC_SIZE - NODE_HEAD_SIZE
+)
+
 type NodeState = uint32
 
 const (
@@ -50,9 +56,17 @@ func AtomicCASRTState(addr *NodeRTState, old, new NodeRTState) bool {
 	return atomic.CompareAndSwapUint32(addr, old, new)
 }
 
+type BufferType uint8
+
+const (
+	STATIC_SIZED BufferType = iota
+	DYNAMIC_SIZED
+)
+
 type INodeBuffer interface {
 	buf.IBuffer
 	GetID() layout.BlockId
+	// GetType() BufferType
 }
 
 type INodeHandle interface {

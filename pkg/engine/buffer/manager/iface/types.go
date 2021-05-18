@@ -9,10 +9,9 @@ import (
 
 type IBufferManager interface {
 	sync.Locker
-
-	GetUsage() uint64
-	GetCapacity() uint64
-	SetCapacity(c uint64) error
+	RLock()
+	RUnlock()
+	buf.IMemoryPool
 
 	RegisterNode(node_id layout.BlockId) nif.INodeHandle
 	UnregisterNode(node_id layout.BlockId, can_destroy bool)
@@ -22,6 +21,4 @@ type IBufferManager interface {
 
 	Pin(h nif.INodeHandle) nif.IBufferHandle
 	Unpin(h nif.INodeHandle)
-
-	GetPool() buf.IMemoryPool
 }
