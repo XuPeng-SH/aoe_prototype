@@ -13,7 +13,7 @@ func NewNodeHandle(ctx *NodeHandleCtx) nif.INodeHandle {
 	size := ctx.Size
 	state := nif.NODE_UNLOAD
 	if ctx.Buff != nil {
-		size = uint64(ctx.Buff.GetCapacity())
+		size = ctx.Buff.GetCapacity()
 		state = nif.NODE_LOADED
 	}
 	handle := &NodeHandle{
@@ -81,7 +81,7 @@ func (h *NodeHandle) Close() error {
 	if h.Buff != nil {
 		h.Buff.Close()
 	}
-	h.Manager.UnregisterNode(h.ID, h.Destroyable)
+	h.Manager.UnregisterNode(h.ID, h.Spillable)
 	return nil
 }
 

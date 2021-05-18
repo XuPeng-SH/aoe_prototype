@@ -13,10 +13,11 @@ type IBufferManager interface {
 	RUnlock()
 	buf.IMemoryPool
 
-	RegisterNode(node_id layout.BlockId) nif.INodeHandle
-	UnregisterNode(node_id layout.BlockId, can_destroy bool)
+	RegisterMemory(capacity uint64, spillable bool) nif.INodeHandle
+	RegisterTransientNode(capacity uint64, node_id layout.BlockId) nif.INodeHandle
+	RegisterNode(capacity uint64, node_id layout.BlockId) nif.INodeHandle
+	UnregisterNode(node_id layout.BlockId, spillable bool)
 
-	// RegisterMemory(node_id layout.BlockId, can_destroy bool) blk.INodeHandle
 	// // Allocate(size uint64) buf.IBufferH
 
 	Pin(h nif.INodeHandle) nif.IBufferHandle

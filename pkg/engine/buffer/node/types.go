@@ -15,24 +15,24 @@ type NodeBuffer struct {
 }
 
 type NodeHandleCtx struct {
-	ID          layout.BlockId
-	Buff        buf.IBuffer
-	Destroyable bool
-	Manager     mgrif.IBufferManager
-	Size        uint64
+	ID        layout.BlockId
+	Buff      buf.IBuffer
+	Spillable bool
+	Manager   mgrif.IBufferManager
+	Size      uint64
 }
 
 type NodeHandle struct {
 	sync.Mutex
-	State       nif.NodeState
-	ID          layout.BlockId
-	Buff        buf.IBuffer
-	Destroyable bool
-	Capacity    uint64
-	RTState     nif.NodeRTState
-	Refs        uint64
-	Manager     mgrif.IBufferManager
-	Iter        uint64
+	State     nif.NodeState
+	ID        layout.BlockId
+	Buff      buf.IBuffer
+	Spillable bool
+	Capacity  uint64
+	RTState   nif.NodeRTState
+	Refs      uint64
+	Manager   mgrif.IBufferManager
+	Iter      uint64
 }
 
 // BufferHandle is created from IBufferManager::Pin, which will set the INodeHandle reference to 1

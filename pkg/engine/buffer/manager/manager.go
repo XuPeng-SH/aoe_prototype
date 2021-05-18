@@ -19,12 +19,29 @@ func NewBufferManager(capacity uint64, evict_q_size ...uint64) mgrif.IBufferMana
 		IMemoryPool: buf.NewSimpleMemoryPool(capacity),
 		Nodes:       make(map[layout.BlockId]nif.INodeHandle),
 		EvictHolder: NewSimpleEvictHolder(evict_q_size...),
+		TransientID: *layout.NewTransientID(),
 	}
 
 	return mgr
 }
 
-func (mgr *BufferManager) RegisterMemory(capacity uint64, node_id layout.BlockId, spillable bool) nif.INodeHandle {
+func (mgr *BufferManager) RegisterMemory(capacity uint64, spillable bool) nif.INodeHandle {
+	pNode := mgr.makePoolNode(capacity)
+	if pNode == nil {
+		return nil
+	}
+	transient_id := mgr.TransientID.Next()
+	ctx := node.NodeHandleCtx{
+		ID:        *transient_id,
+		Manager:   mgr,
+		Buff:      node.NewNodeBuffer(*transient_id, pNode),
+		Spillable: spillable,
+	}
+	handle := node.NewNodeHandle(&ctx)
+	return handle
+}
+
+func (mgr *BufferManager) RegisterTransientNode(capacity uint64, node_id layout.BlockId) nif.INodeHandle {
 	{
 		mgr.RLock()
 		defer mgr.RUnlock()
@@ -42,9 +59,10 @@ func (mgr *BufferManager) RegisterMemory(capacity uint64, node_id layout.BlockId
 		return nil
 	}
 	ctx := node.NodeHandleCtx{
-		ID:      node_id,
-		Manager: mgr,
-		Buff:    node.NewNodeBuffer(node_id, pNode),
+		ID:        node_id,
+		Manager:   mgr,
+		Buff:      node.NewNodeBuffer(node_id, pNode),
+		Spillable: true,
 	}
 	handle := node.NewNodeHandle(&ctx)
 
@@ -62,7 +80,7 @@ func (mgr *BufferManager) RegisterMemory(capacity uint64, node_id layout.BlockId
 	return nil
 }
 
-func (mgr *BufferManager) RegisterNode(node_id layout.BlockId) nif.INodeHandle {
+func (mgr *BufferManager) RegisterNode(capacity uint64, node_id layout.BlockId) nif.INodeHandle {
 	mgr.Lock()
 	defer mgr.Unlock()
 
@@ -73,27 +91,17 @@ func (mgr *BufferManager) RegisterNode(node_id layout.BlockId) nif.INodeHandle {
 		}
 	}
 	ctx := node.NodeHandleCtx{
-		ID:      node_id,
-		Manager: mgr,
-		Size:    nif.NODE_ALLOC_SIZE,
+		ID:        node_id,
+		Manager:   mgr,
+		Size:      capacity,
+		Spillable: false,
 	}
 	handle = node.NewNodeHandle(&ctx)
 	mgr.Nodes[node_id] = handle
 	return handle
 }
 
-// // Temp only can SetCapacity with larger size
-// func (mgr *BufferManager) SetCapacity(capacity uint64) error {
-// 	mgr.Lock()
-// 	defer mgr.Unlock()
-// 	// if !mgr.makeSpace(0, capacity) {
-// 	// 	panic(fmt.Sprintf("Cannot makeSpace(%d,%d)", 0, capacity))
-// 	// }
-// 	// types.AtomicStore(&(mgr.Capacity), capacity)
-// 	return mgr.IMemoryPool.SetCapacity(capacity)
-// }
-
-func (mgr *BufferManager) UnregisterNode(node_id layout.BlockId, can_destroy bool) {
+func (mgr *BufferManager) UnregisterNode(node_id layout.BlockId, spillable bool) {
 	// if node_id.IsTransientBlock() {
 	// PXU TODO
 	// return
