@@ -72,3 +72,34 @@ func TestNode(t *testing.T) {
 	assert.Equal(t, node_buff2.GetCapacity(), uint64(0))
 	assert.Equal(t, uint64(0), pool.GetUsage())
 }
+
+func TestHandle(t *testing.T) {
+	id := layout.NewTransientID()
+	ctx := NodeHandleCtx{
+		ID: *id,
+	}
+
+	handle := NewNodeHandle(&ctx)
+	assert.Equal(t, handle.(*NodeHandle).Refs, uint64(0))
+	assert.False(t, handle.HasRef())
+
+	handle.Ref()
+	assert.Equal(t, handle.(*NodeHandle).Refs, uint64(1))
+	assert.True(t, handle.HasRef())
+
+	handle.Ref()
+	assert.Equal(t, handle.(*NodeHandle).Refs, uint64(2))
+	assert.True(t, handle.HasRef())
+
+	handle.UnRef()
+	assert.Equal(t, handle.(*NodeHandle).Refs, uint64(1))
+	assert.True(t, handle.HasRef())
+
+	handle.UnRef()
+	assert.Equal(t, handle.(*NodeHandle).Refs, uint64(0))
+	assert.False(t, handle.HasRef())
+
+	handle.UnRef()
+	assert.Equal(t, handle.(*NodeHandle).Refs, uint64(0))
+	assert.False(t, handle.HasRef())
+}
