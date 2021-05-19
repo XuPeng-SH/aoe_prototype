@@ -6,8 +6,8 @@ import (
 	"aoe/pkg/engine/layout"
 	"context"
 	"github.com/stretchr/testify/assert"
+	"os"
 	"testing"
-	// "os"
 )
 
 func TestWriter(t *testing.T) {
@@ -28,8 +28,11 @@ func TestWriter(t *testing.T) {
 	ctx := context.TODO()
 	ctx = context.WithValue(ctx, "buffer", node_buff1)
 	e.WRITER_FACTORY.Dirname = "/tmp/node_test"
+	os.RemoveAll(e.WRITER_FACTORY.Dirname)
 	writer := e.WRITER_FACTORY.MakeWriter(NODE_WRITER, ctx)
 	assert.NotNil(t, writer)
 	err := writer.Flush()
+	assert.Nil(t, err)
+	_, err = os.Stat((writer.(*NodeWriter)).Filename)
 	assert.Nil(t, err)
 }

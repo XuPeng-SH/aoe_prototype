@@ -6,9 +6,9 @@ import (
 	"aoe/pkg/engine/layout"
 	"context"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
+	// log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -36,9 +36,10 @@ func (b *NodeWriterBuilder) Build(wf *e.WriterFactory, ctx context.Context) e.Wr
 }
 
 type NodeWriter struct {
-	Opts    *e.Options
-	Dirname string
-	Buffer  iface.INodeBuffer
+	Opts     *e.Options
+	Dirname  string
+	Buffer   iface.INodeBuffer
+	Filename string
 }
 
 func MakeNodeFileName(id *layout.BlockId) string {
@@ -51,7 +52,7 @@ func (sw *NodeWriter) Flush() (err error) {
 
 	fname := e.MakeFilename(sw.Dirname, e.FTNode, MakeNodeFileName(&id), false)
 	dir := filepath.Dir(fname)
-	log.Info(dir)
+	// log.Info(dir)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		os.MkdirAll(dir, 0755)
 	}
@@ -64,5 +65,6 @@ func (sw *NodeWriter) Flush() (err error) {
 	if err != nil {
 		return err
 	}
+	sw.Filename = fname
 	return err
 }
