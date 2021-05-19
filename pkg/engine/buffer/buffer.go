@@ -34,3 +34,7 @@ func (buf *Buffer) GetCapacity() uint64 {
 	}
 	return buf.DataSize + buf.HeaderSize
 }
+
+func (buf *Buffer) GetDataNode() *Node {
+	return buf.Node
+}

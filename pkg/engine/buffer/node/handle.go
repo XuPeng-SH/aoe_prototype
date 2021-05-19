@@ -46,6 +46,10 @@ func (h *NodeHandle) FlushData() {
 	// TODO: Flush node
 }
 
+func (h *NodeHandle) GetBuffer() buf.IBuffer {
+	return h.Buff
+}
+
 func (h *NodeHandle) Unload() {
 	if nif.AtomicLoadState(&h.State) == nif.NODE_UNLOAD {
 		return

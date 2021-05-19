@@ -22,6 +22,7 @@ type IBuffer interface {
 	io.Closer
 	Clear()
 	GetCapacity() uint64
+	GetDataNode() *Node
 }
 
 type Buffer struct {

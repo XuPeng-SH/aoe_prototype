@@ -61,10 +61,9 @@ func (o *Options) FillDefaults(dirname string) *Options {
 	}
 
 	if o.Data.WriterFactory == nil {
-		o.Data.WriterFactory = &WriterFactory{
-			Opts:    o,
-			Dirname: dirname,
-		}
+		o.Data.WriterFactory = WRITER_FACTORY
+		o.Data.WriterFactory.Opts = o
+		o.Data.WriterFactory.Dirname = dirname
 	}
 
 	if o.Data.Flusher == nil {

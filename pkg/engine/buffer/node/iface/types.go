@@ -94,6 +94,7 @@ type INodeHandle interface {
 	SetBuffer(buffer buf.IBuffer) error
 	Iteration() uint64
 	IncIteration() uint64
+	GetBuffer() buf.IBuffer
 }
 
 type IBufferHandle interface {

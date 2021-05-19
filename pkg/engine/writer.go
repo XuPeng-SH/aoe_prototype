@@ -3,7 +3,6 @@ package engine
 import (
 	"context"
 	"fmt"
-	"io"
 	// log "github.com/sirupsen/logrus"
 )
 
@@ -13,8 +12,12 @@ var (
 	}
 )
 
+type Writer interface {
+	Flush() error
+}
+
 type WriterBuilder interface {
-	Build(wf *WriterFactory, ctx context.Context) io.Writer
+	Build(wf *WriterFactory, ctx context.Context) Writer
 }
 
 type WriterFactory struct {
@@ -31,7 +34,7 @@ func (wf *WriterFactory) RegisterBuilder(name string, wb WriterBuilder) {
 	wf.Builders[name] = wb
 }
 
-func (wf *WriterFactory) MakeWriter(name string, ctx context.Context) io.Writer {
+func (wf *WriterFactory) MakeWriter(name string, ctx context.Context) Writer {
 	wb, ok := wf.Builders[name]
 	if !ok {
 		return nil
