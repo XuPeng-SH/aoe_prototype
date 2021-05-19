@@ -6,6 +6,7 @@ import (
 	nif "aoe/pkg/engine/buffer/node/iface"
 	"aoe/pkg/engine/layout"
 	"errors"
+	// log "github.com/sirupsen/logrus"
 	"sync/atomic"
 )
 
@@ -54,7 +55,7 @@ func (h *NodeHandle) Unload() {
 	if nif.AtomicLoadState(&h.State) == nif.NODE_UNLOAD {
 		return
 	}
-	if nif.AtomicCASState(&(h.State), nif.NODE_LOADED, nif.NODE_UNLOADING) {
+	if !nif.AtomicCASState(&(h.State), nif.NODE_LOADED, nif.NODE_UNLOADING) {
 		panic("logic error")
 	}
 	h.FlushData()
