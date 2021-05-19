@@ -15,13 +15,29 @@ const (
 	FTBlock
 	FTSegment
 	FTSegmentIndex
+	FTSpillMemory
 )
 
-func MakeFilename(dirname string, ft FileType, id uint64, isTmp bool) string {
+func MakeSpillDir(dirname string) string {
+	return path.Join(dirname, "spill")
+}
+
+func MakeDataDir(dirname string) string {
+	return path.Join(dirname, "data")
+}
+
+func MakeMetaDir(dirname string) string {
+	return path.Join(dirname, "meta")
+}
+
+func MakeFilename(dirname string, ft FileType, name string, isTmp bool) string {
 	var s string
 	switch ft {
 	case FTCheckpoint:
-		s = path.Join(dirname, fmt.Sprintf("%d.ckp", id))
+		s = path.Join(MakeMetaDir(dirname), fmt.Sprintf("%s.ckp", name))
+	case FTSpillMemory:
+		s = path.Join(MakeSpillDir(dirname), fmt.Sprintf("%s.spm", name))
+		isTmp = false
 	default:
 		panic(fmt.Sprintf("unsupported %d", ft))
 	}
@@ -29,6 +45,10 @@ func MakeFilename(dirname string, ft FileType, id uint64, isTmp bool) string {
 		s += ".tmp"
 	}
 	return s
+}
+
+func IsTempFile(name string) bool {
+	return strings.HasSuffix(name, ".tmp")
 }
 
 func FilenameFromTmpfile(tmpFile string) (fname string, err error) {

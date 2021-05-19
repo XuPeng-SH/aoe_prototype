@@ -4,6 +4,7 @@ import (
 	md "aoe/pkg/engine/metadata"
 	"errors"
 	"os"
+	"strconv"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -27,7 +28,7 @@ func (ck *Checkpointer) PreCommit(info *md.MetaInfo) error {
 		log.Error("nil info")
 		return errors.New("nil info")
 	}
-	fname := MakeFilename(ck.Dirname, FTCheckpoint, info.CheckPoint, true)
+	fname := MakeFilename(ck.Dirname, FTCheckpoint, strconv.Itoa(int(info.CheckPoint)), true)
 	log.Infof("PreCommit CheckPoint: %s", fname)
 	w, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {

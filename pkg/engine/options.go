@@ -5,7 +5,7 @@ import (
 	md "aoe/pkg/engine/metadata"
 	w "aoe/pkg/engine/worker"
 	iw "aoe/pkg/engine/worker/base"
-	todo "aoe/pkg/mock"
+	// todo "aoe/pkg/mock"
 )
 
 type Options struct {
@@ -24,9 +24,9 @@ type Options struct {
 	}
 
 	Data struct {
-		Flusher iw.IOpWorker
-		Sorter  iw.IOpWorker
-		Writer  todo.DataWriter
+		Flusher       iw.IOpWorker
+		Sorter        iw.IOpWorker
+		WriterFactory *WriterFactory
 	}
 }
 
@@ -60,8 +60,11 @@ func (o *Options) FillDefaults(dirname string) *Options {
 		o.Meta.Checkpointer = NewCheckpointer(o, dirname)
 	}
 
-	if o.Data.Writer == nil {
-		o.Data.Writer = todo.NewDataWriter()
+	if o.Data.WriterFactory == nil {
+		o.Data.WriterFactory = &WriterFactory{
+			Opts:    o,
+			Dirname: dirname,
+		}
 	}
 
 	if o.Data.Flusher == nil {

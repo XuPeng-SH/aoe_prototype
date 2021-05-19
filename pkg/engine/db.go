@@ -6,10 +6,10 @@ import (
 	"sync/atomic"
 )
 
-type Reader interface {
-}
-type Writer interface {
-}
+// type Reader interface {
+// }
+// type Writer interface {
+// }
 
 type DB struct {
 	Dir  string
@@ -22,7 +22,7 @@ type DB struct {
 	ClosedC chan struct{}
 }
 
-var (
-	_ Reader = (*DB)(nil)
-	_ Writer = (*DB)(nil)
-)
+// var (
+// 	_ Reader = (*DB)(nil)
+// 	_ Writer = (*DB)(nil)
+// )

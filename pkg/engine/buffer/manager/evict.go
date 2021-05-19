@@ -17,10 +17,17 @@ const (
 	EVICT_HOLDER_CAPACITY uint64 = 100000
 )
 
-func NewSimpleEvictHolder(capacity ...uint64) IEvictHolder {
+type SimpleEvictHolderCtx struct {
+	QCapacity uint64
+}
+
+func NewSimpleEvictHolder(ctx ...interface{}) IEvictHolder {
 	c := EVICT_HOLDER_CAPACITY
-	if len(capacity) > 0 {
-		c = capacity[0]
+	if len(ctx) > 0 {
+		context := ctx[0].(*SimpleEvictHolderCtx)
+		if context != nil {
+			c = context.QCapacity
+		}
 	}
 	holder := &SimpleEvictHolder{
 		Queue: make(chan *EvictNode, c),

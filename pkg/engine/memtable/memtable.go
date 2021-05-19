@@ -9,13 +9,15 @@ import (
 	todo "aoe/pkg/mock"
 	log "github.com/sirupsen/logrus"
 	"sync"
+	// buf "aoe/pkg/engine/buffer"
+	// "context"
 )
 
 type MemTable struct {
 	Opts *engine.Options
 	util.RefProxy
 	sync.RWMutex
-	W    todo.DataWriter
+	WF   *engine.WriterFactory
 	Meta *md.Block
 	Data *todo.Chunk
 	Full bool
@@ -31,7 +33,7 @@ func NewMemTable(opts *engine.Options, meta *md.Block) imem.IMemTable {
 		Data: todo.NewChunk(meta.MaxRowCount, meta),
 		Full: false,
 		Opts: opts,
-		W:    opts.Data.Writer,
+		WF:   opts.Data.WriterFactory,
 	}
 
 	return mt
@@ -64,15 +66,16 @@ func (mt *MemTable) Append(c *todo.Chunk, offset uint64, index *md.LogIndex) (n 
 // If crashed before Step 3, same as above.
 func (mt *MemTable) Flush() error {
 	mt.Opts.EventListener.FlushBlockBeginCB(mt)
-	err := mt.W.Write(mt)
-	if err != nil {
-		mt.Opts.EventListener.BackgroundErrorCB(err)
-		return err
-	}
+	// writer := mt.WF.MakeWriter(buf.SPILL_MEMORY_WRITER_BUILDER, context.TODO())
+	// err := mt.W.Write(mt)
+	// if err != nil {
+	// 	mt.Opts.EventListener.BackgroundErrorCB(err)
+	// 	return err
+	// }
 	ctx := mops.OpCtx{Block: mt.Meta}
 	op := mops.NewUpdateOp(&ctx, mt.Opts.Meta.Info, mt.Opts.Meta.Updater)
 	op.Push()
-	err = op.WaitDone()
+	err := op.WaitDone()
 	if err != nil {
 		mt.Opts.EventListener.BackgroundErrorCB(err)
 		return err

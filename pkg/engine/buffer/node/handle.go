@@ -36,12 +36,27 @@ func (h *NodeHandle) IncIteration() uint64 {
 	return h.Iter
 }
 
-func (h *NodeHandle) Unload() {
-	if nif.AtomicCASState(&(h.State), nif.NODE_LOADED, nif.NODE_UNLOADING) {
-		h.Buff.Close()
-		h.Buff = nil
-		nif.AtomicStoreState(&(h.State), nif.NODE_UNLOAD)
+func (h *NodeHandle) FlushData() {
+	if h.ID.IsTransient() {
+		if !h.Spillable {
+			return
+		}
+		// TODO: flush transient memory
 	}
+	// TODO: Flush node
+}
+
+func (h *NodeHandle) Unload() {
+	if nif.AtomicLoadState(&h.State) == nif.NODE_UNLOAD {
+		return
+	}
+	if nif.AtomicCASState(&(h.State), nif.NODE_LOADED, nif.NODE_UNLOADING) {
+		panic("logic error")
+	}
+	h.FlushData()
+	h.Buff.Close()
+	h.Buff = nil
+	nif.AtomicStoreState(&(h.State), nif.NODE_UNLOAD)
 }
 
 func (h *NodeHandle) GetCapacity() uint64 {

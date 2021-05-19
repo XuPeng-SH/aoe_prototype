@@ -4,6 +4,7 @@ import (
 	buf "aoe/pkg/engine/buffer"
 	"aoe/pkg/engine/buffer/node/iface"
 	"aoe/pkg/engine/layout"
+	iw "aoe/pkg/engine/worker/base"
 	"sync"
 )
 
@@ -24,4 +25,5 @@ type BufferManager struct {
 	Nodes       map[layout.BlockId]iface.INodeHandle // Manager is not responsible to Close handle
 	TransientID layout.BlockId
 	EvictHolder IEvictHolder
+	Flusher     iw.IOpWorker
 }

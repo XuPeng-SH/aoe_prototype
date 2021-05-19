@@ -6,7 +6,7 @@ import (
 	"aoe/pkg/engine/buffer/node"
 	nif "aoe/pkg/engine/buffer/node/iface"
 	"aoe/pkg/engine/layout"
-
+	iw "aoe/pkg/engine/worker/base"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -14,12 +14,13 @@ var (
 	_ mgrif.IBufferManager = (*BufferManager)(nil)
 )
 
-func NewBufferManager(capacity uint64, evict_q_size ...uint64) mgrif.IBufferManager {
+func NewBufferManager(capacity uint64, flusher iw.IOpWorker, evict_ctx ...interface{}) mgrif.IBufferManager {
 	mgr := &BufferManager{
 		IMemoryPool: buf.NewSimpleMemoryPool(capacity),
 		Nodes:       make(map[layout.BlockId]nif.INodeHandle),
-		EvictHolder: NewSimpleEvictHolder(evict_q_size...),
+		EvictHolder: NewSimpleEvictHolder(evict_ctx...),
 		TransientID: *layout.NewTransientID(),
+		Flusher:     flusher,
 	}
 
 	return mgr

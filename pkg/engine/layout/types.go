@@ -27,3 +27,10 @@ func (id *BlockId) Next() *BlockId {
 		TableID: new_id - 1,
 	}
 }
+
+func (id *BlockId) IsTransient() bool {
+	if id.TableID >= TRANSIENT_TABLE_START_ID {
+		return true
+	}
+	return false
+}
