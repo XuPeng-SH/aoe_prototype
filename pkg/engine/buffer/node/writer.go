@@ -23,14 +23,23 @@ type NodeWriterBuilder struct {
 }
 
 func (b *NodeWriterBuilder) Build(wf *e.WriterFactory, ctx context.Context) e.Writer {
-	buffer := ctx.Value("buffer").(iface.INodeBuffer)
-	if buffer == nil {
+	handle := ctx.Value("handle").(iface.INodeHandle)
+	if handle == nil {
 		panic("logic error")
 	}
+	var filename string
+	fn := ctx.Value("filename")
+	if fn == nil {
+		id := handle.GetID()
+		filename = e.MakeFilename(e.READER_FACTORY.Dirname, e.FTNode, MakeNodeFileName(&id), false)
+	} else {
+		filename = fmt.Sprintf("%v", fn)
+	}
 	w := &NodeWriter{
-		Opts:    wf.Opts,
-		Dirname: wf.Dirname,
-		Buffer:  buffer,
+		Opts:     wf.Opts,
+		Dirname:  wf.Dirname,
+		Handle:   handle,
+		Filename: filename,
 	}
 	return w
 }
@@ -38,7 +47,7 @@ func (b *NodeWriterBuilder) Build(wf *e.WriterFactory, ctx context.Context) e.Wr
 type NodeWriter struct {
 	Opts     *e.Options
 	Dirname  string
-	Buffer   iface.INodeBuffer
+	Handle   iface.INodeHandle
 	Filename string
 }
 
@@ -47,11 +56,8 @@ func MakeNodeFileName(id *layout.BlockId) string {
 }
 
 func (sw *NodeWriter) Flush() (err error) {
-	node := sw.Buffer.GetDataNode()
-	id := sw.Buffer.GetID()
-
-	fname := e.MakeFilename(sw.Dirname, e.FTNode, MakeNodeFileName(&id), false)
-	dir := filepath.Dir(fname)
+	node := sw.Handle.GetBuffer().GetDataNode()
+	dir := filepath.Dir(sw.Filename)
 	log.Info(dir)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.MkdirAll(dir, 0755)
@@ -60,7 +66,7 @@ func (sw *NodeWriter) Flush() (err error) {
 		return err
 	}
 
-	w, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE, 0666)
+	w, err := os.OpenFile(sw.Filename, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		return err
 	}
@@ -68,6 +74,5 @@ func (sw *NodeWriter) Flush() (err error) {
 	if err != nil {
 		return err
 	}
-	sw.Filename = fname
 	return err
 }

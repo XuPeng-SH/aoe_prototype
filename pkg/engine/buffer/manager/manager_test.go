@@ -58,7 +58,7 @@ func TestManagerBasic(t *testing.T) {
 	assert.False(t, mgr_h2.IsClosed())
 
 	assert.Equal(t, len(mgr.(*BufferManager).Nodes), 2)
-	mgr.UnregisterNode(*node0, true)
+	mgr.UnregisterNode(h0)
 	assert.Equal(t, len(mgr.(*BufferManager).Nodes), 1)
 }
 

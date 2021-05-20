@@ -4,9 +4,11 @@ import (
 	e "aoe/pkg/engine"
 	"aoe/pkg/engine/buffer/node/iface"
 	"context"
-	log "github.com/sirupsen/logrus"
+	"fmt"
 	"os"
 	"path/filepath"
+
+	log "github.com/sirupsen/logrus"
 	// "fmt"
 	// "aoe/pkg/engine/layout"
 )
@@ -23,14 +25,23 @@ type NodeReaderBuilder struct {
 }
 
 func (b *NodeReaderBuilder) Build(wf *e.ReaderFactory, ctx context.Context) e.Reader {
-	buffer := ctx.Value("buffer").(iface.INodeBuffer)
-	if buffer == nil {
+	handle := ctx.Value("handle").(iface.INodeHandle)
+	if handle == nil {
 		panic("logic error")
 	}
+	var filename string
+	fn := ctx.Value("filename")
+	if fn == nil {
+		id := handle.GetID()
+		filename = e.MakeFilename(e.READER_FACTORY.Dirname, e.FTNode, MakeNodeFileName(&id), false)
+	} else {
+		filename = fmt.Sprintf("%v", fn)
+	}
 	r := &NodeReader{
-		Opts:    wf.Opts,
-		Dirname: wf.Dirname,
-		Buffer:  buffer,
+		Opts:     wf.Opts,
+		Dirname:  wf.Dirname,
+		Handle:   handle,
+		Filename: filename,
 	}
 	return r
 }
@@ -38,16 +49,13 @@ func (b *NodeReaderBuilder) Build(wf *e.ReaderFactory, ctx context.Context) e.Re
 type NodeReader struct {
 	Opts     *e.Options
 	Dirname  string
-	Buffer   iface.INodeBuffer
+	Handle   iface.INodeHandle
 	Filename string
 }
 
 func (nr *NodeReader) Load() (err error) {
-	node := nr.Buffer.GetDataNode()
-	id := nr.Buffer.GetID()
-
-	fname := e.MakeFilename(nr.Dirname, e.FTNode, MakeNodeFileName(&id), false)
-	dir := filepath.Dir(fname)
+	node := nr.Handle.GetBuffer().GetDataNode()
+	dir := filepath.Dir(nr.Filename)
 	log.Info(dir)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err = os.MkdirAll(dir, 0755)
@@ -56,7 +64,7 @@ func (nr *NodeReader) Load() (err error) {
 		return err
 	}
 
-	w, err := os.OpenFile(fname, os.O_RDONLY, 0666)
+	w, err := os.OpenFile(nr.Filename, os.O_RDONLY, 0666)
 	if err != nil {
 		return err
 	}
@@ -64,6 +72,6 @@ func (nr *NodeReader) Load() (err error) {
 	if err != nil {
 		return err
 	}
-	nr.Filename = fname
+	// nr.Filename = fname
 	return err
 }

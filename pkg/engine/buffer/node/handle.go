@@ -30,6 +30,9 @@ func NewNodeHandle(ctx *NodeHandleCtx) nif.INodeHandle {
 		Manager:   ctx.Manager,
 		Spillable: ctx.Spillable,
 	}
+	c := context.TODO()
+	c = context.WithValue(c, "handle", handle)
+	handle.IO = NewNodeIO(e.WRITER_FACTORY.Opts, c)
 	return handle
 }
 
@@ -48,10 +51,7 @@ func (h *NodeHandle) FlushData() error {
 			return nil
 		}
 		log.Infof("Flushing memory %d", h.GetID().TableID)
-		ctx := context.TODO()
-		ctx = context.WithValue(ctx, "buffer", h.Buff)
-		w := e.WRITER_FACTORY.MakeWriter(NODE_WRITER, ctx)
-		return w.Flush()
+		return h.IO.Flush()
 	}
 	// TODO: Flush node
 	log.Infof("Flush node %v", h.GetID())
@@ -107,6 +107,14 @@ func (h *NodeHandle) GetState() nif.NodeState {
 	return h.State
 }
 
+func (h *NodeHandle) IsSpillable() bool {
+	return h.Spillable
+}
+
+func (h *NodeHandle) Clean() error {
+	return nil
+}
+
 func (h *NodeHandle) Close() error {
 	if !nif.AtomicCASRTState(&(h.RTState), nif.NODE_RT_RUNNING, nif.NODE_RT_CLOSED) {
 		// Cocurrent senario that other client already call Close before
@@ -116,7 +124,8 @@ func (h *NodeHandle) Close() error {
 		h.Buff.Close()
 	}
 	log.Infof("UnregisterNode %v", h.ID)
-	h.Manager.UnregisterNode(h.ID, h.Spillable)
+	// h.Manager.UnregisterNode(h.ID, h.Spillable)
+	h.Manager.UnregisterNode(h)
 	return nil
 }
 
@@ -162,10 +171,7 @@ func (h *NodeHandle) CommitLoad() error {
 			panic("logic error: should not load non-spillable transient memory")
 		}
 		log.Infof("loading transient memory %d", h.ID.TableID)
-		ctx := context.TODO()
-		ctx = context.WithValue(ctx, "buffer", h.Buff)
-		r := e.READER_FACTORY.MakeReader(NODE_READER, ctx)
-		err := r.Load()
+		err := h.IO.Load()
 		if err != nil {
 			return err
 		}

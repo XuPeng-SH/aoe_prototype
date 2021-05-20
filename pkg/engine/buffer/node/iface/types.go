@@ -95,6 +95,8 @@ type INodeHandle interface {
 	Iteration() uint64
 	IncIteration() uint64
 	GetBuffer() buf.IBuffer
+	IsSpillable() bool
+	Clean() error
 }
 
 type IBufferHandle interface {

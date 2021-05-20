@@ -102,15 +102,16 @@ func (mgr *BufferManager) RegisterNode(capacity uint64, node_id layout.BlockId) 
 	return handle
 }
 
-func (mgr *BufferManager) UnregisterNode(node_id layout.BlockId, spillable bool) {
-	if spillable {
+func (mgr *BufferManager) UnregisterNode(h nif.INodeHandle) {
+	node_id := h.GetID()
+	if h.IsSpillable() {
 		if node_id.IsTransient() {
 			return
 
 		} else {
 			mgr.Lock()
 			delete(mgr.Nodes, node_id)
-			// Remove the file
+			h.Clean()
 			mgr.Unlock()
 			return
 		}
