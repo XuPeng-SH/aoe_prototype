@@ -14,7 +14,7 @@ type IBufferManager interface {
 	buf.IMemoryPool
 
 	RegisterMemory(capacity uint64, spillable bool) nif.INodeHandle
-	RegisterTransientNode(capacity uint64, node_id layout.BlockId) nif.INodeHandle
+	RegisterSpillableNode(capacity uint64, node_id layout.BlockId) nif.INodeHandle
 	RegisterNode(capacity uint64, node_id layout.BlockId) nif.INodeHandle
 	UnregisterNode(nif.INodeHandle)
 

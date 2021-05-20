@@ -162,12 +162,12 @@ func TestManager4(t *testing.T) {
 
 	baseid := layout.BlockId{}
 	id0 := *baseid.Next()
-	h0 := mgr.RegisterTransientNode(node_capacity, id0)
+	h0 := mgr.RegisterSpillableNode(node_capacity, id0)
 	assert.Nil(t, h0)
 	num_nodes := uint64(3)
 	mgr.SetCapacity(num_nodes * node_capacity)
 
-	h0_1 := mgr.RegisterTransientNode(node_capacity, id0)
+	h0_1 := mgr.RegisterSpillableNode(node_capacity, id0)
 	assert.NotNil(t, h0_1)
 	assert.Equal(t, h0_1.GetCapacity(), node_capacity)
 	assert.Equal(t, h0_1.GetCapacity(), mgr.GetUsage())

@@ -42,7 +42,7 @@ func (mgr *BufferManager) RegisterMemory(capacity uint64, spillable bool) nif.IN
 	return handle
 }
 
-func (mgr *BufferManager) RegisterTransientNode(capacity uint64, node_id layout.BlockId) nif.INodeHandle {
+func (mgr *BufferManager) RegisterSpillableNode(capacity uint64, node_id layout.BlockId) nif.INodeHandle {
 	{
 		mgr.RLock()
 		handle, ok := mgr.Nodes[node_id]
