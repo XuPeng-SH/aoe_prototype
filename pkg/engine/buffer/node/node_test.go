@@ -1,8 +1,9 @@
 package node
 
 import (
-	e "aoe/pkg/engine"
+	// e "aoe/pkg/engine"
 	buf "aoe/pkg/engine/buffer"
+	dio "aoe/pkg/engine/dataio"
 	"aoe/pkg/engine/layout"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -13,8 +14,8 @@ import (
 var WORK_DIR = "/tmp/buff/node_test"
 
 func init() {
-	e.WRITER_FACTORY.Init(nil, WORK_DIR)
-	e.READER_FACTORY.Init(nil, WORK_DIR)
+	dio.WRITER_FACTORY.Init(nil, WORK_DIR)
+	dio.READER_FACTORY.Init(nil, WORK_DIR)
 }
 
 // func TestWriter(t *testing.T) {

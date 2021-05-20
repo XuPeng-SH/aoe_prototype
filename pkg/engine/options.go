@@ -24,9 +24,9 @@ type Options struct {
 	}
 
 	Data struct {
-		Flusher       iw.IOpWorker
-		Sorter        iw.IOpWorker
-		WriterFactory *WriterFactory
+		Flusher iw.IOpWorker
+		Sorter  iw.IOpWorker
+		// WriterFactory *WriterFactory
 	}
 }
 
@@ -60,11 +60,11 @@ func (o *Options) FillDefaults(dirname string) *Options {
 		o.Meta.Checkpointer = NewCheckpointer(o, dirname)
 	}
 
-	if o.Data.WriterFactory == nil {
-		o.Data.WriterFactory = WRITER_FACTORY
-		o.Data.WriterFactory.Opts = o
-		o.Data.WriterFactory.Dirname = dirname
-	}
+	// if o.Data.WriterFactory == nil {
+	// 	o.Data.WriterFactory = WRITER_FACTORY
+	// 	o.Data.WriterFactory.Opts = o
+	// 	o.Data.WriterFactory.Dirname = dirname
+	// }
 
 	if o.Data.Flusher == nil {
 		o.Data.Flusher = w.NewOpWorker()

@@ -2,6 +2,7 @@ package memtable
 
 import (
 	"aoe/pkg/engine"
+	ioif "aoe/pkg/engine/dataio/iface"
 	imem "aoe/pkg/engine/memtable/base"
 	md "aoe/pkg/engine/metadata"
 	mops "aoe/pkg/engine/ops/meta"
@@ -17,7 +18,7 @@ type MemTable struct {
 	Opts *engine.Options
 	util.RefProxy
 	sync.RWMutex
-	WF   *engine.WriterFactory
+	WF   ioif.IWriterFactory
 	Meta *md.Block
 	Data *todo.Chunk
 	Full bool
@@ -33,7 +34,7 @@ func NewMemTable(opts *engine.Options, meta *md.Block) imem.IMemTable {
 		Data: todo.NewChunk(meta.MaxRowCount, meta),
 		Full: false,
 		Opts: opts,
-		WF:   opts.Data.WriterFactory,
+		// WF:   opts.Data.WriterFactory,
 	}
 
 	return mt

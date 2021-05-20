@@ -1,8 +1,9 @@
 package manager
 
 import (
-	e "aoe/pkg/engine"
+	// e "aoe/pkg/engine"
 	nif "aoe/pkg/engine/buffer/node/iface"
+	dio "aoe/pkg/engine/dataio"
 	"aoe/pkg/engine/layout"
 	w "aoe/pkg/engine/worker"
 	"github.com/stretchr/testify/assert"
@@ -12,8 +13,8 @@ import (
 var WORK_DIR = "/tmp/buff/manager_test"
 
 func init() {
-	e.WRITER_FACTORY.Init(nil, WORK_DIR)
-	e.READER_FACTORY.Init(nil, WORK_DIR)
+	dio.WRITER_FACTORY.Init(nil, WORK_DIR)
+	dio.READER_FACTORY.Init(nil, WORK_DIR)
 }
 
 func TestManagerBasic(t *testing.T) {

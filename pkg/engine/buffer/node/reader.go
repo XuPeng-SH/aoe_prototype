@@ -3,14 +3,14 @@ package node
 import (
 	e "aoe/pkg/engine"
 	"aoe/pkg/engine/buffer/node/iface"
+	dio "aoe/pkg/engine/dataio"
+	ioif "aoe/pkg/engine/dataio/iface"
 	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	log "github.com/sirupsen/logrus"
-	// "fmt"
-	// "aoe/pkg/engine/layout"
 )
 
 const (
@@ -18,13 +18,13 @@ const (
 )
 
 func init() {
-	e.READER_FACTORY.RegisterBuilder(NODE_READER, &NodeReaderBuilder{})
+	dio.READER_FACTORY.RegisterBuilder(NODE_READER, &NodeReaderBuilder{})
 }
 
 type NodeReaderBuilder struct {
 }
 
-func (b *NodeReaderBuilder) Build(wf *e.ReaderFactory, ctx context.Context) e.Reader {
+func (b *NodeReaderBuilder) Build(rf ioif.IReaderFactory, ctx context.Context) ioif.Reader {
 	handle := ctx.Value("handle").(iface.INodeHandle)
 	if handle == nil {
 		panic("logic error")
@@ -33,13 +33,13 @@ func (b *NodeReaderBuilder) Build(wf *e.ReaderFactory, ctx context.Context) e.Re
 	fn := ctx.Value("filename")
 	if fn == nil {
 		id := handle.GetID()
-		filename = e.MakeFilename(e.READER_FACTORY.Dirname, e.FTNode, MakeNodeFileName(&id), false)
+		filename = e.MakeFilename(dio.READER_FACTORY.Dirname, e.FTNode, MakeNodeFileName(&id), false)
 	} else {
 		filename = fmt.Sprintf("%v", fn)
 	}
 	r := &NodeReader{
-		Opts:     wf.Opts,
-		Dirname:  wf.Dirname,
+		Opts:     rf.GetOpts(),
+		Dirname:  rf.GetDir(),
 		Handle:   handle,
 		Filename: filename,
 	}

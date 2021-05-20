@@ -3,6 +3,8 @@ package node
 import (
 	e "aoe/pkg/engine"
 	"aoe/pkg/engine/buffer/node/iface"
+	dio "aoe/pkg/engine/dataio"
+	ioif "aoe/pkg/engine/dataio/iface"
 	"aoe/pkg/engine/layout"
 	"context"
 	"fmt"
@@ -16,13 +18,13 @@ const (
 )
 
 func init() {
-	e.WRITER_FACTORY.RegisterBuilder(NODE_WRITER, &NodeWriterBuilder{})
+	dio.WRITER_FACTORY.RegisterBuilder(NODE_WRITER, &NodeWriterBuilder{})
 }
 
 type NodeWriterBuilder struct {
 }
 
-func (b *NodeWriterBuilder) Build(wf *e.WriterFactory, ctx context.Context) e.Writer {
+func (b *NodeWriterBuilder) Build(wf ioif.IWriterFactory, ctx context.Context) ioif.Writer {
 	handle := ctx.Value("handle").(iface.INodeHandle)
 	if handle == nil {
 		panic("logic error")
@@ -31,13 +33,13 @@ func (b *NodeWriterBuilder) Build(wf *e.WriterFactory, ctx context.Context) e.Wr
 	fn := ctx.Value("filename")
 	if fn == nil {
 		id := handle.GetID()
-		filename = e.MakeFilename(e.READER_FACTORY.Dirname, e.FTNode, MakeNodeFileName(&id), false)
+		filename = e.MakeFilename(dio.READER_FACTORY.Dirname, e.FTNode, MakeNodeFileName(&id), false)
 	} else {
 		filename = fmt.Sprintf("%v", fn)
 	}
 	w := &NodeWriter{
-		Opts:     wf.Opts,
-		Dirname:  wf.Dirname,
+		Opts:     wf.GetOpts(),
+		Dirname:  wf.GetDir(),
 		Handle:   handle,
 		Filename: filename,
 	}

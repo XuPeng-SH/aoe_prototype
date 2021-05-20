@@ -2,6 +2,8 @@ package memtable
 
 import (
 	e "aoe/pkg/engine"
+	dio "aoe/pkg/engine/dataio"
+	ioif "aoe/pkg/engine/dataio/iface"
 	"aoe/pkg/engine/layout"
 	imem "aoe/pkg/engine/memtable/base"
 	"context"
@@ -15,20 +17,20 @@ const (
 )
 
 func init() {
-	e.WRITER_FACTORY.RegisterBuilder(MEMTABLE_WRITER, &MemtableWriterBuilder{})
+	dio.WRITER_FACTORY.RegisterBuilder(MEMTABLE_WRITER, &MemtableWriterBuilder{})
 }
 
 type MemtableWriterBuilder struct {
 }
 
-func (b *MemtableWriterBuilder) Build(wf *e.WriterFactory, ctx context.Context) e.Writer {
+func (b *MemtableWriterBuilder) Build(wf ioif.IWriterFactory, ctx context.Context) ioif.Writer {
 	mt := ctx.Value("memtable").(imem.IMemTable)
 	if mt == nil {
 		panic("logic error")
 	}
 	w := &MemtableWriter{
-		Opts:     wf.Opts,
-		Dirname:  wf.Dirname,
+		Opts:     wf.GetOpts(),
+		Dirname:  wf.GetDir(),
 		Memtable: mt,
 	}
 	return w

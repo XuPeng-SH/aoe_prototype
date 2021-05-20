@@ -1,10 +1,11 @@
 package node
 
 import (
-	e "aoe/pkg/engine"
+	// e "aoe/pkg/engine"
 	buf "aoe/pkg/engine/buffer"
 	mgrif "aoe/pkg/engine/buffer/manager/iface"
 	nif "aoe/pkg/engine/buffer/node/iface"
+	dio "aoe/pkg/engine/dataio"
 	"aoe/pkg/engine/layout"
 	"context"
 	"errors"
@@ -32,7 +33,7 @@ func NewNodeHandle(ctx *NodeHandleCtx) nif.INodeHandle {
 	}
 	c := context.TODO()
 	c = context.WithValue(c, "handle", handle)
-	handle.IO = NewNodeIO(e.WRITER_FACTORY.Opts, c)
+	handle.IO = NewNodeIO(dio.WRITER_FACTORY.Opts, c)
 	return handle
 }
 

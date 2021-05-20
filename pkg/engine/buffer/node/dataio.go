@@ -3,6 +3,8 @@ package node
 import (
 	e "aoe/pkg/engine"
 	"aoe/pkg/engine/buffer/node/iface"
+	dio "aoe/pkg/engine/dataio"
+	ioif "aoe/pkg/engine/dataio/iface"
 	"context"
 	log "github.com/sirupsen/logrus"
 	"os"
@@ -39,14 +41,14 @@ func (nc *NodeCleaner) Clean() error {
 }
 
 type IO interface {
-	e.Writer
-	e.Reader
+	ioif.Writer
+	ioif.Reader
 	Cleaner
 }
 
 type NodeIO struct {
-	e.Writer
-	e.Reader
+	ioif.Writer
+	ioif.Reader
 	Cleaner
 }
 
@@ -57,11 +59,11 @@ func NewNodeIO(opts *e.Options, ctx context.Context) IO {
 	}
 
 	id := handle.GetID()
-	filename := e.MakeFilename(e.WRITER_FACTORY.Dirname, e.FTNode, MakeNodeFileName(&id), false)
+	filename := e.MakeFilename(dio.WRITER_FACTORY.Dirname, e.FTNode, MakeNodeFileName(&id), false)
 	ctx = context.WithValue(ctx, "filename", filename)
 
-	w := e.WRITER_FACTORY.MakeWriter(NODE_WRITER, ctx)
-	r := e.READER_FACTORY.MakeReader(NODE_READER, ctx)
+	w := dio.WRITER_FACTORY.MakeWriter(NODE_WRITER, ctx)
+	r := dio.READER_FACTORY.MakeReader(NODE_READER, ctx)
 	c := NewNodeCleaner(filename)
 	nio := &NodeIO{
 		Writer:  w,
