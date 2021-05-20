@@ -115,6 +115,7 @@ func (h *NodeHandle) Close() error {
 	if h.Buff != nil {
 		h.Buff.Close()
 	}
+	log.Infof("UnregisterNode %v", h.ID)
 	h.Manager.UnregisterNode(h.ID, h.Spillable)
 	return nil
 }
@@ -156,16 +157,20 @@ func (h *NodeHandle) CommitLoad() error {
 		return errors.New("logic error")
 	}
 
-	// TODO: Load content from io here
 	if h.ID.IsTransient() {
 		if !h.Spillable {
 			panic("logic error: should not load non-spillable transient memory")
 		}
-		// ctx := context.TODO()
-		// ctx = context.WithValue(ctx, "buffer", h.Buff)
-		// w := e.WRITER_FACTORY.MakeWriter(NODE_WRITER, ctx)
-		// return w.Flush()
+		ctx := context.TODO()
+		ctx = context.WithValue(ctx, "buffer", h.Buff)
+		r := e.READER_FACTORY.MakeReader(NODE_READER, ctx)
+		log.Infof("loading transient memory %d", h.ID.TableID)
+		err := r.Load()
+		if err != nil {
+			return err
+		}
 	}
+	// TODO: Load content
 
 	if !nif.AtomicCASState(&(h.State), nif.NODE_COMMIT, nif.NODE_LOADED) {
 		return errors.New("logic error")

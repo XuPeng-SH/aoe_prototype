@@ -13,6 +13,7 @@ var WORK_DIR = "/tmp/buff/manager_test"
 
 func init() {
 	e.WRITER_FACTORY.Init(nil, WORK_DIR)
+	e.READER_FACTORY.Init(nil, WORK_DIR)
 }
 
 func TestManagerBasic(t *testing.T) {
@@ -214,7 +215,7 @@ func TestManager5(t *testing.T) {
 	bh0.Close()
 	assert.False(t, h0_1.HasRef())
 
-	h1 = mgr.RegisterMemory(node_capacity, false)
+	h1 = mgr.RegisterMemory(node_capacity, true)
 	assert.NotNil(t, h1)
 
 	bh1 := mgr.Pin(h1)
@@ -225,4 +226,9 @@ func TestManager5(t *testing.T) {
 
 	bh1.Close()
 	assert.False(t, h1.HasRef())
+
+	bh0 = mgr.Pin(h0_1)
+
+	h1.Close()
+	h0_1.Close()
 }

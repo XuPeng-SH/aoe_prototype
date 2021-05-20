@@ -155,7 +155,6 @@ func (mgr *BufferManager) makePoolNode(capacity uint64) *buf.Node {
 
 		{
 			evict_node.Handle.Lock()
-			defer evict_node.Handle.Unload()
 			if !evict_node.Unloadable(evict_node.Handle) {
 				continue
 			}
@@ -163,6 +162,7 @@ func (mgr *BufferManager) makePoolNode(capacity uint64) *buf.Node {
 				continue
 			}
 			evict_node.Handle.Unload()
+			evict_node.Handle.Unlock()
 		}
 		node = mgr.MakeNode(capacity)
 	}
