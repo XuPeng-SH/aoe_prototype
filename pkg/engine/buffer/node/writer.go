@@ -6,9 +6,9 @@ import (
 	"aoe/pkg/engine/layout"
 	"context"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"path/filepath"
-	// log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -52,9 +52,12 @@ func (sw *NodeWriter) Flush() (err error) {
 
 	fname := e.MakeFilename(sw.Dirname, e.FTNode, MakeNodeFileName(&id), false)
 	dir := filepath.Dir(fname)
-	// log.Info(dir)
+	log.Info(dir)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		os.MkdirAll(dir, 0755)
+		err = os.MkdirAll(dir, 0755)
+	}
+	if err != nil {
+		return err
 	}
 
 	w, err := os.OpenFile(fname, os.O_WRONLY|os.O_CREATE, 0666)

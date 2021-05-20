@@ -26,6 +26,11 @@ type WriterFactory struct {
 	Builders map[string]WriterBuilder
 }
 
+func (wf *WriterFactory) Init(opts *Options, dirname string) {
+	wf.Opts = opts
+	wf.Dirname = dirname
+}
+
 func (wf *WriterFactory) RegisterBuilder(name string, wb WriterBuilder) {
 	_, ok := wf.Builders[name]
 	if ok {

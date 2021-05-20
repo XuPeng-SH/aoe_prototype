@@ -1,13 +1,17 @@
 package node
 
 import (
+	e "aoe/pkg/engine"
 	buf "aoe/pkg/engine/buffer"
 	mgrif "aoe/pkg/engine/buffer/manager/iface"
 	nif "aoe/pkg/engine/buffer/node/iface"
 	"aoe/pkg/engine/layout"
+	"context"
 	"errors"
-	// log "github.com/sirupsen/logrus"
+	"fmt"
 	"sync/atomic"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func NewNodeHandle(ctx *NodeHandleCtx) nif.INodeHandle {
@@ -18,12 +22,13 @@ func NewNodeHandle(ctx *NodeHandleCtx) nif.INodeHandle {
 		state = nif.NODE_LOADED
 	}
 	handle := &NodeHandle{
-		ID:       ctx.ID,
-		Buff:     ctx.Buff,
-		Capacity: size,
-		State:    state,
-		RTState:  nif.NODE_RT_RUNNING,
-		Manager:  ctx.Manager,
+		ID:        ctx.ID,
+		Buff:      ctx.Buff,
+		Capacity:  size,
+		State:     state,
+		RTState:   nif.NODE_RT_RUNNING,
+		Manager:   ctx.Manager,
+		Spillable: ctx.Spillable,
 	}
 	return handle
 }
@@ -37,14 +42,20 @@ func (h *NodeHandle) IncIteration() uint64 {
 	return h.Iter
 }
 
-func (h *NodeHandle) FlushData() {
+func (h *NodeHandle) FlushData() error {
 	if h.ID.IsTransient() {
 		if !h.Spillable {
-			return
+			return nil
 		}
-		// TODO: flush transient memory
+		log.Infof("Flushing memory %d", h.GetID().TableID)
+		ctx := context.TODO()
+		ctx = context.WithValue(ctx, "buffer", h.Buff)
+		w := e.WRITER_FACTORY.MakeWriter(NODE_WRITER, ctx)
+		return w.Flush()
 	}
 	// TODO: Flush node
+	log.Infof("Flush node %v", h.GetID())
+	return nil
 }
 
 func (h *NodeHandle) GetBuffer() buf.IBuffer {
@@ -58,7 +69,10 @@ func (h *NodeHandle) Unload() {
 	if !nif.AtomicCASState(&(h.State), nif.NODE_LOADED, nif.NODE_UNLOADING) {
 		panic("logic error")
 	}
-	h.FlushData()
+	err := h.FlushData()
+	if err != nil {
+		panic(fmt.Sprintf("flush data err: %s", err))
+	}
 	h.Buff.Close()
 	h.Buff = nil
 	nif.AtomicStoreState(&(h.State), nif.NODE_UNLOAD)
@@ -143,6 +157,15 @@ func (h *NodeHandle) CommitLoad() error {
 	}
 
 	// TODO: Load content from io here
+	if h.ID.IsTransient() {
+		if !h.Spillable {
+			panic("logic error: should not load non-spillable transient memory")
+		}
+		// ctx := context.TODO()
+		// ctx = context.WithValue(ctx, "buffer", h.Buff)
+		// w := e.WRITER_FACTORY.MakeWriter(NODE_WRITER, ctx)
+		// return w.Flush()
+	}
 
 	if !nif.AtomicCASState(&(h.State), nif.NODE_COMMIT, nif.NODE_LOADED) {
 		return errors.New("logic error")
@@ -165,9 +188,9 @@ func (h *NodeHandle) SetBuffer(buf buf.IBuffer) error {
 	return nil
 }
 
-func NewBufferHandle(blk nif.INodeHandle, mgr mgrif.IBufferManager) nif.IBufferHandle {
+func NewBufferHandle(n nif.INodeHandle, mgr mgrif.IBufferManager) nif.IBufferHandle {
 	h := &BufferHandle{
-		Handle:  blk,
+		Handle:  n,
 		Manager: mgr,
 	}
 	return h

@@ -1,12 +1,19 @@
 package manager
 
 import (
+	e "aoe/pkg/engine"
 	nif "aoe/pkg/engine/buffer/node/iface"
 	"aoe/pkg/engine/layout"
 	w "aoe/pkg/engine/worker"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
+
+var WORK_DIR = "/tmp/buff/manager_test"
+
+func init() {
+	e.WRITER_FACTORY.Init(nil, WORK_DIR)
+}
 
 func TestManagerBasic(t *testing.T) {
 	flusher := w.NewOpWorker()
@@ -172,4 +179,50 @@ func TestManager4(t *testing.T) {
 	assert.True(t, h0_1.HasRef())
 	bh0.Close()
 	assert.False(t, h0_1.HasRef())
+}
+
+func TestManager5(t *testing.T) {
+	node_capacity := uint64(1024)
+	capacity := node_capacity / 2
+	flusher := w.NewOpWorker()
+	mgr := NewBufferManager(capacity, flusher)
+	assert.Equal(t, mgr.GetCapacity(), capacity)
+
+	h0 := mgr.RegisterMemory(node_capacity, false)
+	assert.Nil(t, h0)
+
+	mgr.SetCapacity(node_capacity)
+
+	h0_1 := mgr.RegisterMemory(node_capacity, true)
+	assert.NotNil(t, h0_1)
+	assert.Equal(t, h0_1.GetCapacity(), node_capacity)
+	assert.Equal(t, h0_1.GetCapacity(), mgr.GetUsage())
+	assert.Equal(t, nif.NODE_LOADED, h0_1.GetState())
+	assert.False(t, h0_1.HasRef())
+
+	bh0 := mgr.Pin(h0_1)
+	bh0_id := bh0.GetID()
+	assert.True(t, bh0_id.IsTransient())
+	assert.Equal(t, nif.NODE_LOADED, h0_1.GetState())
+	assert.Equal(t, h0_1.GetCapacity(), node_capacity)
+	assert.Equal(t, h0_1.GetCapacity(), mgr.GetUsage())
+	assert.True(t, h0_1.HasRef())
+
+	h1 := mgr.RegisterMemory(node_capacity, false)
+	assert.Nil(t, h1)
+
+	bh0.Close()
+	assert.False(t, h0_1.HasRef())
+
+	h1 = mgr.RegisterMemory(node_capacity, false)
+	assert.NotNil(t, h1)
+
+	bh1 := mgr.Pin(h1)
+	assert.Equal(t, nif.NODE_LOADED, h1.GetState())
+	assert.Equal(t, h1.GetCapacity(), node_capacity)
+	assert.Equal(t, h1.GetCapacity(), mgr.GetUsage())
+	assert.True(t, h1.HasRef())
+
+	bh1.Close()
+	assert.False(t, h1.HasRef())
 }

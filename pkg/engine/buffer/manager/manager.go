@@ -103,10 +103,18 @@ func (mgr *BufferManager) RegisterNode(capacity uint64, node_id layout.BlockId) 
 }
 
 func (mgr *BufferManager) UnregisterNode(node_id layout.BlockId, spillable bool) {
-	// if node_id.IsTransientBlock() {
-	// PXU TODO
-	// return
-	// }
+	if spillable {
+		if node_id.IsTransient() {
+			return
+
+		} else {
+			mgr.Lock()
+			delete(mgr.Nodes, node_id)
+			// Remove the file
+			mgr.Unlock()
+			return
+		}
+	}
 	mgr.Lock()
 	defer mgr.Unlock()
 	delete(mgr.Nodes, node_id)
