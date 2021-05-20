@@ -3,6 +3,7 @@ package buf
 import (
 	"errors"
 	"sync/atomic"
+	// log "github.com/sirupsen/logrus"
 )
 
 type SimpleMemoryPool struct {
@@ -49,12 +50,12 @@ func (pool *SimpleMemoryPool) MakeNode(size uint64) (node *Node) {
 			// return &Node{Data: []byte{}, Pool: pool}
 		}
 	}
-	buf := make([]byte, size)
+	buf := make([]byte, 0, size)
 	return &Node{Data: buf, Pool: pool, Capacity: size}
 }
 
 func (pool *SimpleMemoryPool) FreeNode(node *Node) {
-	size := uint64(len(node.Data))
+	size := uint64(cap(node.Data))
 	if size == 0 {
 		return
 	}

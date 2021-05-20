@@ -161,16 +161,17 @@ func (h *NodeHandle) CommitLoad() error {
 		if !h.Spillable {
 			panic("logic error: should not load non-spillable transient memory")
 		}
+		log.Infof("loading transient memory %d", h.ID.TableID)
 		ctx := context.TODO()
 		ctx = context.WithValue(ctx, "buffer", h.Buff)
 		r := e.READER_FACTORY.MakeReader(NODE_READER, ctx)
-		log.Infof("loading transient memory %d", h.ID.TableID)
 		err := r.Load()
 		if err != nil {
 			return err
 		}
+	} else {
+		// TODO: Load content
 	}
-	// TODO: Load content
 
 	if !nif.AtomicCASState(&(h.State), nif.NODE_COMMIT, nif.NODE_LOADED) {
 		return errors.New("logic error")

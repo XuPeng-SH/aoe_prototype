@@ -143,6 +143,7 @@ func TestManager3(t *testing.T) {
 		assert.Equal(t, h2.GetState(), nif.NODE_UNLOAD)
 		assert.Equal(t, mgr.GetUsage(), h0.GetCapacity()+h1.GetCapacity())
 		bh_0_2 := mgr.Pin(h2)
+		assert.NotNil(t, bh_0_2)
 		assert.Equal(t, mgr.GetUsage(), h0.GetCapacity()+h1.GetCapacity())
 		assert.Equal(t, h1.GetState(), nif.NODE_LOADED)
 		bh_0_2.Close()
