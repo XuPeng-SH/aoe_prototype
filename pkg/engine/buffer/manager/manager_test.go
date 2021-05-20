@@ -142,3 +142,21 @@ func TestManager3(t *testing.T) {
 		// assert.Equal(t, mgr.GetUsage(), h0.GetCapacity()+h1.GetCapacity())
 	}
 }
+
+func TestManager4(t *testing.T) {
+	node_capacity := uint64(1024)
+	capacity := node_capacity / 2
+	flusher := w.NewOpWorker()
+	mgr := NewBufferManager(capacity, flusher)
+	assert.Equal(t, mgr.GetCapacity(), capacity)
+
+	baseid := layout.BlockId{}
+	id0 := *baseid.Next()
+	h0 := mgr.RegisterTransientNode(node_capacity, id0)
+	assert.Nil(t, h0)
+	num_nodes := uint64(3)
+	mgr.SetCapacity(num_nodes * node_capacity)
+
+	h0_1 := mgr.RegisterTransientNode(node_capacity, id0)
+	assert.NotNil(t, h0_1)
+}

@@ -45,14 +45,14 @@ func (mgr *BufferManager) RegisterMemory(capacity uint64, spillable bool) nif.IN
 func (mgr *BufferManager) RegisterTransientNode(capacity uint64, node_id layout.BlockId) nif.INodeHandle {
 	{
 		mgr.RLock()
-		defer mgr.RUnlock()
-
 		handle, ok := mgr.Nodes[node_id]
 		if ok {
 			if !handle.IsClosed() {
+				mgr.RUnlock()
 				return handle
 			}
 		}
+		mgr.RUnlock()
 	}
 
 	pNode := mgr.makePoolNode(capacity)
@@ -69,16 +69,16 @@ func (mgr *BufferManager) RegisterTransientNode(capacity uint64, node_id layout.
 
 	mgr.Lock()
 	defer mgr.Unlock()
-	handle, ok := mgr.Nodes[node_id]
+	h, ok := mgr.Nodes[node_id]
 	if ok {
-		if !handle.IsClosed() {
+		if !h.IsClosed() {
 			go func() { mgr.FreeNode(pNode) }()
-			return handle
+			return h
 		}
 	}
 
 	mgr.Nodes[node_id] = handle
-	return nil
+	return handle
 }
 
 func (mgr *BufferManager) RegisterNode(capacity uint64, node_id layout.BlockId) nif.INodeHandle {
