@@ -9,12 +9,6 @@ import (
 	// log "github.com/sirupsen/logrus"
 )
 
-type NodeIO struct {
-	ioif.Writer
-	ioif.Reader
-	ioif.Cleaner
-}
-
 func NewNodeIO(opts *e.Options, ctx context.Context) ioif.IO {
 	handle := ctx.Value("handle").(iface.INodeHandle)
 	if handle == nil {
@@ -25,13 +19,7 @@ func NewNodeIO(opts *e.Options, ctx context.Context) ioif.IO {
 	filename := e.MakeFilename(dio.WRITER_FACTORY.Dirname, e.FTNode, MakeNodeFileName(&id), false)
 	ctx = context.WithValue(ctx, "filename", filename)
 
-	w := dio.WRITER_FACTORY.MakeWriter(NODE_WRITER, ctx)
-	r := dio.READER_FACTORY.MakeReader(NODE_READER, ctx)
-	c := dio.CLEANER_FACTORY.MakeCleaner(NODE_CLEANER, ctx)
-	nio := &NodeIO{
-		Writer:  w,
-		Reader:  r,
-		Cleaner: c,
-	}
+	iof := dio.NewIOFactory(dio.WRITER_FACTORY, dio.READER_FACTORY, dio.CLEANER_FACTORY)
+	nio := iof.MakeIO(NODE_WRITER, NODE_READER, NODE_CLEANER, ctx)
 	return nio
 }

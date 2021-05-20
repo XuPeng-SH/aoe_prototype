@@ -1,7 +1,7 @@
 package dio
 
 import (
-	e "aoe/pkg/engine"
+	// e "aoe/pkg/engine"
 	base "aoe/pkg/engine/dataio/iface"
 	"context"
 	"fmt"
@@ -25,8 +25,8 @@ var (
 )
 
 type CleanerFactory struct {
-	Opts     *e.Options
-	Dirname  string
+	// Opts     *e.Options
+	// Dirname  string
 	Builders map[string]base.CleanerBuilder
 }
 

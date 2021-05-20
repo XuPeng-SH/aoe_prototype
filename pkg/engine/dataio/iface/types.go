@@ -55,3 +55,7 @@ type IO interface {
 	Reader
 	Cleaner
 }
+
+type IOFactory interface {
+	MakeIO(writerName, readerName, cleanerName string, ctx context.Context) IO
+}

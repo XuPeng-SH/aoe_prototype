@@ -1,6 +1,8 @@
 package engine
 
 import (
+	// dio "aoe/pkg/engine/dataio"
+	// ioif "aoe/pkg/engine/dataio/iface"
 	e "aoe/pkg/engine/event"
 	md "aoe/pkg/engine/metadata"
 	w "aoe/pkg/engine/worker"
@@ -26,7 +28,7 @@ type Options struct {
 	Data struct {
 		Flusher iw.IOpWorker
 		Sorter  iw.IOpWorker
-		// WriterFactory *WriterFactory
+		// IOFactory ioif.IOFactory
 	}
 }
 
@@ -60,10 +62,14 @@ func (o *Options) FillDefaults(dirname string) *Options {
 		o.Meta.Checkpointer = NewCheckpointer(o, dirname)
 	}
 
-	// if o.Data.WriterFactory == nil {
-	// 	o.Data.WriterFactory = WRITER_FACTORY
-	// 	o.Data.WriterFactory.Opts = o
-	// 	o.Data.WriterFactory.Dirname = dirname
+	// if o.Data.IOFactory == nil {
+	// 	dio.WRITER_FACTORY.Opts = o
+	// 	dio.WRITER_FACTORY.Dirname = dirname
+	// 	dio.READER_FACTORY.Opts = o
+	// 	dio.READER_FACTORY.Dirname = dirname
+	// o.Data.IOFactory = WRITER_FACTORY
+	// o.Data.WriterFactory.Opts = o
+	// o.Data.WriterFactory.Dirname = dirname
 	// }
 
 	if o.Data.Flusher == nil {
