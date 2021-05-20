@@ -216,8 +216,9 @@ func TestManager5(t *testing.T) {
 
 	bh0.Close()
 	assert.False(t, h0_1.HasRef())
-
-	h1 = mgr.RegisterMemory(node_capacity, true)
+	id := layout.BlockId{}
+	id1 := id.Next()
+	h1 = mgr.RegisterSpillableNode(node_capacity, *id1)
 	assert.NotNil(t, h1)
 
 	bh1 := mgr.Pin(h1)
@@ -230,6 +231,13 @@ func TestManager5(t *testing.T) {
 	assert.False(t, h1.HasRef())
 
 	bh0 = mgr.Pin(h0_1)
+	assert.NotNil(t, bh0)
+	bh1 = mgr.Pin(h1)
+	assert.Nil(t, bh1)
+
+	bh0.Close()
+	bh1 = mgr.Pin(h1)
+	assert.NotNil(t, bh1)
 
 	h1.Close()
 	h0_1.Close()
