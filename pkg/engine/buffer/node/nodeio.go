@@ -6,53 +6,16 @@ import (
 	dio "aoe/pkg/engine/dataio"
 	ioif "aoe/pkg/engine/dataio/iface"
 	"context"
-	log "github.com/sirupsen/logrus"
-	"os"
+	// log "github.com/sirupsen/logrus"
 )
-
-type emptyCleaner int
-
-func (*emptyCleaner) Clean() error {
-	return nil
-}
-
-var (
-	cleaner = new(emptyCleaner)
-)
-
-type Cleaner interface {
-	Clean() error
-}
-
-type NodeCleaner struct {
-	Filename string
-}
-
-func NewNodeCleaner(filename string) Cleaner {
-	nc := &NodeCleaner{
-		Filename: filename,
-	}
-	return nc
-}
-
-func (nc *NodeCleaner) Clean() error {
-	log.Infof("NodeCleaner removing %s", nc.Filename)
-	return os.Remove(nc.Filename)
-}
-
-type IO interface {
-	ioif.Writer
-	ioif.Reader
-	Cleaner
-}
 
 type NodeIO struct {
 	ioif.Writer
 	ioif.Reader
-	Cleaner
+	ioif.Cleaner
 }
 
-func NewNodeIO(opts *e.Options, ctx context.Context) IO {
+func NewNodeIO(opts *e.Options, ctx context.Context) ioif.IO {
 	handle := ctx.Value("handle").(iface.INodeHandle)
 	if handle == nil {
 		panic("logic error")
@@ -64,7 +27,7 @@ func NewNodeIO(opts *e.Options, ctx context.Context) IO {
 
 	w := dio.WRITER_FACTORY.MakeWriter(NODE_WRITER, ctx)
 	r := dio.READER_FACTORY.MakeReader(NODE_READER, ctx)
-	c := NewNodeCleaner(filename)
+	c := dio.CLEANER_FACTORY.MakeCleaner(NODE_CLEANER, ctx)
 	nio := &NodeIO{
 		Writer:  w,
 		Reader:  r,

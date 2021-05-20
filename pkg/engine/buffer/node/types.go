@@ -1,10 +1,10 @@
 package node
 
 import (
-	// e "aoe/pkg/engine"
 	buf "aoe/pkg/engine/buffer"
 	mgrif "aoe/pkg/engine/buffer/manager/iface"
 	nif "aoe/pkg/engine/buffer/node/iface"
+	ioif "aoe/pkg/engine/dataio/iface"
 	"aoe/pkg/engine/layout"
 	"sync"
 )
@@ -34,7 +34,7 @@ type NodeHandle struct {
 	Refs      uint64
 	Manager   mgrif.IBufferManager
 	Iter      uint64
-	IO        IO
+	IO        ioif.IO
 }
 
 // BufferHandle is created from IBufferManager::Pin, which will set the INodeHandle reference to 1
