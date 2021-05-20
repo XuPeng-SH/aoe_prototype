@@ -159,4 +159,17 @@ func TestManager4(t *testing.T) {
 
 	h0_1 := mgr.RegisterTransientNode(node_capacity, id0)
 	assert.NotNil(t, h0_1)
+	assert.Equal(t, h0_1.GetCapacity(), node_capacity)
+	assert.Equal(t, h0_1.GetCapacity(), mgr.GetUsage())
+	assert.Equal(t, nif.NODE_LOADED, h0_1.GetState())
+	assert.False(t, h0_1.HasRef())
+
+	bh0 := mgr.Pin(h0_1)
+	assert.Equal(t, bh0.GetID(), id0)
+	assert.Equal(t, nif.NODE_LOADED, h0_1.GetState())
+	assert.Equal(t, h0_1.GetCapacity(), node_capacity)
+	assert.Equal(t, h0_1.GetCapacity(), mgr.GetUsage())
+	assert.True(t, h0_1.HasRef())
+	bh0.Close()
+	assert.False(t, h0_1.HasRef())
 }
