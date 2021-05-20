@@ -47,16 +47,11 @@ func (h *NodeHandle) IncIteration() uint64 {
 }
 
 func (h *NodeHandle) FlushData() error {
-	if h.ID.IsTransient() {
-		if !h.Spillable {
-			return nil
-		}
-		log.Infof("Flushing memory %d", h.GetID().TableID)
-		return h.IO.Flush()
+	if !h.Spillable {
+		return nil
 	}
-	// TODO: Flush node
-	log.Infof("Flush node %v", h.GetID())
-	return nil
+	log.Infof("Flushing node %v", h.GetID())
+	return h.IO.Flush()
 }
 
 func (h *NodeHandle) GetBuffer() buf.IBuffer {
@@ -166,17 +161,16 @@ func (h *NodeHandle) CommitLoad() error {
 		return errors.New("logic error")
 	}
 
-	if h.ID.IsTransient() {
-		if !h.Spillable {
-			panic("logic error: should not load non-spillable transient memory")
-		}
-		log.Infof("loading transient memory %d", h.ID.TableID)
+	if h.Spillable {
+		log.Infof("loading transient node %v", h.ID)
 		err := h.IO.Load()
 		if err != nil {
 			return err
 		}
+	} else if h.ID.IsTransient() {
+		panic("logic error: should not load non-spillable transient memory")
 	} else {
-		// TODO: Load content
+		// TODO: Load from persistent segment
 	}
 
 	if !nif.AtomicCASState(&(h.State), nif.NODE_COMMIT, nif.NODE_LOADED) {
