@@ -4,7 +4,7 @@ import (
 	e "aoe/pkg/engine"
 	"aoe/pkg/engine/buffer/node/iface"
 	"context"
-	// log "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"os"
 )
 
@@ -34,6 +34,7 @@ func NewNodeCleaner(filename string) Cleaner {
 }
 
 func (nc *NodeCleaner) Clean() error {
+	log.Infof("NodeCleaner removing %s", nc.Filename)
 	return os.Remove(nc.Filename)
 }
 

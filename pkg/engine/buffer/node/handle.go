@@ -112,7 +112,7 @@ func (h *NodeHandle) IsSpillable() bool {
 }
 
 func (h *NodeHandle) Clean() error {
-	return nil
+	return h.IO.Clean()
 }
 
 func (h *NodeHandle) Close() error {
@@ -124,7 +124,6 @@ func (h *NodeHandle) Close() error {
 		h.Buff.Close()
 	}
 	log.Infof("UnregisterNode %v", h.ID)
-	// h.Manager.UnregisterNode(h.ID, h.Spillable)
 	h.Manager.UnregisterNode(h)
 	return nil
 }

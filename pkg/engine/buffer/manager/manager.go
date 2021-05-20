@@ -106,8 +106,8 @@ func (mgr *BufferManager) UnregisterNode(h nif.INodeHandle) {
 	node_id := h.GetID()
 	if h.IsSpillable() {
 		if node_id.IsTransient() {
+			h.Clean()
 			return
-
 		} else {
 			mgr.Lock()
 			delete(mgr.Nodes, node_id)
