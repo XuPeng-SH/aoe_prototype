@@ -2,6 +2,8 @@ package memtable
 
 import (
 	"aoe/pkg/engine"
+	// bmgr "aoe/pkg/engine/buffer/manager"
+	bmgrif "aoe/pkg/engine/buffer/manager/iface"
 	imem "aoe/pkg/engine/memtable/base"
 	"errors"
 	"sync"
@@ -11,16 +13,18 @@ type Manager struct {
 	sync.RWMutex
 	Opts        *engine.Options
 	Collections map[uint64]imem.ICollection
+	BufMgr      bmgrif.IBufferManager
 }
 
 var (
 	_ imem.IManager = (*Manager)(nil)
 )
 
-func NewManager(opts *engine.Options) imem.IManager {
+func NewManager(opts *engine.Options, bufMgr bmgrif.IBufferManager) imem.IManager {
 	m := &Manager{
 		Opts:        opts,
 		Collections: make(map[uint64]imem.ICollection),
+		BufMgr:      bufMgr,
 	}
 	return m
 }
@@ -50,7 +54,7 @@ func (m *Manager) RegisterCollection(id uint64) (c imem.ICollection, err error) 
 	if ok {
 		return nil, errors.New("logic error")
 	}
-	c = NewCollection(m.Opts, id)
+	c = NewCollection(m.BufMgr, m.Opts, id)
 	m.Collections[id] = c
 	return c, err
 }

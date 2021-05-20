@@ -2,6 +2,7 @@ package memtable
 
 import (
 	"aoe/pkg/engine"
+	bmgrif "aoe/pkg/engine/buffer/manager/iface"
 	imem "aoe/pkg/engine/memtable/base"
 	md "aoe/pkg/engine/metadata"
 	dops "aoe/pkg/engine/ops/data"
@@ -12,9 +13,10 @@ import (
 )
 
 type Collection struct {
-	ID   uint64
-	Opts *engine.Options
-	mem  struct {
+	ID     uint64
+	Opts   *engine.Options
+	BufMgr bmgrif.IBufferManager
+	mem    struct {
 		sync.RWMutex
 		MemTables []imem.IMemTable
 	}
@@ -24,10 +26,11 @@ var (
 	_ imem.ICollection = (*Collection)(nil)
 )
 
-func NewCollection(opts *engine.Options, id uint64) imem.ICollection {
+func NewCollection(bmgr bmgrif.IBufferManager, opts *engine.Options, id uint64) imem.ICollection {
 	c := &Collection{
-		ID:   id,
-		Opts: opts,
+		ID:     id,
+		Opts:   opts,
+		BufMgr: bmgr,
 	}
 	c.mem.MemTables = make([]imem.IMemTable, 0)
 	return c
@@ -50,7 +53,7 @@ func (c *Collection) onNoMutableTable() (tbl imem.IMemTable, err error) {
 	if err != nil {
 		return nil, err
 	}
-	tbl = NewMemTable(c.Opts, blk)
+	tbl = NewMemTable(c.BufMgr, c.Opts, blk)
 	c.mem.MemTables = append(c.mem.MemTables, tbl)
 	return tbl, err
 }

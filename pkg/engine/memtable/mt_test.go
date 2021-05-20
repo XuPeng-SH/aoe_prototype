@@ -2,9 +2,12 @@ package memtable
 
 import (
 	"aoe/pkg/engine"
-	// e "aoe/pkg/engine/event"
+	bmgr "aoe/pkg/engine/buffer/manager"
+	dio "aoe/pkg/engine/dataio"
+	"aoe/pkg/engine/layout"
 	md "aoe/pkg/engine/metadata"
 	mops "aoe/pkg/engine/ops/meta"
+	w "aoe/pkg/engine/worker"
 	todo "aoe/pkg/mock"
 	"github.com/stretchr/testify/assert"
 	"sync"
@@ -12,9 +15,19 @@ import (
 	"time"
 )
 
+var WORK_DIR = "/tmp/memtable/mt_test"
+
+func init() {
+	dio.WRITER_FACTORY.Init(nil, WORK_DIR)
+	dio.READER_FACTORY.Init(nil, WORK_DIR)
+}
+
 func TestManager(t *testing.T) {
 	opts := &engine.Options{}
-	manager := NewManager(opts)
+	capacity := uint64(4096)
+	flusher := w.NewOpWorker()
+	bufMgr := bmgr.NewBufferManager(capacity, flusher)
+	manager := NewManager(opts, bufMgr)
 	assert.Equal(t, len(manager.CollectionIDs()), 0)
 	c0, err := manager.RegisterCollection(0)
 	assert.Nil(t, err)
@@ -52,7 +65,10 @@ func TestCollection(t *testing.T) {
 	assert.Nil(t, err)
 	tbl := op.GetTable()
 
-	manager := NewManager(opts)
+	capacity := uint64(4096)
+	flusher := w.NewOpWorker()
+	bufMgr := bmgr.NewBufferManager(capacity, flusher)
+	manager := NewManager(opts, bufMgr)
 	c0, _ := manager.RegisterCollection(tbl.ID)
 	blks := uint64(20)
 	expect_blks := blks
@@ -92,4 +108,44 @@ func TestCollection(t *testing.T) {
 	opts.Meta.Flusher.Stop()
 	opts.Data.Flusher.Stop()
 	opts.Data.Sorter.Stop()
+}
+
+func TestContainer(t *testing.T) {
+	capacity := uint64(4096)
+	flusher := w.NewOpWorker()
+	bufMgr := bmgr.NewBufferManager(capacity, flusher)
+
+	baseid := layout.BlockId{}
+	step := capacity / 2
+	// step := capacity
+	con := NewDynamicContainer(bufMgr, baseid, step)
+	assert.Equal(t, uint64(0), con.GetCapacity())
+
+	err := con.Allocate()
+	assert.Nil(t, err)
+	assert.Equal(t, step, con.GetCapacity())
+	assert.True(t, con.IsPined())
+
+	id2 := baseid
+	id2.BlockID += 1
+	con2 := NewDynamicContainer(bufMgr, id2, step)
+	assert.NotNil(t, con2)
+	err = con2.Allocate()
+	assert.Nil(t, err)
+
+	err = con2.Allocate()
+	assert.NotNil(t, err)
+	assert.Equal(t, step, con2.GetCapacity())
+
+	con.Unpin()
+	err = con2.Allocate()
+	assert.Nil(t, err)
+	assert.Equal(t, step*2, con2.GetCapacity())
+	assert.Equal(t, capacity, bufMgr.GetUsage())
+
+	con.Close()
+	con2.Close()
+	assert.Equal(t, uint64(0), con.GetCapacity())
+	assert.Equal(t, uint64(0), con2.GetCapacity())
+	assert.Equal(t, capacity, bufMgr.GetCapacity())
 }
