@@ -33,7 +33,7 @@ func NewNodeHandle(ctx *NodeHandleCtx) nif.INodeHandle {
 	}
 	c := context.TODO()
 	c = context.WithValue(c, "handle", handle)
-	handle.IO = NewNodeIO(dio.WRITER_FACTORY.Opts, c)
+	handle.SpillIO = NewNodeIO(dio.WRITER_FACTORY.Opts, c)
 	return handle
 }
 
@@ -51,7 +51,7 @@ func (h *NodeHandle) FlushData() error {
 		return nil
 	}
 	log.Infof("Flushing node %v", h.GetID())
-	return h.IO.Flush()
+	return h.SpillIO.Flush()
 }
 
 func (h *NodeHandle) GetBuffer() buf.IBuffer {
@@ -108,7 +108,7 @@ func (h *NodeHandle) IsSpillable() bool {
 }
 
 func (h *NodeHandle) Clean() error {
-	return h.IO.Clean()
+	return h.SpillIO.Clean()
 }
 
 func (h *NodeHandle) Close() error {
@@ -163,7 +163,7 @@ func (h *NodeHandle) CommitLoad() error {
 
 	if h.Spillable {
 		log.Infof("loading transient node %v", h.ID)
-		err := h.IO.Load()
+		err := h.SpillIO.Load()
 		if err != nil {
 			return err
 		}

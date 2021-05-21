@@ -34,7 +34,7 @@ type NodeHandle struct {
 	Refs      uint64
 	Manager   mgrif.IBufferManager
 	Iter      uint64
-	IO        ioif.IO
+	SpillIO   ioif.IO
 }
 
 // BufferHandle is created from IBufferManager::Pin, which will set the INodeHandle reference to 1
