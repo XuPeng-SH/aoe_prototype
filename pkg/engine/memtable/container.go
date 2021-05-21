@@ -6,8 +6,8 @@ import (
 	"aoe/pkg/engine/layout"
 	"errors"
 	"fmt"
-	// log "github.com/sirupsen/logrus"
 	"sync"
+	// log "github.com/sirupsen/logrus"
 )
 
 type Container interface {
@@ -20,35 +20,106 @@ type Container interface {
 }
 
 type StaticContainer struct {
-	Nodes map[layout.BlockId]nif.INodeHandle
+	sync.RWMutex
+	BufMgr  bmgrif.IBufferManager
+	BaseID  layout.BlockId
+	Nodes   map[layout.BlockId]nif.INodeHandle
+	Handles map[layout.BlockId]nif.IBufferHandle
+	Pined   bool
+	Impl    Container
 }
 
 type DynamicContainer struct {
-	sync.RWMutex
-	BufMgr   bmgrif.IBufferManager
+	// Container
+	StaticContainer
 	StepSize uint64
-	BaseID   layout.BlockId
-	Nodes    map[layout.BlockId]nif.INodeHandle
-	Handles  map[layout.BlockId]nif.IBufferHandle
-	Pined    bool
 }
 
 func NewDynamicContainer(bmgr bmgrif.IBufferManager, id layout.BlockId, step uint64) Container {
 	con := &DynamicContainer{
-		BaseID:   id,
-		BufMgr:   bmgr,
 		StepSize: step,
-		Nodes:    make(map[layout.BlockId]nif.INodeHandle),
-		Handles:  make(map[layout.BlockId]nif.IBufferHandle),
-		Pined:    true,
+		StaticContainer: StaticContainer{
+			BufMgr:  bmgr,
+			BaseID:  id,
+			Nodes:   make(map[layout.BlockId]nif.INodeHandle),
+			Handles: make(map[layout.BlockId]nif.IBufferHandle),
+			Pined:   true,
+		},
 	}
+	con.Impl = con
 	return con
 }
 
-func (con *DynamicContainer) IsPined() bool {
+func (con *StaticContainer) Allocate() error {
+	if con.Impl != nil {
+		return con.Impl.Allocate()
+	}
+	return errors.New("not supported")
+}
+
+func (con *StaticContainer) IsPined() bool {
 	con.RLock()
 	defer con.RUnlock()
 	return con.Pined
+}
+
+func (con *StaticContainer) GetCapacity() uint64 {
+	con.RLock()
+	defer con.RUnlock()
+	ret := uint64(0)
+	for _, n := range con.Nodes {
+		ret += n.GetCapacity()
+	}
+	return ret
+}
+
+func (con *StaticContainer) Pin() error {
+	con.Lock()
+	defer con.Unlock()
+	if con.Pined {
+		return nil
+	}
+	for id, n := range con.Nodes {
+		h := con.BufMgr.Pin(n)
+		if h == nil {
+			con.Handles = make(map[layout.BlockId]nif.IBufferHandle)
+			return errors.New(fmt.Sprintf("Cannot pin node %v", id))
+		}
+		con.Handles[id] = h
+	}
+	con.Pined = true
+	return nil
+}
+
+func (con *StaticContainer) Unpin() {
+	con.Lock()
+	defer con.Unlock()
+	if !con.Pined {
+		return
+	}
+	for _, h := range con.Handles {
+		err := h.Close()
+		if err != nil {
+			panic(fmt.Sprintf("logic error: %v", err))
+		}
+	}
+	con.Handles = make(map[layout.BlockId]nif.IBufferHandle)
+	con.Pined = false
+	return
+}
+
+func (con *StaticContainer) Close() error {
+	con.Lock()
+	defer con.Unlock()
+	for _, h := range con.Handles {
+		h.Close()
+	}
+	con.Handles = make(map[layout.BlockId]nif.IBufferHandle)
+	for _, n := range con.Nodes {
+		n.Close()
+	}
+	con.Nodes = make(map[layout.BlockId]nif.INodeHandle)
+	return nil
 }
 
 func (con *DynamicContainer) Allocate() error {
@@ -70,60 +141,5 @@ func (con *DynamicContainer) Allocate() error {
 	}
 	con.Nodes[id] = node
 	con.Handles[id] = handle
-	return nil
-}
-
-func (con *DynamicContainer) GetCapacity() uint64 {
-	con.RLock()
-	defer con.RUnlock()
-	return uint64(int(con.StepSize) * len(con.Nodes))
-}
-
-func (con *DynamicContainer) Pin() error {
-	con.Lock()
-	defer con.Unlock()
-	if con.Pined {
-		return nil
-	}
-	for id, n := range con.Nodes {
-		h := con.BufMgr.Pin(n)
-		if h == nil {
-			con.Handles = make(map[layout.BlockId]nif.IBufferHandle)
-			return errors.New(fmt.Sprintf("Cannot pin node %v", id))
-		}
-		con.Handles[id] = h
-	}
-	con.Pined = true
-	return nil
-}
-
-func (con *DynamicContainer) Unpin() {
-	con.Lock()
-	defer con.Unlock()
-	if !con.Pined {
-		return
-	}
-	for _, h := range con.Handles {
-		err := h.Close()
-		if err != nil {
-			panic(fmt.Sprintf("logic error: %v", err))
-		}
-	}
-	con.Handles = make(map[layout.BlockId]nif.IBufferHandle)
-	con.Pined = false
-	return
-}
-
-func (con *DynamicContainer) Close() error {
-	con.Lock()
-	defer con.Unlock()
-	for _, h := range con.Handles {
-		h.Close()
-	}
-	con.Handles = make(map[layout.BlockId]nif.IBufferHandle)
-	for _, n := range con.Nodes {
-		n.Close()
-	}
-	con.Nodes = make(map[layout.BlockId]nif.INodeHandle)
 	return nil
 }
