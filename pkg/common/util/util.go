@@ -2,6 +2,10 @@ package util
 
 import ()
 
+const (
+	UINT64_MAX = ^uint64(0)
+)
+
 func MemsetRepeatByte(a []byte, v byte) {
 	if len(a) == 0 {
 		return
