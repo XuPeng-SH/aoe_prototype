@@ -7,10 +7,6 @@ import (
 	w "aoe/pkg/engine/worker"
 	"github.com/stretchr/testify/assert"
 	"testing"
-	// "aoe/pkg/engine"
-	// md "aoe/pkg/engine/metadata"
-	// mops "aoe/pkg/engine/ops/meta"
-	// todo "aoe/pkg/mock"
 )
 
 var WORK_DIR = "/tmp/layout/blk_test"
@@ -27,20 +23,6 @@ func TestManager(t *testing.T) {
 	bufMgr := bmgr.NewBufferManager(capacity, flusher)
 	baseid := layout.BlockId{}
 	row_count := uint64(64)
-	// seg0_id := baseid.NextSegment()
-	// seg0 := NewSegment(seg0_id)
-	// assert.Nil(t, seg0.GetNext())
-	// assert.Nil(t, seg0.GetBlockRoot())
-	// blk0_0_id := seg0_id.NextBlock()
-	// blk0_0 := NewStdColumnBlock(bufMgr, seg0, blk0_0_id, row_count)
-	// assert.Nil(t, blk0_0.GetNext())
-	// assert.Equal(t, seg0, blk0_0.GetSegment())
-	// assert.Equal(t, blk0_0, seg0.GetBlockRoot())
-	// blk0_1_id := seg0_id.NextBlock()
-	// blk0_1 := NewStdColumnBlock(bufMgr, seg0, blk0_1_id, row_count)
-	// assert.Nil(t, blk0_1.GetNext())
-	// assert.Equal(t, blk0_1, blk0_0.GetNext())
-	// assert.Equal(t, seg0, blk0_1.GetSegment())
 	var prev_seg IColumnSegment
 	var first_seg IColumnSegment
 	seg_cnt := 5
@@ -76,4 +58,16 @@ func TestManager(t *testing.T) {
 		cnt++
 	}
 	assert.Equal(t, seg_cnt*2, cnt)
+
+	first_blk := first_seg.GetBlockRoot()
+	assert.NotNil(t, first_blk)
+	cursor := ScanCursor{
+		Current: first_blk,
+	}
+
+	for cursor.Current != nil {
+		err := cursor.Init()
+		assert.Nil(t, err)
+		cursor.Next()
+	}
 }
