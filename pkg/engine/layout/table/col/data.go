@@ -62,7 +62,11 @@ func (cdata *ColumnData) InitScanCursor(cursor *ScanCursor) error {
 	if root == nil {
 		return nil
 	}
-	cursor.Current = root.GetBlockRoot()
+	blk := root.GetBlockRoot()
+	if blk == nil {
+		return nil
+	}
+	cursor.Current = blk.GetPartRoot()
 	return nil
 }
 

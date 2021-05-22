@@ -10,6 +10,7 @@ type IColumnSegment interface {
 	SetNext(next IColumnSegment)
 	GetID() layout.BlockId
 	GetBlockRoot() IColumnBlock
+	GetPartRoot() IColumnPart
 	GetRowCount() uint64
 	String() string
 	ToString(verbose bool) string
@@ -62,6 +63,13 @@ func (seg *ColumnSegment) Append(blk IColumnBlock) {
 
 func (seg *ColumnSegment) GetBlockRoot() IColumnBlock {
 	return seg.BlockRoot
+}
+
+func (seg *ColumnSegment) GetPartRoot() IColumnPart {
+	if seg.BlockRoot != nil {
+		return seg.BlockRoot.GetPartRoot()
+	}
+	return nil
 }
 
 func (seg *ColumnSegment) String() string {

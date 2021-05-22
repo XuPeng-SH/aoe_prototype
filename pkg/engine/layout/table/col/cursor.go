@@ -14,7 +14,7 @@ type IScanCursor interface {
 }
 
 type ScanCursor struct {
-	Current IColumnBlock
+	Current IColumnPart
 	Handle  nif.IBufferHandle
 	Inited  bool
 }

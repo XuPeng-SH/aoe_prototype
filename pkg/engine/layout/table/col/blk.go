@@ -13,6 +13,8 @@ type IColumnBlock interface {
 	GetRowCount() uint64
 	GetSegment() IColumnSegment
 	InitScanCursor(cusor *ScanCursor) error
+	Append(part IColumnPart)
+	GetPartRoot() IColumnPart
 }
 
 type ColumnBlock struct {
