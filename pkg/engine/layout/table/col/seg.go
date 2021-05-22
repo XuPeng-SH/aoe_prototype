@@ -7,22 +7,36 @@ import (
 
 type IColumnSegment interface {
 	GetNext() IColumnSegment
+	SetNext(next IColumnSegment)
 	GetID() layout.BlockId
 	GetBlockRoot() IColumnBlock
 	GetRowCount() uint64
 	String() string
 	ToString(verbose bool) string
+	Append(blk IColumnBlock)
 }
 
 type ColumnSegment struct {
 	ID        layout.BlockId
 	Next      IColumnSegment
 	BlockRoot IColumnBlock
+	BlockTail IColumnBlock
 	RowCount  uint64
+}
+
+func NewSegment(id layout.BlockId) IColumnSegment {
+	seg := &ColumnSegment{
+		ID: id,
+	}
+	return seg
 }
 
 func (seg *ColumnSegment) GetRowCount() uint64 {
 	return seg.RowCount
+}
+
+func (seg *ColumnSegment) SetNext(next IColumnSegment) {
+	seg.Next = next
 }
 
 func (seg *ColumnSegment) GetNext() IColumnSegment {
@@ -31,6 +45,19 @@ func (seg *ColumnSegment) GetNext() IColumnSegment {
 
 func (seg *ColumnSegment) GetID() layout.BlockId {
 	return seg.ID
+}
+
+func (seg *ColumnSegment) Append(blk IColumnBlock) {
+	if !seg.ID.IsSameSegment(blk.GetID()) {
+		panic("logic error")
+	}
+	if seg.BlockTail == nil {
+		seg.BlockRoot = blk
+		seg.BlockTail = blk
+	} else {
+		seg.BlockTail.SetNext(blk)
+	}
+	seg.RowCount += blk.GetRowCount()
 }
 
 func (seg *ColumnSegment) GetBlockRoot() IColumnBlock {

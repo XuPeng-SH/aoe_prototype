@@ -129,7 +129,7 @@ func (con *DynamicContainer) Allocate() error {
 		panic("logic error")
 	}
 	id := con.BaseID
-	id.PartID = uint16(len(con.Nodes))
+	id.PartID = uint32(len(con.Nodes))
 	node := con.BufMgr.RegisterSpillableNode(con.StepSize, id)
 	if node == nil {
 		return errors.New(fmt.Sprintf("Cannot allocate %d from buffer manager", con.StepSize))

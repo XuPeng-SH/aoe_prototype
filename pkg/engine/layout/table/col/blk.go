@@ -2,13 +2,17 @@ package col
 
 import (
 	"aoe/pkg/engine/layout"
+	"io"
 )
 
 type IColumnBlock interface {
+	io.Closer
 	GetNext() IColumnBlock
+	SetNext(next IColumnBlock)
 	GetID() layout.BlockId
 	GetRowCount() uint64
 	GetSegment() IColumnSegment
+	InitScanCursor(cusor *ScanCursor) error
 }
 
 type ColumnBlock struct {
@@ -24,6 +28,13 @@ func (blk *ColumnBlock) GetSegment() IColumnSegment {
 
 func (blk *ColumnBlock) GetRowCount() uint64 {
 	return blk.RowCount
+}
+
+func (blk *ColumnBlock) SetNext(next IColumnBlock) {
+	// if blk.Next != nil {
+	// 	panic("logic error")
+	// }
+	blk.Next = next
 }
 
 func (blk *ColumnBlock) GetNext() IColumnBlock {
