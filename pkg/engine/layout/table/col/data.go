@@ -8,6 +8,7 @@ type IColumnData interface {
 	String() string
 	InitScanCursor(cursor *ScanCursor) error
 	Append(seg IColumnSegment) error
+	AppendBlock(blk IColumnBlock) error
 	SegmentCount() uint64
 	GetSegmentRoot() IColumnSegment
 }
@@ -38,6 +39,18 @@ func (cdata *ColumnData) SegmentCount() uint64 {
 
 func (cdata *ColumnData) Append(seg IColumnSegment) error {
 	return cdata.SegTree.Append(seg)
+}
+
+func (cdata *ColumnData) AppendBlock(blk IColumnBlock) error {
+	tail_seg := cdata.SegTree.GetTail()
+	id := tail_seg.GetID()
+	if tail_seg == nil || !id.IsSameSegment(blk.GetID()) {
+		err := cdata.Append(blk.GetSegment())
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (cdata *ColumnData) InitScanCursor(cursor *ScanCursor) error {
