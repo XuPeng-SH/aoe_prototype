@@ -8,6 +8,9 @@ import (
 )
 
 type ISegmentTree interface {
+	sync.Locker
+	RLock()
+	RUnlock()
 	String() string
 	ToString(depth uint64) string
 	GetRoot() IColumnSegment
@@ -21,6 +24,14 @@ type SegmentTree struct {
 	sync.RWMutex
 	Segments []IColumnSegment
 	Helper   map[layout.BlockId]bool
+}
+
+func NewSegmentTree() ISegmentTree {
+	tree := &SegmentTree{
+		Segments: make([]IColumnSegment, 0),
+		Helper:   make(map[layout.BlockId]bool),
+	}
+	return tree
 }
 
 func (tree *SegmentTree) Depth() uint64 {
@@ -45,6 +56,9 @@ func (tree *SegmentTree) Append(seg IColumnSegment) error {
 	_, ok := tree.Helper[seg.GetID()]
 	if ok {
 		return errors.New(fmt.Sprintf("Duplicate seg %v in tree", seg.GetID()))
+	}
+	if len(tree.Segments) != 0 {
+		tree.Segments[len(tree.Segments)-1].SetNext(seg)
 	}
 	tree.Segments = append(tree.Segments, seg)
 	tree.Helper[seg.GetID()] = true

@@ -8,10 +8,6 @@ import (
 	"fmt"
 )
 
-const (
-	NodeCapacity uint64 = 4096
-)
-
 type StdColumnBlock struct {
 	ColumnBlock
 	BufMgr  bmgrif.IBufferManager
@@ -19,7 +15,7 @@ type StdColumnBlock struct {
 }
 
 func NewStdColumnBlock(bmgr bmgrif.IBufferManager, seg IColumnSegment, id layout.BlockId,
-	rowCount uint64) IColumnBlock {
+	rowCount uint64, typeSize uint64) IColumnBlock {
 	blk := &StdColumnBlock{
 		BufMgr: bmgr,
 		ColumnBlock: ColumnBlock{
@@ -28,7 +24,7 @@ func NewStdColumnBlock(bmgr bmgrif.IBufferManager, seg IColumnSegment, id layout
 			RowCount: rowCount,
 		},
 	}
-	blk.BufNode = bmgr.RegisterNode(NodeCapacity, id)
+	blk.BufNode = bmgr.RegisterNode(rowCount*typeSize, id)
 	seg.Append(blk)
 	return blk
 }
