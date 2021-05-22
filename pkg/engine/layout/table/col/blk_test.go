@@ -119,6 +119,68 @@ func TestStdColumnBlock2(t *testing.T) {
 	cursor.Close()
 }
 
+func TestStrColumnBlock(t *testing.T) {
+	typeSize := uint64(unsafe.Sizeof(uint64(0)))
+	row_count := uint64(1)
+	capacity := typeSize * row_count
+	flusher := w.NewOpWorker()
+	bufMgr := bmgr.NewBufferManager(capacity, flusher)
+	t.Log(bufMgr.GetCapacity())
+	baseid := layout.BlockId{}
+	var prev_seg IColumnSegment
+	var first_seg IColumnSegment
+	seg_cnt := 5
+	for i := 0; i < seg_cnt; i++ {
+		seg_id := baseid.NextSegment()
+		seg := NewSegment(seg_id)
+		assert.Nil(t, seg.GetNext())
+		assert.Nil(t, seg.GetBlockRoot())
+		blk_0_id := seg_id.NextBlock()
+		blk_0 := NewStrColumnBlock(seg, blk_0_id)
+		part_0_0_id := blk_0_id.NextPart()
+		part_0 := NewColumnPart(bufMgr, blk_0, part_0_0_id, row_count, typeSize)
+		assert.Nil(t, part_0.GetNext())
+		assert.Equal(t, blk_0, part_0.GetBlock())
+		assert.Equal(t, part_0, blk_0.GetPartRoot())
+		part_0_1_id := blk_0_id.NextPart()
+		part_0_1 := NewColumnPart(bufMgr, blk_0, part_0_1_id, row_count, typeSize)
+		assert.Nil(t, part_0_1.GetNext())
+		assert.Equal(t, blk_0, part_0_1.GetBlock())
+		// assert.Equal(t, part_0, blk_0.GetPartRoot())
+		if prev_seg != nil {
+			prev_seg.SetNext(seg)
+		} else {
+			first_seg = seg
+		}
+		prev_seg = seg
+	}
+	t.Log(first_seg.ToString(true))
+	part := first_seg.GetPartRoot()
+	assert.NotNil(t, part)
+	var cnt int
+	for part != nil {
+		t.Log(part.GetID())
+		part = part.GetNext()
+		cnt++
+	}
+	assert.Equal(t, seg_cnt*2, cnt)
+
+	first_part := first_seg.GetPartRoot()
+	assert.NotNil(t, first_part)
+	cursor := ScanCursor{
+		Current: first_part,
+	}
+	for {
+		err := cursor.Init()
+		assert.Nil(t, err)
+		if !cursor.Next() {
+			break
+		}
+	}
+
+	cursor.Close()
+}
+
 type MockType struct {
 }
 

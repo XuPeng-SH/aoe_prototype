@@ -12,6 +12,7 @@ import (
 type IColumnPart interface {
 	io.Closer
 	GetNext() IColumnPart
+	SetNext(IColumnPart)
 	InitScanCursor(cursor *ScanCursor) error
 	GetID() layout.BlockId
 	GetBlock() IColumnBlock
@@ -66,12 +67,19 @@ func (part *ColumnPart) GetBlock() IColumnBlock {
 	return part.Block
 }
 
+func (part *ColumnPart) SetNext(next IColumnPart) {
+	part.Next = next
+}
+
 func (part *ColumnPart) GetNext() IColumnPart {
-	next_blk := part.Block.GetNext()
-	if next_blk != nil {
-		return next_blk.GetPartRoot()
+	n := part.Next
+	if n == nil {
+		next_blk := part.Block.GetNext()
+		if next_blk != nil {
+			return next_blk.GetPartRoot()
+		}
 	}
-	return nil
+	return n
 }
 
 func (part *ColumnPart) Close() error {
