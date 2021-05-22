@@ -39,7 +39,7 @@ func NewColumnPart(bmgr bmgrif.IBufferManager, blk IColumnBlock, id layout.Block
 		TypeSize:    typeSize,
 		MaxRowCount: rowCount,
 	}
-	part.BufNode = bmgr.RegisterNode(part.Capacity, id)
+	part.BufNode = bmgr.RegisterNode(typeSize*rowCount, id)
 	blk.Append(part)
 	return part
 }

@@ -3,9 +3,11 @@ package col
 import (
 	"aoe/pkg/engine/layout"
 	"fmt"
+	"io"
 )
 
 type IColumnSegment interface {
+	io.Closer
 	GetNext() IColumnSegment
 	SetNext(next IColumnSegment)
 	GetID() layout.BlockId
@@ -42,6 +44,18 @@ func (seg *ColumnSegment) SetNext(next IColumnSegment) {
 
 func (seg *ColumnSegment) GetNext() IColumnSegment {
 	return seg.Next
+}
+
+func (seg *ColumnSegment) Close() error {
+	block := seg.BlockRoot
+	for block != nil && seg.ID.IsSameSegment(block.GetID()) {
+		err := block.Close()
+		if err != nil {
+			return err
+		}
+		block = block.GetNext()
+	}
+	return nil
 }
 
 func (seg *ColumnSegment) GetID() layout.BlockId {

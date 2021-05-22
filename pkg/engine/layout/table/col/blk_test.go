@@ -61,6 +61,7 @@ func TestStdColumnBlock2(t *testing.T) {
 	capacity := typeSize * row_count
 	flusher := w.NewOpWorker()
 	bufMgr := bmgr.NewBufferManager(capacity, flusher)
+	t.Log(bufMgr.GetCapacity())
 	baseid := layout.BlockId{}
 	var prev_seg IColumnSegment
 	var first_seg IColumnSegment
@@ -114,6 +115,8 @@ func TestStdColumnBlock2(t *testing.T) {
 			break
 		}
 	}
+
+	cursor.Close()
 }
 
 type MockType struct {
