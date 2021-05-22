@@ -8,7 +8,7 @@ import (
 
 type IScanCursor interface {
 	io.Closer
-	Next()
+	Next() bool
 	Init() error
 	IsInited() bool
 }
@@ -19,12 +19,13 @@ type ScanCursor struct {
 	Inited  bool
 }
 
-func (c *ScanCursor) Next() {
+func (c *ScanCursor) Next() bool {
 	if c.Current == nil {
-		return
+		return false
 	}
 	c.Close()
 	c.Current = c.Current.GetNext()
+	return c.Current != nil
 }
 
 func (c *ScanCursor) IsInited() bool {

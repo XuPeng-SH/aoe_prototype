@@ -18,7 +18,7 @@ func init() {
 
 func TestManager(t *testing.T) {
 	// opts := &engine.Options{}
-	capacity := uint64(4096)
+	capacity := NodeCapacity
 	flusher := w.NewOpWorker()
 	bufMgr := bmgr.NewBufferManager(capacity, flusher)
 	baseid := layout.BlockId{}
@@ -65,9 +65,11 @@ func TestManager(t *testing.T) {
 		Current: first_blk,
 	}
 
-	for cursor.Current != nil {
+	for {
 		err := cursor.Init()
 		assert.Nil(t, err)
-		cursor.Next()
+		if !cursor.Next() {
+			break
+		}
 	}
 }
