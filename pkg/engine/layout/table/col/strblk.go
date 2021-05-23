@@ -9,11 +9,12 @@ type StrColumnBlock struct {
 	Parts []IColumnPart
 }
 
-func NewStrColumnBlock(seg IColumnSegment, id layout.ID) IColumnBlock {
+func NewStrColumnBlock(seg IColumnSegment, id layout.ID, blkType BlockType) IColumnBlock {
 	blk := &StrColumnBlock{
 		ColumnBlock: ColumnBlock{
 			ID:      id,
 			Segment: seg,
+			Type:    blkType,
 		},
 		Parts: make([]IColumnPart, 0),
 	}

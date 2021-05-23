@@ -80,7 +80,7 @@ func (c *Collection) onNoMutableTable() (tbl imem.IMemTable, err error) {
 			SegmentID: blk.SegmentID,
 			BlockID:   blk.ID,
 		}
-		colBlk := col.NewStdColumnBlock(seg, blk_id)
+		colBlk := col.NewStdColumnBlock(seg, blk_id, col.TRANSIENT_BLK)
 		_ = col.NewColumnPart(c.TableData.GetBufMgr(), colBlk, blk_id, blk.MaxRowCount, c.TableData.GetColTypeSize(idx))
 		columns = append(columns, colBlk)
 		c.mem.Cursors[idx] = &col.ScanCursor{}

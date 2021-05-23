@@ -9,11 +9,12 @@ type StdColumnBlock struct {
 	Part IColumnPart
 }
 
-func NewStdColumnBlock(seg IColumnSegment, id layout.ID) IColumnBlock {
+func NewStdColumnBlock(seg IColumnSegment, id layout.ID, blkType BlockType) IColumnBlock {
 	blk := &StdColumnBlock{
 		ColumnBlock: ColumnBlock{
 			ID:      id,
 			Segment: seg,
+			Type:    blkType,
 		},
 	}
 	seg.Append(blk)

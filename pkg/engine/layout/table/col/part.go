@@ -49,8 +49,13 @@ func NewColumnPart(bmgr bmgrif.IBufferManager, blk IColumnBlock, id layout.ID,
 		TypeSize:    typeSize,
 		MaxRowCount: rowCount,
 	}
-	part.BufNode = bmgr.RegisterNode(typeSize*rowCount, id)
-	// part.BufNode = bmgr.RegisterSpillableNode(typeSize*rowCount, id)
+
+	if blk.GetBlockType() == TRANSIENT_BLK {
+		part.BufNode = bmgr.RegisterSpillableNode(typeSize*rowCount, id)
+	} else {
+		part.BufNode = bmgr.RegisterNode(typeSize*rowCount, id)
+	}
+
 	blk.Append(part)
 	return part
 }

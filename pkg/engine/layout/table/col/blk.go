@@ -5,6 +5,13 @@ import (
 	"io"
 )
 
+type BlockType uint8
+
+const (
+	TRANSIENT_BLK BlockType = iota
+	PERSISTENT_BLK
+)
+
 type IColumnBlock interface {
 	io.Closer
 	GetNext() IColumnBlock
@@ -15,6 +22,7 @@ type IColumnBlock interface {
 	InitScanCursor(cusor *ScanCursor) error
 	Append(part IColumnPart)
 	GetPartRoot() IColumnPart
+	GetBlockType() BlockType
 }
 
 type ColumnBlock struct {
@@ -22,6 +30,11 @@ type ColumnBlock struct {
 	Next     IColumnBlock
 	Segment  IColumnSegment
 	RowCount uint64
+	Type     BlockType
+}
+
+func (blk *ColumnBlock) GetBlockType() BlockType {
+	return blk.Type
 }
 
 func (blk *ColumnBlock) GetSegment() IColumnSegment {
