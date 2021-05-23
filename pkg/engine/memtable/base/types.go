@@ -2,6 +2,7 @@ package base
 
 import (
 	// "aoe/pkg/engine/layout/table"
+	// "aoe/pkg/engine/layout/table/col"
 	md "aoe/pkg/engine/metadata"
 	"aoe/pkg/mock/type/chunk"
 )
@@ -11,7 +12,7 @@ type IMemTable interface {
 	IsFull() bool
 	Flush() error
 	GetMeta() *md.Block
-	Unpin()
+	InitScanCursors(cursors []interface{}) error
 }
 
 type ICollection interface {

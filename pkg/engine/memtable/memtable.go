@@ -54,10 +54,15 @@ func NewMemTable(colTypes []mock.ColType, columnBlocks []col.IColumnBlock,
 	return mt
 }
 
-func (mt *MemTable) Unpin() {
-	for _, cursor := range mt.Cursors {
-		cursor.Close()
+func (mt *MemTable) InitScanCursors(cursors []interface{}) error {
+	for idx, colBlock := range mt.Columns {
+		cursor := cursors[idx].(*col.ScanCursor)
+		err := colBlock.InitScanCursor(cursor)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func (mt *MemTable) Append(c *chunk.Chunk, offset uint64, index *md.LogIndex) (n uint64, err error) {

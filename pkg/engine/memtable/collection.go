@@ -22,6 +22,7 @@ type Collection struct {
 	mem       struct {
 		sync.RWMutex
 		MemTables []imem.IMemTable
+		Cursors   []col.IScanCursor
 	}
 }
 
@@ -36,6 +37,7 @@ func NewCollection(tableData table.ITableData, opts *engine.Options) imem.IColle
 		TableData: tableData,
 	}
 	c.mem.MemTables = make([]imem.IMemTable, 0)
+	c.mem.Cursors = make([]col.IScanCursor, len(tableData.GetCollumns()))
 	return c
 }
 
@@ -56,8 +58,6 @@ func (c *Collection) onNoMutableTable() (tbl imem.IMemTable, err error) {
 	if err != nil {
 		return nil, err
 	}
-
-	cursors := make([]col.IScanCursor, len(c.TableData.GetCollumns()))
 
 	columns := make([]col.IColumnBlock, 0)
 	for idx, column := range c.TableData.GetCollumns() {
@@ -81,15 +81,13 @@ func (c *Collection) onNoMutableTable() (tbl imem.IMemTable, err error) {
 			BlockID:   blk.ID,
 		}
 		colBlk := col.NewStdColumnBlock(seg, blk_id)
-		part := col.NewColumnPart(c.TableData.GetBufMgr(), colBlk, blk_id, blk.MaxRowCount, c.TableData.GetColTypeSize(idx))
+		_ = col.NewColumnPart(c.TableData.GetBufMgr(), colBlk, blk_id, blk.MaxRowCount, c.TableData.GetColTypeSize(idx))
 		columns = append(columns, colBlk)
-		cursors[idx] = &col.ScanCursor{
-			Current: part,
-		}
-		cursors[idx].Init()
+		c.mem.Cursors[idx] = &col.ScanCursor{}
+		colBlk.InitScanCursor(c.mem.Cursors[idx].(*col.ScanCursor))
 	}
 
-	tbl = NewMemTable(c.TableData.GetColTypes(), columns, cursors, c.Opts, blk)
+	tbl = NewMemTable(c.TableData.GetColTypes(), columns, c.mem.Cursors, c.Opts, blk)
 	c.mem.MemTables = append(c.mem.MemTables, tbl)
 	return tbl, err
 }
@@ -115,7 +113,9 @@ func (c *Collection) Append(ck *chunk.Chunk, index *md.LogIndex) (err error) {
 				c.Opts.EventListener.BackgroundErrorCB(err)
 				return err
 			}
-			mut.Unpin()
+			for _, cursor := range c.mem.Cursors {
+				cursor.Close()
+			}
 			go func() {
 				ctx := dops.OpCtx{Collection: c}
 				op := dops.NewFlushBlkOp(&ctx, c.Opts.Data.Flusher)

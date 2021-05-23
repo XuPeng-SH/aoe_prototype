@@ -40,6 +40,7 @@ func (blk *StdColumnBlock) Close() error {
 
 func (blk *StdColumnBlock) InitScanCursor(cursor *ScanCursor) error {
 	if blk.Part != nil {
+		cursor.Current = blk.Part
 		return blk.Part.InitScanCursor(cursor)
 	}
 	return nil
