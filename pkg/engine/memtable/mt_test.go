@@ -126,6 +126,9 @@ func TestCollection(t *testing.T) {
 	assert.Equal(t, len(tbl.SegmentIDs()), int(blks/opts.Meta.Info.Conf.SegmentMaxBlocks))
 	// t.Log(opts.Meta.Info.String())
 	time.Sleep(time.Duration(100) * time.Millisecond)
+	for _, colData := range t0_data.GetCollumns() {
+		t.Log(colData.ToString(10000))
+	}
 
 	opts.Meta.Updater.Stop()
 	opts.Meta.Flusher.Stop()

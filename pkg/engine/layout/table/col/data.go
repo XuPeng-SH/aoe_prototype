@@ -7,6 +7,7 @@ import (
 
 type IColumnData interface {
 	String() string
+	ToString(depth uint64) string
 	InitScanCursor(cursor *ScanCursor) error
 	Append(seg IColumnSegment) error
 	// AppendBlock(blk IColumnBlock) error
@@ -87,4 +88,10 @@ func (cdata *ColumnData) InitScanCursor(cursor *ScanCursor) error {
 
 func (cdata *ColumnData) String() string {
 	return fmt.Sprintf("CData(%d,%d,%d)[SegCnt=%d]", cdata.Type, cdata.Idx, cdata.RowCount, cdata.SegmentCount())
+}
+
+func (cdata *ColumnData) ToString(depth uint64) string {
+	s := fmt.Sprintf("CData(%d,%d,%d)[SegCnt=%d]", cdata.Type, cdata.Idx, cdata.RowCount, cdata.SegmentCount())
+
+	return fmt.Sprintf("%s\n%s", s, cdata.SegTree.ToString(depth))
 }
