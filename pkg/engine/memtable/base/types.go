@@ -1,6 +1,7 @@
 package base
 
 import (
+	// "aoe/pkg/engine/layout/table"
 	md "aoe/pkg/engine/metadata"
 	todo "aoe/pkg/mock"
 )
@@ -19,7 +20,7 @@ type ICollection interface {
 
 type IManager interface {
 	GetCollection(id uint64) ICollection
-	RegisterCollection(id uint64) (c ICollection, err error)
+	RegisterCollection(interface{}) (c ICollection, err error)
 	UnregisterCollection(id uint64) (c ICollection, err error)
 	CollectionIDs() map[uint64]uint64
 }

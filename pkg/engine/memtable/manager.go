@@ -2,8 +2,7 @@ package memtable
 
 import (
 	"aoe/pkg/engine"
-	// bmgr "aoe/pkg/engine/buffer/manager"
-	bmgrif "aoe/pkg/engine/buffer/manager/iface"
+	"aoe/pkg/engine/layout/table"
 	imem "aoe/pkg/engine/memtable/base"
 	"errors"
 	"sync"
@@ -13,18 +12,17 @@ type Manager struct {
 	sync.RWMutex
 	Opts        *engine.Options
 	Collections map[uint64]imem.ICollection
-	BufMgr      bmgrif.IBufferManager
+	TableData   table.ITableData
 }
 
 var (
 	_ imem.IManager = (*Manager)(nil)
 )
 
-func NewManager(opts *engine.Options, bufMgr bmgrif.IBufferManager) imem.IManager {
+func NewManager(opts *engine.Options) imem.IManager {
 	m := &Manager{
 		Opts:        opts,
 		Collections: make(map[uint64]imem.ICollection),
-		BufMgr:      bufMgr,
 	}
 	return m
 }
@@ -47,15 +45,16 @@ func (m *Manager) GetCollection(id uint64) imem.ICollection {
 	return c
 }
 
-func (m *Manager) RegisterCollection(id uint64) (c imem.ICollection, err error) {
+func (m *Manager) RegisterCollection(td interface{}) (c imem.ICollection, err error) {
 	m.Lock()
 	defer m.Unlock()
-	c, ok := m.Collections[id]
+	tableData := td.(table.ITableData)
+	_, ok := m.Collections[tableData.GetID()]
 	if ok {
 		return nil, errors.New("logic error")
 	}
-	c = NewCollection(m.BufMgr, m.Opts, id)
-	m.Collections[id] = c
+	c = NewCollection(tableData, m.Opts)
+	m.Collections[tableData.GetID()] = c
 	return c, err
 }
 

@@ -2,21 +2,22 @@ package memtable
 
 import (
 	"aoe/pkg/engine"
-	bmgrif "aoe/pkg/engine/buffer/manager/iface"
+	"aoe/pkg/engine/layout/table"
 	imem "aoe/pkg/engine/memtable/base"
 	md "aoe/pkg/engine/metadata"
 	dops "aoe/pkg/engine/ops/data"
 	mops "aoe/pkg/engine/ops/meta"
 	todo "aoe/pkg/mock"
+
 	// log "github.com/sirupsen/logrus"
 	"sync"
 )
 
 type Collection struct {
-	ID     uint64
-	Opts   *engine.Options
-	BufMgr bmgrif.IBufferManager
-	mem    struct {
+	ID        uint64
+	Opts      *engine.Options
+	TableData table.ITableData
+	mem       struct {
 		sync.RWMutex
 		MemTables []imem.IMemTable
 	}
@@ -26,11 +27,11 @@ var (
 	_ imem.ICollection = (*Collection)(nil)
 )
 
-func NewCollection(bmgr bmgrif.IBufferManager, opts *engine.Options, id uint64) imem.ICollection {
+func NewCollection(tableData table.ITableData, opts *engine.Options) imem.ICollection {
 	c := &Collection{
-		ID:     id,
-		Opts:   opts,
-		BufMgr: bmgr,
+		ID:        tableData.GetID(),
+		Opts:      opts,
+		TableData: tableData,
 	}
 	c.mem.MemTables = make([]imem.IMemTable, 0)
 	return c
@@ -53,7 +54,7 @@ func (c *Collection) onNoMutableTable() (tbl imem.IMemTable, err error) {
 	if err != nil {
 		return nil, err
 	}
-	tbl = NewMemTable(c.BufMgr, c.Opts, blk)
+	tbl = NewMemTable(c.TableData, c.Opts, blk)
 	c.mem.MemTables = append(c.mem.MemTables, tbl)
 	return tbl, err
 }

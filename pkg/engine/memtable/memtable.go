@@ -2,8 +2,8 @@ package memtable
 
 import (
 	"aoe/pkg/engine"
-	bmgrif "aoe/pkg/engine/buffer/manager/iface"
 	ioif "aoe/pkg/engine/dataio/iface"
+	"aoe/pkg/engine/layout/table"
 	imem "aoe/pkg/engine/memtable/base"
 	md "aoe/pkg/engine/metadata"
 	mops "aoe/pkg/engine/ops/meta"
@@ -17,24 +17,24 @@ type MemTable struct {
 	Opts *engine.Options
 	util.RefProxy
 	sync.RWMutex
-	WF     ioif.IWriterFactory
-	Meta   *md.Block
-	Data   *todo.Chunk
-	Full   bool
-	BufMgr bmgrif.IBufferManager
+	WF        ioif.IWriterFactory
+	Meta      *md.Block
+	Data      *todo.Chunk
+	Full      bool
+	TableData table.ITableData
 }
 
 var (
 	_ imem.IMemTable = (*MemTable)(nil)
 )
 
-func NewMemTable(bmgr bmgrif.IBufferManager, opts *engine.Options, meta *md.Block) imem.IMemTable {
+func NewMemTable(tableData table.ITableData, opts *engine.Options, meta *md.Block) imem.IMemTable {
 	mt := &MemTable{
-		Meta:   meta,
-		Data:   todo.NewChunk(meta.MaxRowCount, meta),
-		Full:   false,
-		Opts:   opts,
-		BufMgr: bmgr,
+		Meta:      meta,
+		Data:      todo.NewChunk(meta.MaxRowCount, meta),
+		Full:      false,
+		Opts:      opts,
+		TableData: tableData,
 		// WF:   opts.Data.WriterFactory,
 	}
 

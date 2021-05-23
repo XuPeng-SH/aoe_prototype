@@ -5,6 +5,7 @@ import (
 	bmgr "aoe/pkg/engine/buffer/manager"
 	dio "aoe/pkg/engine/dataio"
 	"aoe/pkg/engine/layout"
+	"aoe/pkg/engine/layout/table"
 	md "aoe/pkg/engine/metadata"
 	mops "aoe/pkg/engine/ops/meta"
 	w "aoe/pkg/engine/worker"
@@ -24,24 +25,25 @@ func init() {
 
 func TestManager(t *testing.T) {
 	opts := &engine.Options{}
-	capacity := uint64(4096)
-	flusher := w.NewOpWorker()
-	bufMgr := bmgr.NewBufferManager(capacity, flusher)
-	manager := NewManager(opts, bufMgr)
+	manager := NewManager(opts)
 	assert.Equal(t, len(manager.CollectionIDs()), 0)
-	c0, err := manager.RegisterCollection(0)
+	t0 := uint64(0)
+	colDefs := make([]table.IColumnDef, 2)
+	t0_data := table.NewTableData(t0, colDefs)
+
+	c0, err := manager.RegisterCollection(t0_data)
 	assert.Nil(t, err)
 	assert.NotNil(t, c0)
 	assert.Equal(t, len(manager.CollectionIDs()), 1)
-	c00, err := manager.RegisterCollection(0)
+	c00, err := manager.RegisterCollection(t0_data)
 	assert.NotNil(t, err)
 	assert.Nil(t, c00)
 	assert.Equal(t, len(manager.CollectionIDs()), 1)
-	c00, err = manager.UnregisterCollection(1)
+	c00, err = manager.UnregisterCollection(t0 + 1)
 	assert.NotNil(t, err)
 	assert.Nil(t, c00)
 	assert.Equal(t, len(manager.CollectionIDs()), 1)
-	c00, err = manager.UnregisterCollection(0)
+	c00, err = manager.UnregisterCollection(t0)
 	assert.Nil(t, err)
 	assert.NotNil(t, c00)
 	assert.Equal(t, len(manager.CollectionIDs()), 0)
@@ -65,11 +67,10 @@ func TestCollection(t *testing.T) {
 	assert.Nil(t, err)
 	tbl := op.GetTable()
 
-	capacity := uint64(4096)
-	flusher := w.NewOpWorker()
-	bufMgr := bmgr.NewBufferManager(capacity, flusher)
-	manager := NewManager(opts, bufMgr)
-	c0, _ := manager.RegisterCollection(tbl.ID)
+	manager := NewManager(opts)
+	colDefs := make([]table.IColumnDef, 2)
+	t0_data := table.NewTableData(tbl.ID, colDefs)
+	c0, _ := manager.RegisterCollection(t0_data)
 	blks := uint64(20)
 	expect_blks := blks
 	batch_size := uint64(4)
