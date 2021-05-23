@@ -2,7 +2,9 @@ package memtable
 
 import (
 	"aoe/pkg/engine"
+	"aoe/pkg/engine/layout"
 	"aoe/pkg/engine/layout/table"
+	"aoe/pkg/engine/layout/table/col"
 	imem "aoe/pkg/engine/memtable/base"
 	md "aoe/pkg/engine/metadata"
 	dops "aoe/pkg/engine/ops/data"
@@ -37,24 +39,51 @@ func NewCollection(tableData table.ITableData, opts *engine.Options) imem.IColle
 	return c
 }
 
-func (c *Collection) onNoBlock() (blk *md.Block, err error) {
+func (c *Collection) onNoBlock() (blk *md.Block, newSeg bool, err error) {
 	ctx := mops.OpCtx{TableID: c.ID}
 	op := mops.NewCreateBlkOp(&ctx, c.Opts.Meta.Info, c.Opts.Meta.Updater)
 	op.Push()
 	err = op.WaitDone()
 	if err != nil {
-		return nil, err
+		return nil, false, err
 	}
 	blk = op.GetBlock()
-	return blk, nil
+	return blk, op.HasNewSegment(), nil
 }
 
 func (c *Collection) onNoMutableTable() (tbl imem.IMemTable, err error) {
-	blk, err := c.onNoBlock()
+	blk, newSeg, err := c.onNoBlock()
 	if err != nil {
 		return nil, err
 	}
-	tbl = NewMemTable(c.TableData, c.Opts, blk)
+
+	columns := make([]col.IColumnBlock, 0)
+	for idx, column := range c.TableData.GetCollumns() {
+		var seg col.IColumnSegment
+		if newSeg {
+			seg_id := layout.BlockId{
+				TableID:   c.ID,
+				SegmentID: blk.SegmentID,
+			}
+			seg = col.NewSegment(seg_id)
+			err = column.Append(seg)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			seg = column.GetSegmentTail()
+		}
+		blk_id := layout.BlockId{
+			TableID:   blk.TableID,
+			SegmentID: blk.SegmentID,
+			BlockID:   blk.ID,
+		}
+		colBlk := col.NewStdColumnBlock(seg, blk_id)
+		_ = col.NewColumnPart(c.TableData.GetBufMgr(), colBlk, blk_id, blk.MaxRowCount, c.TableData.GetColTypeSize(idx))
+		columns = append(columns, colBlk)
+	}
+
+	tbl = NewMemTable(columns, c.Opts, blk)
 	c.mem.MemTables = append(c.mem.MemTables, tbl)
 	return tbl, err
 }

@@ -15,6 +15,11 @@ func NewCreateBlkOp(ctx *OpCtx, info *md.MetaInfo,
 
 type CreateBlkOp struct {
 	Op
+	NewSegment bool
+}
+
+func (op *CreateBlkOp) HasNewSegment() bool {
+	return op.NewSegment
 }
 
 func (op *CreateBlkOp) GetBlock() *md.Block {
@@ -40,6 +45,7 @@ func (op *CreateBlkOp) Execute() error {
 		if err != nil {
 			return err
 		}
+		op.NewSegment = true
 	}
 	blk, err := seg.CreateBlock()
 	if err != nil {

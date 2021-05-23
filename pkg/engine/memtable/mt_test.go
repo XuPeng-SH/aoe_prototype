@@ -27,9 +27,12 @@ func TestManager(t *testing.T) {
 	opts := &engine.Options{}
 	manager := NewManager(opts)
 	assert.Equal(t, len(manager.CollectionIDs()), 0)
+	capacity := uint64(4096)
+	flusher := w.NewOpWorker()
+	bufMgr := bmgr.NewBufferManager(capacity, flusher)
 	t0 := uint64(0)
 	colDefs := make([]table.IColumnDef, 2)
-	t0_data := table.NewTableData(t0, colDefs)
+	t0_data := table.NewTableData(bufMgr, t0, colDefs)
 
 	c0, err := manager.RegisterCollection(t0_data)
 	assert.Nil(t, err)
@@ -68,8 +71,11 @@ func TestCollection(t *testing.T) {
 	tbl := op.GetTable()
 
 	manager := NewManager(opts)
+	capacity := uint64(4096)
+	flusher := w.NewOpWorker()
+	bufMgr := bmgr.NewBufferManager(capacity, flusher)
 	colDefs := make([]table.IColumnDef, 2)
-	t0_data := table.NewTableData(tbl.ID, colDefs)
+	t0_data := table.NewTableData(bufMgr, tbl.ID, colDefs)
 	c0, _ := manager.RegisterCollection(t0_data)
 	blks := uint64(20)
 	expect_blks := blks

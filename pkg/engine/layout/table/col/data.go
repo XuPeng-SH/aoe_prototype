@@ -12,6 +12,7 @@ type IColumnData interface {
 	// AppendPart(part IColumnPart) error
 	SegmentCount() uint64
 	GetSegmentRoot() IColumnSegment
+	GetSegmentTail() IColumnSegment
 }
 
 type ColumnData struct {
@@ -32,6 +33,10 @@ func NewColumnData(col_type interface{}, col_idx uint64) IColumnData {
 
 func (cdata *ColumnData) GetSegmentRoot() IColumnSegment {
 	return cdata.SegTree.GetRoot()
+}
+
+func (cdata *ColumnData) GetSegmentTail() IColumnSegment {
+	return cdata.SegTree.GetTail()
 }
 
 func (cdata *ColumnData) SegmentCount() uint64 {

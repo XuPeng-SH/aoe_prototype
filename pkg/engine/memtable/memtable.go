@@ -3,38 +3,39 @@ package memtable
 import (
 	"aoe/pkg/engine"
 	ioif "aoe/pkg/engine/dataio/iface"
-	"aoe/pkg/engine/layout/table"
+	"aoe/pkg/engine/layout/table/col"
 	imem "aoe/pkg/engine/memtable/base"
 	md "aoe/pkg/engine/metadata"
 	mops "aoe/pkg/engine/ops/meta"
 	util "aoe/pkg/metadata"
 	todo "aoe/pkg/mock"
-	log "github.com/sirupsen/logrus"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type MemTable struct {
 	Opts *engine.Options
 	util.RefProxy
 	sync.RWMutex
-	WF        ioif.IWriterFactory
-	Meta      *md.Block
-	Data      *todo.Chunk
-	Full      bool
-	TableData table.ITableData
+	WF      ioif.IWriterFactory
+	Meta    *md.Block
+	Data    *todo.Chunk
+	Full    bool
+	Columns []col.IColumnBlock
 }
 
 var (
 	_ imem.IMemTable = (*MemTable)(nil)
 )
 
-func NewMemTable(tableData table.ITableData, opts *engine.Options, meta *md.Block) imem.IMemTable {
+func NewMemTable(columnBlocks []col.IColumnBlock, opts *engine.Options, meta *md.Block) imem.IMemTable {
 	mt := &MemTable{
-		Meta:      meta,
-		Data:      todo.NewChunk(meta.MaxRowCount, meta),
-		Full:      false,
-		Opts:      opts,
-		TableData: tableData,
+		Meta:    meta,
+		Data:    todo.NewChunk(meta.MaxRowCount, meta),
+		Full:    false,
+		Opts:    opts,
+		Columns: columnBlocks,
 		// WF:   opts.Data.WriterFactory,
 	}
 
