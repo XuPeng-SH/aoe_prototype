@@ -5,6 +5,7 @@ import (
 	dio "aoe/pkg/engine/dataio"
 	"aoe/pkg/engine/layout"
 	w "aoe/pkg/engine/worker"
+	mock "aoe/pkg/mock/type"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"unsafe"
@@ -190,8 +191,8 @@ func (t *MockType) Size() uint64 {
 
 func TestStdSegmentTree(t *testing.T) {
 	baseid := layout.BlockId{}
-	col_idx := uint64(0)
-	col_data := NewColumnData(MockType{}, col_idx)
+	col_idx := 0
+	col_data := NewColumnData(mock.INTEGER, col_idx)
 
 	seg_cnt := 5
 	for i := 0; i < seg_cnt; i++ {

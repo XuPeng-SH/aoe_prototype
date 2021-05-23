@@ -7,7 +7,15 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	// log "github.com/sirupsen/logrus"
 )
+
+type ColumnPartAllocator struct {
+}
+
+func (alloc *ColumnPartAllocator) Malloc() (buf []byte, err error) {
+	return buf, err
+}
 
 type IColumnPart interface {
 	io.Closer
@@ -16,6 +24,7 @@ type IColumnPart interface {
 	InitScanCursor(cursor *ScanCursor) error
 	GetID() layout.BlockId
 	GetBlock() IColumnBlock
+	GetBuf() []byte
 }
 
 type ColumnPart struct {
@@ -41,8 +50,13 @@ func NewColumnPart(bmgr bmgrif.IBufferManager, blk IColumnBlock, id layout.Block
 		MaxRowCount: rowCount,
 	}
 	part.BufNode = bmgr.RegisterNode(typeSize*rowCount, id)
+	// part.BufNode = bmgr.RegisterSpillableNode(typeSize*rowCount, id)
 	blk.Append(part)
 	return part
+}
+
+func (part *ColumnPart) GetBuf() []byte {
+	return part.BufNode.GetBuffer().GetDataNode().Data
 }
 
 func (part *ColumnPart) SetRowCount(cnt uint64) {

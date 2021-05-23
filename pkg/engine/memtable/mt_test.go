@@ -9,7 +9,9 @@ import (
 	md "aoe/pkg/engine/metadata"
 	mops "aoe/pkg/engine/ops/meta"
 	w "aoe/pkg/engine/worker"
-	todo "aoe/pkg/mock"
+	mock "aoe/pkg/mock/type"
+	"aoe/pkg/mock/type/chunk"
+	"aoe/pkg/mock/type/vector"
 	"github.com/stretchr/testify/assert"
 	"sync"
 	"testing"
@@ -31,7 +33,7 @@ func TestManager(t *testing.T) {
 	flusher := w.NewOpWorker()
 	bufMgr := bmgr.NewBufferManager(capacity, flusher)
 	t0 := uint64(0)
-	colDefs := make([]table.IColumnDef, 2)
+	colDefs := make([]mock.ColType, 2)
 	t0_data := table.NewTableData(bufMgr, t0, colDefs)
 
 	c0, err := manager.RegisterCollection(t0_data)
@@ -50,6 +52,19 @@ func TestManager(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, c00)
 	assert.Equal(t, len(manager.CollectionIDs()), 0)
+}
+
+func BuildChunk(types []mock.ColType, rows uint64) *chunk.Chunk {
+	var vectors []vector.Vector
+	buf := make([]byte, rows*types[0].Size())
+	for _, colType := range types {
+		vec := vector.NewStdVector(colType, buf)
+		vectors = append(vectors, vec)
+	}
+
+	return &chunk.Chunk{
+		Vectors: vectors,
+	}
 }
 
 func TestCollection(t *testing.T) {
@@ -71,10 +86,12 @@ func TestCollection(t *testing.T) {
 	tbl := op.GetTable()
 
 	manager := NewManager(opts)
-	capacity := uint64(4096)
+	capacity := uint64(128)
 	flusher := w.NewOpWorker()
 	bufMgr := bmgr.NewBufferManager(capacity, flusher)
-	colDefs := make([]table.IColumnDef, 2)
+	colDefs := make([]mock.ColType, 2)
+	colDefs[0] = mock.INTEGER
+	colDefs[1] = mock.INTEGER
 	t0_data := table.NewTableData(bufMgr, tbl.ID, colDefs)
 	c0, _ := manager.RegisterCollection(t0_data)
 	blks := uint64(20)
@@ -96,8 +113,7 @@ func TestCollection(t *testing.T) {
 		seq++
 		go func(id uint64, wg *sync.WaitGroup) {
 			defer wg.Done()
-			insert := todo.NewChunk(thisStep*opts.Meta.Conf.BlockMaxRows, nil)
-			insert.Count = insert.Capacity
+			insert := BuildChunk(colDefs, thisStep*opts.Meta.Conf.BlockMaxRows)
 			index := &md.LogIndex{
 				ID:       id,
 				Capacity: insert.GetCount(),

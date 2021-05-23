@@ -8,7 +8,9 @@ import (
 	md "aoe/pkg/engine/metadata"
 	mops "aoe/pkg/engine/ops/meta"
 	util "aoe/pkg/metadata"
-	todo "aoe/pkg/mock"
+	mock "aoe/pkg/mock/type"
+	"aoe/pkg/mock/type/chunk"
+	"aoe/pkg/mock/type/vector"
 	"sync"
 
 	log "github.com/sirupsen/logrus"
@@ -20,29 +22,45 @@ type MemTable struct {
 	sync.RWMutex
 	WF      ioif.IWriterFactory
 	Meta    *md.Block
-	Data    *todo.Chunk
+	Data    *chunk.Chunk
 	Full    bool
 	Columns []col.IColumnBlock
+	Cursors []col.IScanCursor
 }
 
 var (
 	_ imem.IMemTable = (*MemTable)(nil)
 )
 
-func NewMemTable(columnBlocks []col.IColumnBlock, opts *engine.Options, meta *md.Block) imem.IMemTable {
+func NewMemTable(colTypes []mock.ColType, columnBlocks []col.IColumnBlock,
+	cursors []col.IScanCursor, opts *engine.Options, meta *md.Block) imem.IMemTable {
 	mt := &MemTable{
 		Meta:    meta,
-		Data:    todo.NewChunk(meta.MaxRowCount, meta),
 		Full:    false,
 		Opts:    opts,
 		Columns: columnBlocks,
-		// WF:   opts.Data.WriterFactory,
+		Cursors: cursors,
+	}
+	var vectors []vector.Vector
+	for idx, blk := range columnBlocks {
+		vec := vector.NewStdVector(colTypes[idx], blk.GetPartRoot().GetBuf())
+		vectors = append(vectors, vec)
+	}
+
+	mt.Data = &chunk.Chunk{
+		Vectors: vectors,
 	}
 
 	return mt
 }
 
-func (mt *MemTable) Append(c *todo.Chunk, offset uint64, index *md.LogIndex) (n uint64, err error) {
+func (mt *MemTable) Unpin() {
+	for _, cursor := range mt.Cursors {
+		cursor.Close()
+	}
+}
+
+func (mt *MemTable) Append(c *chunk.Chunk, offset uint64, index *md.LogIndex) (n uint64, err error) {
 	mt.Lock()
 	defer mt.Unlock()
 	n, err = mt.Data.Append(c, offset)
@@ -50,6 +68,7 @@ func (mt *MemTable) Append(c *todo.Chunk, offset uint64, index *md.LogIndex) (n 
 		return n, err
 	}
 	index.Count = n
+	log.Info(mt.Meta.String())
 	log.Info(index.String())
 	mt.Meta.SetIndex(*index)
 	mt.Meta.Count += n

@@ -3,18 +3,19 @@ package base
 import (
 	// "aoe/pkg/engine/layout/table"
 	md "aoe/pkg/engine/metadata"
-	todo "aoe/pkg/mock"
+	"aoe/pkg/mock/type/chunk"
 )
 
 type IMemTable interface {
-	Append(c *todo.Chunk, offset uint64, index *md.LogIndex) (n uint64, err error)
+	Append(c *chunk.Chunk, offset uint64, index *md.LogIndex) (n uint64, err error)
 	IsFull() bool
 	Flush() error
 	GetMeta() *md.Block
+	Unpin()
 }
 
 type ICollection interface {
-	Append(ck *todo.Chunk, index *md.LogIndex) (err error)
+	Append(ck *chunk.Chunk, index *md.LogIndex) (err error)
 	FetchImmuTable() IMemTable
 }
 

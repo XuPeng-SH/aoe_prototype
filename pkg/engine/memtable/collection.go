@@ -9,7 +9,7 @@ import (
 	md "aoe/pkg/engine/metadata"
 	dops "aoe/pkg/engine/ops/data"
 	mops "aoe/pkg/engine/ops/meta"
-	todo "aoe/pkg/mock"
+	"aoe/pkg/mock/type/chunk"
 
 	// log "github.com/sirupsen/logrus"
 	"sync"
@@ -57,6 +57,8 @@ func (c *Collection) onNoMutableTable() (tbl imem.IMemTable, err error) {
 		return nil, err
 	}
 
+	cursors := make([]col.IScanCursor, len(c.TableData.GetCollumns()))
+
 	columns := make([]col.IColumnBlock, 0)
 	for idx, column := range c.TableData.GetCollumns() {
 		var seg col.IColumnSegment
@@ -79,16 +81,20 @@ func (c *Collection) onNoMutableTable() (tbl imem.IMemTable, err error) {
 			BlockID:   blk.ID,
 		}
 		colBlk := col.NewStdColumnBlock(seg, blk_id)
-		_ = col.NewColumnPart(c.TableData.GetBufMgr(), colBlk, blk_id, blk.MaxRowCount, c.TableData.GetColTypeSize(idx))
+		part := col.NewColumnPart(c.TableData.GetBufMgr(), colBlk, blk_id, blk.MaxRowCount, c.TableData.GetColTypeSize(idx))
 		columns = append(columns, colBlk)
+		cursors[idx] = &col.ScanCursor{
+			Current: part,
+		}
+		cursors[idx].Init()
 	}
 
-	tbl = NewMemTable(columns, c.Opts, blk)
+	tbl = NewMemTable(c.TableData.GetColTypes(), columns, cursors, c.Opts, blk)
 	c.mem.MemTables = append(c.mem.MemTables, tbl)
 	return tbl, err
 }
 
-func (c *Collection) Append(ck *todo.Chunk, index *md.LogIndex) (err error) {
+func (c *Collection) Append(ck *chunk.Chunk, index *md.LogIndex) (err error) {
 	var mut imem.IMemTable
 	c.mem.Lock()
 	defer c.mem.Unlock()
@@ -109,6 +115,7 @@ func (c *Collection) Append(ck *todo.Chunk, index *md.LogIndex) (err error) {
 				c.Opts.EventListener.BackgroundErrorCB(err)
 				return err
 			}
+			mut.Unpin()
 			go func() {
 				ctx := dops.OpCtx{Collection: c}
 				op := dops.NewFlushBlkOp(&ctx, c.Opts.Data.Flusher)

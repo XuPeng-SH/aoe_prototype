@@ -1,6 +1,7 @@
 package col
 
 import (
+	mock "aoe/pkg/mock/type"
 	"fmt"
 )
 
@@ -16,13 +17,13 @@ type IColumnData interface {
 }
 
 type ColumnData struct {
-	Type     interface{}
-	Idx      uint64
+	Type     mock.ColType
+	Idx      int
 	RowCount uint64
 	SegTree  ISegmentTree
 }
 
-func NewColumnData(col_type interface{}, col_idx uint64) IColumnData {
+func NewColumnData(col_type mock.ColType, col_idx int) IColumnData {
 	data := &ColumnData{
 		Type:    col_type,
 		Idx:     col_idx,
