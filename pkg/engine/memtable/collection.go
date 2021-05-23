@@ -63,7 +63,7 @@ func (c *Collection) onNoMutableTable() (tbl imem.IMemTable, err error) {
 	for idx, column := range c.TableData.GetCollumns() {
 		var seg col.IColumnSegment
 		if newSeg {
-			seg_id := layout.BlockId{
+			seg_id := layout.ID{
 				TableID:   c.ID,
 				SegmentID: blk.SegmentID,
 			}
@@ -75,7 +75,7 @@ func (c *Collection) onNoMutableTable() (tbl imem.IMemTable, err error) {
 		} else {
 			seg = column.GetSegmentTail()
 		}
-		blk_id := layout.BlockId{
+		blk_id := layout.ID{
 			TableID:   blk.TableID,
 			SegmentID: blk.SegmentID,
 			BlockID:   blk.ID,

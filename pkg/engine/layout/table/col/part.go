@@ -22,13 +22,13 @@ type IColumnPart interface {
 	GetNext() IColumnPart
 	SetNext(IColumnPart)
 	InitScanCursor(cursor *ScanCursor) error
-	GetID() layout.BlockId
+	GetID() layout.ID
 	GetBlock() IColumnBlock
 	GetBuf() []byte
 }
 
 type ColumnPart struct {
-	ID          layout.BlockId
+	ID          layout.ID
 	Next        IColumnPart
 	Block       IColumnBlock
 	BufMgr      bmgrif.IBufferManager
@@ -40,7 +40,7 @@ type ColumnPart struct {
 	Capacity    uint64
 }
 
-func NewColumnPart(bmgr bmgrif.IBufferManager, blk IColumnBlock, id layout.BlockId,
+func NewColumnPart(bmgr bmgrif.IBufferManager, blk IColumnBlock, id layout.ID,
 	rowCount uint64, typeSize uint64) IColumnPart {
 	part := &ColumnPart{
 		BufMgr:      bmgr,
@@ -73,7 +73,7 @@ func (part *ColumnPart) SetSize(size uint64) {
 	part.Size = size
 }
 
-func (part *ColumnPart) GetID() layout.BlockId {
+func (part *ColumnPart) GetID() layout.ID {
 	return part.ID
 }
 

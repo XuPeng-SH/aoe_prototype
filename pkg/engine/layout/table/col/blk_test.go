@@ -19,7 +19,7 @@ func init() {
 }
 
 func TestStdColumnBlock(t *testing.T) {
-	baseid := layout.BlockId{}
+	baseid := layout.ID{}
 	var prev_seg IColumnSegment
 	var first_seg IColumnSegment
 	seg_cnt := 5
@@ -63,7 +63,7 @@ func TestStdColumnBlock2(t *testing.T) {
 	flusher := w.NewOpWorker()
 	bufMgr := bmgr.NewBufferManager(capacity, flusher)
 	t.Log(bufMgr.GetCapacity())
-	baseid := layout.BlockId{}
+	baseid := layout.ID{}
 	var prev_seg IColumnSegment
 	var first_seg IColumnSegment
 	seg_cnt := 5
@@ -127,7 +127,7 @@ func TestStrColumnBlock(t *testing.T) {
 	flusher := w.NewOpWorker()
 	bufMgr := bmgr.NewBufferManager(capacity, flusher)
 	t.Log(bufMgr.GetCapacity())
-	baseid := layout.BlockId{}
+	baseid := layout.ID{}
 	var prev_seg IColumnSegment
 	var first_seg IColumnSegment
 	seg_cnt := 5
@@ -190,7 +190,7 @@ func (t *MockType) Size() uint64 {
 }
 
 func TestStdSegmentTree(t *testing.T) {
-	baseid := layout.BlockId{}
+	baseid := layout.ID{}
 	col_idx := 0
 	col_data := NewColumnData(mock.INTEGER, col_idx)
 

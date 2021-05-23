@@ -23,13 +23,13 @@ type ISegmentTree interface {
 type SegmentTree struct {
 	sync.RWMutex
 	Segments []IColumnSegment
-	Helper   map[layout.BlockId]bool
+	Helper   map[layout.ID]bool
 }
 
 func NewSegmentTree() ISegmentTree {
 	tree := &SegmentTree{
 		Segments: make([]IColumnSegment, 0),
-		Helper:   make(map[layout.BlockId]bool),
+		Helper:   make(map[layout.ID]bool),
 	}
 	return tree
 }

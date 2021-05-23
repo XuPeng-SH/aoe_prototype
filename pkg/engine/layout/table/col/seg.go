@@ -10,7 +10,7 @@ type IColumnSegment interface {
 	io.Closer
 	GetNext() IColumnSegment
 	SetNext(next IColumnSegment)
-	GetID() layout.BlockId
+	GetID() layout.ID
 	GetBlockRoot() IColumnBlock
 	GetPartRoot() IColumnPart
 	GetRowCount() uint64
@@ -20,14 +20,14 @@ type IColumnSegment interface {
 }
 
 type ColumnSegment struct {
-	ID        layout.BlockId
+	ID        layout.ID
 	Next      IColumnSegment
 	BlockRoot IColumnBlock
 	BlockTail IColumnBlock
 	RowCount  uint64
 }
 
-func NewSegment(id layout.BlockId) IColumnSegment {
+func NewSegment(id layout.ID) IColumnSegment {
 	seg := &ColumnSegment{
 		ID: id,
 	}
@@ -58,7 +58,7 @@ func (seg *ColumnSegment) Close() error {
 	return nil
 }
 
-func (seg *ColumnSegment) GetID() layout.BlockId {
+func (seg *ColumnSegment) GetID() layout.ID {
 	return seg.ID
 }
 

@@ -9,7 +9,7 @@ type StrColumnBlock struct {
 	Parts []IColumnPart
 }
 
-func NewStrColumnBlock(seg IColumnSegment, id layout.BlockId) IColumnBlock {
+func NewStrColumnBlock(seg IColumnSegment, id layout.ID) IColumnBlock {
 	blk := &StrColumnBlock{
 		ColumnBlock: ColumnBlock{
 			ID:      id,

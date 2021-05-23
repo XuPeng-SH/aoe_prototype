@@ -68,7 +68,7 @@ func TestManager2(t *testing.T) {
 	capacity := uint64(1024)
 	node_capacity := 2 * capacity
 	mgr := NewBufferManager(capacity, flusher)
-	node0 := layout.BlockId{}
+	node0 := layout.ID{}
 	h0 := mgr.RegisterNode(node_capacity, node0)
 	assert.Equal(t, h0.GetID(), node0)
 	assert.False(t, h0.HasRef())
@@ -107,7 +107,7 @@ func TestManager3(t *testing.T) {
 	mgr := NewBufferManager(capacity, flusher)
 	assert.Equal(t, mgr.GetCapacity(), capacity)
 
-	id := layout.BlockId{}
+	id := layout.ID{}
 	n0 := *id.Next()
 	h0 := mgr.RegisterNode(node_capacity, n0)
 	assert.NotNil(t, h0)
@@ -160,7 +160,7 @@ func TestManager4(t *testing.T) {
 	mgr := NewBufferManager(capacity, flusher)
 	assert.Equal(t, mgr.GetCapacity(), capacity)
 
-	baseid := layout.BlockId{}
+	baseid := layout.ID{}
 	id0 := *baseid.Next()
 	h0 := mgr.RegisterSpillableNode(node_capacity, id0)
 	assert.Nil(t, h0)
@@ -216,7 +216,7 @@ func TestManager5(t *testing.T) {
 
 	bh0.Close()
 	assert.False(t, h0_1.HasRef())
-	id := layout.BlockId{}
+	id := layout.ID{}
 	id1 := id.Next()
 	h1 = mgr.RegisterSpillableNode(node_capacity, *id1)
 	assert.NotNil(t, h1)

@@ -22,8 +22,8 @@ type IEvictHolder interface {
 type BufferManager struct {
 	buf.IMemoryPool
 	sync.RWMutex
-	Nodes       map[layout.BlockId]iface.INodeHandle // Manager is not responsible to Close handle
-	TransientID layout.BlockId
+	Nodes       map[layout.ID]iface.INodeHandle // Manager is not responsible to Close handle
+	TransientID layout.ID
 	EvictHolder IEvictHolder
 	Flusher     iw.IOpWorker
 }

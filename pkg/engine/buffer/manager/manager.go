@@ -17,7 +17,7 @@ var (
 func NewBufferManager(capacity uint64, flusher iw.IOpWorker, evict_ctx ...interface{}) mgrif.IBufferManager {
 	mgr := &BufferManager{
 		IMemoryPool: buf.NewSimpleMemoryPool(capacity),
-		Nodes:       make(map[layout.BlockId]nif.INodeHandle),
+		Nodes:       make(map[layout.ID]nif.INodeHandle),
 		EvictHolder: NewSimpleEvictHolder(evict_ctx...),
 		TransientID: *layout.NewTransientID(),
 		Flusher:     flusher,
@@ -42,7 +42,7 @@ func (mgr *BufferManager) RegisterMemory(capacity uint64, spillable bool) nif.IN
 	return handle
 }
 
-func (mgr *BufferManager) RegisterSpillableNode(capacity uint64, node_id layout.BlockId) nif.INodeHandle {
+func (mgr *BufferManager) RegisterSpillableNode(capacity uint64, node_id layout.ID) nif.INodeHandle {
 	{
 		mgr.RLock()
 		handle, ok := mgr.Nodes[node_id]
@@ -81,7 +81,7 @@ func (mgr *BufferManager) RegisterSpillableNode(capacity uint64, node_id layout.
 	return handle
 }
 
-func (mgr *BufferManager) RegisterNode(capacity uint64, node_id layout.BlockId) nif.INodeHandle {
+func (mgr *BufferManager) RegisterNode(capacity uint64, node_id layout.ID) nif.INodeHandle {
 	mgr.Lock()
 	defer mgr.Unlock()
 

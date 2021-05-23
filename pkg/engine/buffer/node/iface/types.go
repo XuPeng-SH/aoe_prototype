@@ -65,14 +65,14 @@ const (
 
 type INodeBuffer interface {
 	buf.IBuffer
-	GetID() layout.BlockId
+	GetID() layout.ID
 	// GetType() BufferType
 }
 
 type INodeHandle interface {
 	sync.Locker
 	io.Closer
-	GetID() layout.BlockId
+	GetID() layout.ID
 	Unload()
 	// Loadable() bool
 	Unloadable() bool
@@ -101,5 +101,5 @@ type INodeHandle interface {
 
 type IBufferHandle interface {
 	io.Closer
-	GetID() layout.BlockId
+	GetID() layout.ID
 }

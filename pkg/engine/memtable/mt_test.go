@@ -141,7 +141,7 @@ func TestContainer(t *testing.T) {
 	flusher := w.NewOpWorker()
 	bufMgr := bmgr.NewBufferManager(capacity, flusher)
 
-	baseid := layout.BlockId{}
+	baseid := layout.ID{}
 	step := capacity / 2
 	// step := capacity
 	con := NewDynamicContainer(bufMgr, baseid, step)

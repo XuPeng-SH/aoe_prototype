@@ -95,7 +95,7 @@ func (h *NodeHandle) HasRef() bool {
 	return v > uint64(0)
 }
 
-func (h *NodeHandle) GetID() layout.BlockId {
+func (h *NodeHandle) GetID() layout.ID {
 	return h.ID
 }
 
@@ -202,7 +202,7 @@ func NewBufferHandle(n nif.INodeHandle, mgr mgrif.IBufferManager) nif.IBufferHan
 	return h
 }
 
-func (h *BufferHandle) GetID() layout.BlockId {
+func (h *BufferHandle) GetID() layout.ID {
 	return h.Handle.GetID()
 }
 

@@ -53,7 +53,7 @@ type NodeWriter struct {
 	Filename string
 }
 
-func MakeNodeFileName(id *layout.BlockId) string {
+func MakeNodeFileName(id *layout.ID) string {
 	return fmt.Sprintf("%d_%d_%d_%d", id.TableID, id.SegmentID, id.BlockID, id.PartID)
 }
 

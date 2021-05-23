@@ -42,7 +42,7 @@ type MemtableWriter struct {
 	Memtable imem.IMemTable
 }
 
-func MakeMemtableFileName(id *layout.BlockId) string {
+func MakeMemtableFileName(id *layout.ID) string {
 	return fmt.Sprintf("%d_%d_%d_%d", id.TableID, id.SegmentID, id.BlockID, id.PartID)
 }
 

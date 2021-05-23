@@ -12,7 +12,7 @@ var (
 	_ iface.INodeBuffer = (*NodeBuffer)(nil)
 )
 
-func NewNodeBuffer(id layout.BlockId, node *buf.Node) iface.INodeBuffer {
+func NewNodeBuffer(id layout.ID, node *buf.Node) iface.INodeBuffer {
 	if node == nil {
 		return nil
 	}
@@ -25,7 +25,7 @@ func NewNodeBuffer(id layout.BlockId, node *buf.Node) iface.INodeBuffer {
 	return nb
 }
 
-func (nb *NodeBuffer) GetID() layout.BlockId {
+func (nb *NodeBuffer) GetID() layout.ID {
 	return nb.ID
 }
 

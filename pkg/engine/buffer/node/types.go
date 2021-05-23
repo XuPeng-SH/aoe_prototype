@@ -11,12 +11,12 @@ import (
 
 type NodeBuffer struct {
 	buf.IBuffer
-	ID layout.BlockId
+	ID layout.ID
 	// Type nif.BufferType
 }
 
 type NodeHandleCtx struct {
-	ID        layout.BlockId
+	ID        layout.ID
 	Buff      buf.IBuffer
 	Spillable bool
 	Manager   mgrif.IBufferManager
@@ -26,7 +26,7 @@ type NodeHandleCtx struct {
 type NodeHandle struct {
 	sync.Mutex
 	State     nif.NodeState
-	ID        layout.BlockId
+	ID        layout.ID
 	Buff      buf.IBuffer
 	Spillable bool
 	Capacity  uint64

@@ -9,7 +9,7 @@ type IColumnBlock interface {
 	io.Closer
 	GetNext() IColumnBlock
 	SetNext(next IColumnBlock)
-	GetID() layout.BlockId
+	GetID() layout.ID
 	GetRowCount() uint64
 	GetSegment() IColumnSegment
 	InitScanCursor(cusor *ScanCursor) error
@@ -18,7 +18,7 @@ type IColumnBlock interface {
 }
 
 type ColumnBlock struct {
-	ID       layout.BlockId
+	ID       layout.ID
 	Next     IColumnBlock
 	Segment  IColumnSegment
 	RowCount uint64
@@ -50,6 +50,6 @@ func (blk *ColumnBlock) GetNext() IColumnBlock {
 	return n
 }
 
-func (blk *ColumnBlock) GetID() layout.BlockId {
+func (blk *ColumnBlock) GetID() layout.ID {
 	return blk.ID
 }
