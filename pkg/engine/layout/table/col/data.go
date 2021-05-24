@@ -1,6 +1,7 @@
 package col
 
 import (
+	bmgrif "aoe/pkg/engine/buffer/manager/iface"
 	"aoe/pkg/engine/layout"
 	mock "aoe/pkg/mock/type"
 	"fmt"
@@ -18,6 +19,7 @@ type IColumnData interface {
 	GetSegmentRoot() IColumnSegment
 	GetSegmentTail() IColumnSegment
 	RegisterSegment(id layout.ID) (seg IColumnSegment, err error)
+	RegisterBlock(bufMgr bmgrif.IBufferManager, id layout.ID, maxRows uint64) (blk IColumnBlock, err error)
 }
 
 type ColumnData struct {
@@ -63,6 +65,14 @@ func (cdata *ColumnData) RegisterSegment(id layout.ID) (seg IColumnSegment, err 
 	seg = NewSegment(id, cdata.Idx, UNSORTED_SEG)
 	err = cdata.Append(seg)
 	return seg, err
+}
+
+func (cdata *ColumnData) RegisterBlock(bufMgr bmgrif.IBufferManager, id layout.ID, maxRows uint64) (blk IColumnBlock, err error) {
+	seg := cdata.GetSegmentTail()
+	blk = NewStdColumnBlock(seg, id, TRANSIENT_BLK)
+	_ = NewColumnPart(bufMgr, blk, id, maxRows, uint64(cdata.Type.Size()))
+	// TODO: StrColumnBlock
+	return blk, err
 }
 
 // func (cdata *ColumnData) AppendBlock(blk IColumnBlock) error {

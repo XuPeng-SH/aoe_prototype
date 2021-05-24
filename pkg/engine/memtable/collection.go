@@ -61,27 +61,25 @@ func (c *Collection) onNoMutableTable() (tbl imem.IMemTable, err error) {
 
 	columns := make([]col.IColumnBlock, 0)
 	for idx, column := range c.TableData.GetCollumns() {
-		var seg col.IColumnSegment
 		if newSeg {
 			seg_id := layout.ID{
 				TableID:   c.ID,
 				SegmentID: blk.SegmentID,
 			}
 			// TODO: All column data modification should be executed by one worker
-			seg, err = column.RegisterSegment(seg_id)
+			_, err = column.RegisterSegment(seg_id)
 			if err != nil {
 				return nil, err
 			}
-		} else {
-			seg = column.GetSegmentTail()
 		}
+
 		blk_id := layout.ID{
 			TableID:   blk.TableID,
 			SegmentID: blk.SegmentID,
 			BlockID:   blk.ID,
 		}
-		colBlk := col.NewStdColumnBlock(seg, blk_id, col.TRANSIENT_BLK)
-		_ = col.NewColumnPart(c.TableData.GetBufMgr(), colBlk, blk_id, blk.MaxRowCount, c.TableData.GetColTypeSize(idx))
+		// TODO: All column data modification should be executed by one worker
+		colBlk, _ := column.RegisterBlock(c.TableData.GetBufMgr(), blk_id, blk.MaxRowCount)
 		columns = append(columns, colBlk)
 		c.mem.Cursors[idx] = &col.ScanCursor{}
 		colBlk.InitScanCursor(c.mem.Cursors[idx].(*col.ScanCursor))
