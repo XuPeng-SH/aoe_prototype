@@ -23,6 +23,7 @@ type IColumnBlock interface {
 	Append(part IColumnPart)
 	GetPartRoot() IColumnPart
 	GetBlockType() BlockType
+	GetColIdx() int
 }
 
 type ColumnBlock struct {
@@ -31,6 +32,10 @@ type ColumnBlock struct {
 	Segment  IColumnSegment
 	RowCount uint64
 	Type     BlockType
+}
+
+func (blk *ColumnBlock) GetColIdx() int {
+	return blk.Segment.GetColIdx()
 }
 
 func (blk *ColumnBlock) GetBlockType() BlockType {

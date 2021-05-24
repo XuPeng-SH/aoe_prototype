@@ -52,6 +52,9 @@ func (cdata *ColumnData) SegmentCount() uint64 {
 }
 
 func (cdata *ColumnData) Append(seg IColumnSegment) error {
+	if seg.GetColIdx() != cdata.Idx {
+		panic("logic error")
+	}
 	return cdata.SegTree.Append(seg)
 }
 

@@ -26,6 +26,7 @@ type IColumnPart interface {
 	GetID() layout.ID
 	GetBlock() IColumnBlock
 	GetBuf() []byte
+	GetColIdx() int
 }
 
 type ColumnPart struct {
@@ -64,6 +65,10 @@ func NewColumnPart(bmgr bmgrif.IBufferManager, blk IColumnBlock, id layout.ID,
 
 	blk.Append(part)
 	return part
+}
+
+func (part *ColumnPart) GetColIdx() int {
+	return part.Block.GetColIdx()
 }
 
 func (part *ColumnPart) GetBuf() []byte {
