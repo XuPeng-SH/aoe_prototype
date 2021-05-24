@@ -22,6 +22,14 @@ func NewTransientID() *ID {
 	}
 }
 
+func (id *ID) AsBlockID() ID {
+	return ID{
+		TableID:   id.TableID,
+		SegmentID: id.SegmentID,
+		BlockID:   id.BlockID,
+	}
+}
+
 func (id *ID) String() string {
 	return fmt.Sprintf("ID<%d-%d-%d-%d>", id.TableID, id.SegmentID, id.BlockID, id.PartID)
 }
