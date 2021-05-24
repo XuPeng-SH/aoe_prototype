@@ -28,7 +28,7 @@ func TestStdColumnBlock(t *testing.T) {
 	seg_cnt := 5
 	for i := 0; i < seg_cnt; i++ {
 		seg_id := baseid.NextSegment()
-		seg := NewSegment(seg_id, 0)
+		seg := NewSegment(seg_id, 0, UNSORTED_SEG)
 		assert.Nil(t, seg.GetNext())
 		assert.Nil(t, seg.GetBlockRoot())
 		blk_0_id := seg_id.NextBlock()
@@ -72,7 +72,7 @@ func TestStdColumnBlock2(t *testing.T) {
 	seg_cnt := 5
 	for i := 0; i < seg_cnt; i++ {
 		seg_id := baseid.NextSegment()
-		seg := NewSegment(seg_id, 0)
+		seg := NewSegment(seg_id, 0, UNSORTED_SEG)
 		assert.Nil(t, seg.GetNext())
 		assert.Nil(t, seg.GetBlockRoot())
 		blk_0_id := seg_id.NextBlock()
@@ -136,7 +136,7 @@ func TestStrColumnBlock(t *testing.T) {
 	seg_cnt := 5
 	for i := 0; i < seg_cnt; i++ {
 		seg_id := baseid.NextSegment()
-		seg := NewSegment(seg_id, 0)
+		seg := NewSegment(seg_id, 0, UNSORTED_SEG)
 		assert.Nil(t, seg.GetNext())
 		assert.Nil(t, seg.GetBlockRoot())
 		blk_0_id := seg_id.NextBlock()
@@ -200,7 +200,7 @@ func TestStdSegmentTree(t *testing.T) {
 	seg_cnt := 5
 	for i := 0; i < seg_cnt; i++ {
 		seg_id := baseid.NextSegment()
-		seg := NewSegment(seg_id, 0)
+		seg := NewSegment(seg_id, 0, UNSORTED_SEG)
 		assert.Nil(t, seg.GetNext())
 		assert.Nil(t, seg.GetBlockRoot())
 		err := col_data.Append(seg)

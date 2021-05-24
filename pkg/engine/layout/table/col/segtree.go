@@ -41,6 +41,20 @@ func NewSegmentTree() ISegmentTree {
 	return tree
 }
 
+func (tree *SegmentTree) UpgradeSegment(id layout.ID) (err error) {
+	idx, ok := tree.Helper[id]
+	if !ok {
+		return errors.New(fmt.Sprintf("Specified seg %s not found", id.SegmentString()))
+	}
+	seg := tree.Segments[idx]
+	if seg.GetSegmentType() == SORTED_SEG {
+		log.Warnf("Specified seg %s is already SORTED!", id.SegmentString())
+		return nil
+	}
+
+	return nil
+}
+
 func (tree *SegmentTree) DropSegment(id layout.ID) (seg IColumnSegment, err error) {
 	idx, ok := tree.Helper[id]
 	if !ok {

@@ -21,6 +21,26 @@ func NewStdColumnBlock(seg IColumnSegment, id layout.ID, blkType BlockType) ICol
 	return blk
 }
 
+func (blk *StdColumnBlock) CloneWithUpgrade(seg IColumnSegment) IColumnBlock {
+	if blk.Type == PERSISTENT_SORTED_BLK {
+		panic("logic error")
+	}
+	var newType BlockType
+	if blk.Type == TRANSIENT_BLK {
+		newType = PERSISTENT_BLK
+	} else {
+		newType = PERSISTENT_SORTED_BLK
+	}
+	cloned := &StdColumnBlock{
+		ColumnBlock: ColumnBlock{
+			ID:      blk.ID,
+			Segment: seg,
+			Type:    newType,
+		},
+	}
+	return cloned
+}
+
 func (blk *StdColumnBlock) GetPartRoot() IColumnPart {
 	return blk.Part
 }

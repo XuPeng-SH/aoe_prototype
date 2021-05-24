@@ -22,6 +22,10 @@ func NewStrColumnBlock(seg IColumnSegment, id layout.ID, blkType BlockType) ICol
 	return blk
 }
 
+func (blk *StrColumnBlock) CloneWithUpgrade(seg IColumnSegment) IColumnBlock {
+	return nil
+}
+
 func (blk *StrColumnBlock) Close() error {
 	for _, part := range blk.Parts {
 		err := part.Close()

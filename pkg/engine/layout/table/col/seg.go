@@ -9,13 +9,12 @@ import (
 	"sync"
 )
 
-// type SegmentType uint8
+type SegmentType uint8
 
-// const (
-// 	UNCLOSED_SEG SegmentType = iota
-// 	CLOSED_SEG
-// 	SORTED_SEG
-// )
+const (
+	UNSORTED_SEG SegmentType = iota
+	SORTED_SEG
+)
 
 type IColumnSegment interface {
 	io.Closer
@@ -30,6 +29,8 @@ type IColumnSegment interface {
 	Append(blk IColumnBlock)
 	UpgradeBlock(layout.ID)
 	GetColIdx() int
+	GetSegmentType() SegmentType
+	CloneWithUpgrade() IColumnSegment
 }
 
 type ColumnSegment struct {
@@ -40,24 +41,58 @@ type ColumnSegment struct {
 	RowCount uint64
 	IDMap    map[layout.ID]int
 	Idx      int
+	Type     SegmentType
 }
 
-func NewSegment(id layout.ID, colIdx int) IColumnSegment {
+func NewSegment(id layout.ID, colIdx int, segType SegmentType) IColumnSegment {
 	seg := &ColumnSegment{
 		ID:    id,
 		IDMap: make(map[layout.ID]int, 0),
 		Idx:   colIdx,
+		Type:  segType,
 	}
 	runtime.SetFinalizer(seg, func(o IColumnSegment) {
 		id := o.GetID()
 		o.SetNext(nil)
-		log.Infof("[GC]: ColumnSegment %s", id.SegmentString())
+		log.Infof("[GC]: ColumnSegment %s [%d]", id.SegmentString(), o.GetSegmentType())
 	})
 	return seg
 }
 
 func (seg *ColumnSegment) GetColIdx() int {
 	return seg.Idx
+}
+
+func (seg *ColumnSegment) GetSegmentType() SegmentType {
+	return seg.Type
+}
+
+func (seg *ColumnSegment) CloneWithUpgrade() IColumnSegment {
+	if seg.Type != UNSORTED_SEG {
+		panic("logic error")
+	}
+	cloned := &ColumnSegment{
+		ID:       seg.ID,
+		IDMap:    seg.IDMap,
+		RowCount: seg.RowCount,
+		Next:     seg.Next,
+		// Blocks:   seg.Blocks,
+	}
+	var prev IColumnBlock
+	for _, blk := range seg.Blocks {
+		cur := blk.CloneWithUpgrade(cloned)
+		cloned.Blocks = append(seg.Blocks, cur)
+		if prev != nil {
+			prev.SetNext(cur)
+		}
+		prev = cur
+	}
+	runtime.SetFinalizer(cloned, func(o IColumnSegment) {
+		id := o.GetID()
+		o.SetNext(nil)
+		log.Infof("[GC]: ColumnSegment %s [%d]", id.SegmentString(), o.GetSegmentType())
+	})
+	return cloned
 }
 
 func (seg *ColumnSegment) UpgradeBlock(blkID layout.ID) {

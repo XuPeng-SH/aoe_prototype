@@ -10,6 +10,7 @@ type BlockType uint8
 const (
 	TRANSIENT_BLK BlockType = iota
 	PERSISTENT_BLK
+	PERSISTENT_SORTED_BLK
 )
 
 type IColumnBlock interface {
@@ -24,6 +25,7 @@ type IColumnBlock interface {
 	GetPartRoot() IColumnPart
 	GetBlockType() BlockType
 	GetColIdx() int
+	CloneWithUpgrade(IColumnSegment) IColumnBlock
 }
 
 type ColumnBlock struct {
