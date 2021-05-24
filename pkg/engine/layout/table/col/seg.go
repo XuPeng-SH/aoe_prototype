@@ -29,6 +29,7 @@ type IColumnSegment interface {
 	ToString(verbose bool) string
 	Append(blk IColumnBlock)
 	UpgradeBlock(layout.ID)
+	GetColIdx() int
 }
 
 type ColumnSegment struct {
@@ -38,12 +39,14 @@ type ColumnSegment struct {
 	Blocks   []IColumnBlock
 	RowCount uint64
 	IDMap    map[layout.ID]int
+	Idx      int
 }
 
-func NewSegment(id layout.ID) IColumnSegment {
+func NewSegment(id layout.ID, colIdx int) IColumnSegment {
 	seg := &ColumnSegment{
 		ID:    id,
 		IDMap: make(map[layout.ID]int, 0),
+		Idx:   colIdx,
 	}
 	runtime.SetFinalizer(seg, func(o IColumnSegment) {
 		id := o.GetID()
@@ -51,6 +54,10 @@ func NewSegment(id layout.ID) IColumnSegment {
 		log.Infof("[GC]: ColumnSegment %s", id.SegmentString())
 	})
 	return seg
+}
+
+func (seg *ColumnSegment) GetColIdx() int {
+	return seg.Idx
 }
 
 func (seg *ColumnSegment) UpgradeBlock(blkID layout.ID) {

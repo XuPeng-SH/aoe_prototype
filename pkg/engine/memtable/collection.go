@@ -67,7 +67,7 @@ func (c *Collection) onNoMutableTable() (tbl imem.IMemTable, err error) {
 				TableID:   c.ID,
 				SegmentID: blk.SegmentID,
 			}
-			seg = col.NewSegment(seg_id)
+			seg = col.NewSegment(seg_id, idx)
 			err = column.Append(seg)
 			if err != nil {
 				return nil, err
