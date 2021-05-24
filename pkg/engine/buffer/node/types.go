@@ -6,6 +6,7 @@ import (
 	nif "aoe/pkg/engine/buffer/node/iface"
 	ioif "aoe/pkg/engine/dataio/iface"
 	"aoe/pkg/engine/layout"
+	dio "aoe/pkg/engine/layout/dataio"
 	"sync"
 )
 
@@ -16,11 +17,12 @@ type NodeBuffer struct {
 }
 
 type NodeHandleCtx struct {
-	ID        layout.ID
-	Buff      buf.IBuffer
-	Spillable bool
-	Manager   mgrif.IBufferManager
-	Size      uint64
+	ID          layout.ID
+	Buff        buf.IBuffer
+	Spillable   bool
+	Manager     mgrif.IBufferManager
+	Size        uint64
+	SegmentFile dio.IColSegmentFile
 }
 
 type NodeHandle struct {

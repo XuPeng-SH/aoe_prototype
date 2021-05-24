@@ -15,9 +15,12 @@ func NewNodeIO(opts *e.Options, ctx context.Context) ioif.IO {
 		panic("logic error")
 	}
 
-	id := handle.GetID()
-	filename := e.MakeFilename(dio.WRITER_FACTORY.Dirname, e.FTTransientNode, MakeNodeFileName(&id), false)
-	ctx = context.WithValue(ctx, "filename", filename)
+	segmentFile := ctx.Value("segmentfile")
+	if segmentFile == nil {
+		id := handle.GetID()
+		filename := e.MakeFilename(dio.WRITER_FACTORY.Dirname, e.FTTransientNode, id.ToBlockFileName(), false)
+		ctx = context.WithValue(ctx, "filename", filename)
+	}
 
 	iof := dio.NewIOFactory(dio.WRITER_FACTORY, dio.READER_FACTORY, dio.CLEANER_FACTORY)
 	nio := iof.MakeIO(NODE_WRITER, NODE_READER, NODE_CLEANER, ctx)

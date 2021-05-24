@@ -5,6 +5,7 @@ import (
 	"aoe/pkg/engine/buffer/node/iface"
 	dio "aoe/pkg/engine/dataio"
 	ioif "aoe/pkg/engine/dataio/iface"
+	ldio "aoe/pkg/engine/layout/dataio"
 	"context"
 	"fmt"
 	"os"
@@ -29,32 +30,48 @@ func (b *NodeReaderBuilder) Build(rf ioif.IReaderFactory, ctx context.Context) i
 	if handle == nil {
 		panic("logic error")
 	}
-	var filename string
-	fn := ctx.Value("filename")
-	if fn == nil {
-		id := handle.GetID()
-		filename = e.MakeFilename(dio.READER_FACTORY.Dirname, e.FTTransientNode, MakeNodeFileName(&id), false)
+	var (
+		filename    string
+		segmentFile ldio.IColSegmentFile
+	)
+	sf := ctx.Value("segmentfile")
+	if sf == nil {
+		fn := ctx.Value("filename")
+		if fn == nil {
+			id := handle.GetID()
+			filename = e.MakeFilename(dio.READER_FACTORY.Dirname, e.FTTransientNode, MakeNodeFileName(&id), false)
+		} else {
+			filename = fmt.Sprintf("%v", fn)
+		}
 	} else {
-		filename = fmt.Sprintf("%v", fn)
+		segmentFile = sf.(ldio.IColSegmentFile)
 	}
 	r := &NodeReader{
-		Opts:     rf.GetOpts(),
-		Dirname:  rf.GetDir(),
-		Handle:   handle,
-		Filename: filename,
+		Opts:        rf.GetOpts(),
+		Dirname:     rf.GetDir(),
+		Handle:      handle,
+		Filename:    filename,
+		SegmentFile: segmentFile,
 	}
 	return r
 }
 
 type NodeReader struct {
-	Opts     *e.Options
-	Dirname  string
-	Handle   iface.INodeHandle
-	Filename string
+	Opts        *e.Options
+	Dirname     string
+	Handle      iface.INodeHandle
+	Filename    string
+	SegmentFile ldio.IColSegmentFile
+	ColIdx      uint64
 }
 
 func (nr *NodeReader) Load() (err error) {
 	node := nr.Handle.GetBuffer().GetDataNode()
+	if nr.SegmentFile != nil {
+		nr.SegmentFile.ReadPart(nr.Handle.GetID(), node.Data)
+		return nil
+	}
+
 	dir := filepath.Dir(nr.Filename)
 	log.Info(dir)
 	if _, err := os.Stat(dir); os.IsNotExist(err) {

@@ -13,6 +13,19 @@ type ISegmentFile interface {
 	ReadPart(colIdx uint64, id layout.ID, buf []byte)
 }
 
+type IColSegmentFile interface {
+	ReadPart(id layout.ID, buf []byte)
+}
+
+type ColSegmentFile struct {
+	SegmentFile ISegmentFile
+	ColIdx      uint64
+}
+
+func (csf *ColSegmentFile) ReadPart(id layout.ID, buf []byte) {
+	csf.SegmentFile.ReadPart(csf.ColIdx, id, buf)
+}
+
 type UnsortedSegmentFile struct {
 	sync.RWMutex
 	ID     layout.ID

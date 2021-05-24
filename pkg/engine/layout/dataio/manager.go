@@ -2,8 +2,8 @@ package dataio
 
 import (
 	"aoe/pkg/engine/layout"
-	"aoe/pkg/engine/layout/table/col"
 	"sync"
+	// "aoe/pkg/engine/layout/table/col"
 )
 
 type Manager struct {
@@ -11,9 +11,9 @@ type Manager struct {
 	Files map[layout.ID]ISegmentFile
 }
 
-func MakeSegmentFile(id layout.ID, segType col.SegmentType) ISegmentFile {
-	return nil
-}
+// func MakeSegmentFile(id layout.ID, segType col.SegmentType) ISegmentFile {
+// 	return nil
+// }
 
 func (mgr *Manager) RegisterSegment(id layout.ID, sf ISegmentFile) {
 	mgr.Files[id] = sf
