@@ -15,7 +15,7 @@ const (
 	FTBlock
 	FTSegment
 	FTSegmentIndex
-	FTNode
+	FTTransientNode
 )
 
 func MakeSpillDir(dirname string) string {
@@ -35,7 +35,7 @@ func MakeFilename(dirname string, ft FileType, name string, isTmp bool) string {
 	switch ft {
 	case FTCheckpoint:
 		s = path.Join(MakeMetaDir(dirname), fmt.Sprintf("%s.ckp", name))
-	case FTNode:
+	case FTTransientNode:
 		s = path.Join(MakeSpillDir(dirname), fmt.Sprintf("%s.nod", name))
 		isTmp = false
 	default:

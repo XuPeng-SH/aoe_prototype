@@ -16,7 +16,7 @@ func NewNodeIO(opts *e.Options, ctx context.Context) ioif.IO {
 	}
 
 	id := handle.GetID()
-	filename := e.MakeFilename(dio.WRITER_FACTORY.Dirname, e.FTNode, MakeNodeFileName(&id), false)
+	filename := e.MakeFilename(dio.WRITER_FACTORY.Dirname, e.FTTransientNode, MakeNodeFileName(&id), false)
 	ctx = context.WithValue(ctx, "filename", filename)
 
 	iof := dio.NewIOFactory(dio.WRITER_FACTORY, dio.READER_FACTORY, dio.CLEANER_FACTORY)

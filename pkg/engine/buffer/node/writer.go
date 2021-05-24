@@ -33,7 +33,7 @@ func (b *NodeWriterBuilder) Build(wf ioif.IWriterFactory, ctx context.Context) i
 	fn := ctx.Value("filename")
 	if fn == nil {
 		id := handle.GetID()
-		filename = e.MakeFilename(dio.READER_FACTORY.Dirname, e.FTNode, MakeNodeFileName(&id), false)
+		filename = e.MakeFilename(dio.READER_FACTORY.Dirname, e.FTTransientNode, MakeNodeFileName(&id), false)
 	} else {
 		filename = fmt.Sprintf("%v", fn)
 	}
