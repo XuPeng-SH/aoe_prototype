@@ -6,8 +6,9 @@ import (
 	"aoe/pkg/engine/layout"
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io"
-	// log "github.com/sirupsen/logrus"
+	"runtime"
 )
 
 type ColumnPartAllocator struct {
@@ -55,6 +56,11 @@ func NewColumnPart(bmgr bmgrif.IBufferManager, blk IColumnBlock, id layout.ID,
 	} else {
 		part.BufNode = bmgr.RegisterNode(typeSize*rowCount, id)
 	}
+	runtime.SetFinalizer(part, func(p IColumnPart) {
+		id := part.GetID()
+		log.Infof("GC ColumnPart %s", id.String())
+		part.Close()
+	})
 
 	blk.Append(part)
 	return part

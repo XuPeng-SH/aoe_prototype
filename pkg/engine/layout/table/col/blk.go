@@ -46,9 +46,6 @@ func (blk *ColumnBlock) GetRowCount() uint64 {
 }
 
 func (blk *ColumnBlock) SetNext(next IColumnBlock) {
-	// if blk.Next != nil {
-	// 	panic("logic error")
-	// }
 	blk.Next = next
 }
 

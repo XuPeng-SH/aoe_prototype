@@ -6,9 +6,12 @@ import (
 	"aoe/pkg/engine/layout"
 	w "aoe/pkg/engine/worker"
 	mock "aoe/pkg/mock/type"
-	"github.com/stretchr/testify/assert"
+	"runtime"
 	"testing"
+	"time"
 	"unsafe"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var WORK_DIR = "/tmp/layout/blk_test"
@@ -216,4 +219,16 @@ func TestStdSegmentTree(t *testing.T) {
 		}
 	}
 	assert.Equal(t, seg_cnt, cnt)
+	{
+		seg := col_data.GetSegmentRoot()
+		dseg, err := col_data.DropSegment(seg.GetID())
+		assert.Nil(t, err)
+		assert.Equal(t, seg.GetID(), dseg.GetID())
+	}
+	for i := 0; i < 5; i++ {
+		runtime.GC()
+		time.Sleep(time.Duration(1) * time.Millisecond)
+	}
+	seg2 := col_data.GetSegmentRoot()
+	t.Log(seg2)
 }

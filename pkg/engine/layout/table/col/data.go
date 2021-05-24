@@ -1,6 +1,7 @@
 package col
 
 import (
+	"aoe/pkg/engine/layout"
 	mock "aoe/pkg/mock/type"
 	"fmt"
 )
@@ -10,6 +11,7 @@ type IColumnData interface {
 	ToString(depth uint64) string
 	InitScanCursor(cursor *ScanCursor) error
 	Append(seg IColumnSegment) error
+	DropSegment(id layout.ID) (seg IColumnSegment, err error)
 	// AppendBlock(blk IColumnBlock) error
 	// AppendPart(part IColumnPart) error
 	SegmentCount() uint64
@@ -39,6 +41,10 @@ func (cdata *ColumnData) GetSegmentRoot() IColumnSegment {
 
 func (cdata *ColumnData) GetSegmentTail() IColumnSegment {
 	return cdata.SegTree.GetTail()
+}
+
+func (cdata *ColumnData) DropSegment(id layout.ID) (seg IColumnSegment, err error) {
+	return cdata.SegTree.DropSegment(id)
 }
 
 func (cdata *ColumnData) SegmentCount() uint64 {

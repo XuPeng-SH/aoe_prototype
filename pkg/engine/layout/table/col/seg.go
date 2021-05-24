@@ -3,8 +3,19 @@ package col
 import (
 	"aoe/pkg/engine/layout"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io"
+	"runtime"
+	"sync"
 )
+
+// type SegmentType uint8
+
+// const (
+// 	UNCLOSED_SEG SegmentType = iota
+// 	CLOSED_SEG
+// 	SORTED_SEG
+// )
 
 type IColumnSegment interface {
 	io.Closer
@@ -17,21 +28,52 @@ type IColumnSegment interface {
 	String() string
 	ToString(verbose bool) string
 	Append(blk IColumnBlock)
+	UpgradeBlock(layout.ID)
 }
 
 type ColumnSegment struct {
-	ID        layout.ID
-	Next      IColumnSegment
-	BlockRoot IColumnBlock
-	BlockTail IColumnBlock
-	RowCount  uint64
+	sync.RWMutex
+	ID       layout.ID
+	Next     IColumnSegment
+	Blocks   []IColumnBlock
+	RowCount uint64
+	IDMap    map[layout.ID]int
 }
 
 func NewSegment(id layout.ID) IColumnSegment {
 	seg := &ColumnSegment{
-		ID: id,
+		ID:    id,
+		IDMap: make(map[layout.ID]int, 0),
 	}
+	runtime.SetFinalizer(seg, func(o IColumnSegment) {
+		id := o.GetID()
+		o.SetNext(nil)
+		log.Infof("[GC]: ColumnSegment %s", id.SegmentString())
+	})
 	return seg
+}
+
+func (seg *ColumnSegment) UpgradeBlock(blkID layout.ID) {
+	// idx, ok := seg.IDMap[blkID]
+	// if !ok {
+	// 	panic("logic error")
+	// }
+	// blk := seg.Blocks[idx]
+	// if blk.GetBlockType() != TRANSIENT_BLK {
+	// 	panic("logic error")
+	// }
+	// if idx == 0 {
+
+	// } else {
+	// 	prev := seg.Blocks[idx-1]
+
+	// }
+
+	// if idx == len(seg.Blocks)-1 {
+
+	// } else {
+
+	// }
 }
 
 func (seg *ColumnSegment) GetRowCount() uint64 {
@@ -47,13 +89,11 @@ func (seg *ColumnSegment) GetNext() IColumnSegment {
 }
 
 func (seg *ColumnSegment) Close() error {
-	block := seg.BlockRoot
-	for block != nil && seg.ID.IsSameSegment(block.GetID()) {
-		err := block.Close()
+	for _, blk := range seg.Blocks {
+		err := blk.Close()
 		if err != nil {
 			return err
 		}
-		block = block.GetNext()
 	}
 	return nil
 }
@@ -66,24 +106,26 @@ func (seg *ColumnSegment) Append(blk IColumnBlock) {
 	if !seg.ID.IsSameSegment(blk.GetID()) {
 		panic("logic error")
 	}
-	if seg.BlockTail == nil {
-		seg.BlockRoot = blk
-		seg.BlockTail = blk
-	} else {
-		seg.BlockTail.SetNext(blk)
+	if len(seg.Blocks) > 0 {
+		seg.Blocks[len(seg.Blocks)-1].SetNext(blk)
 	}
+	seg.Blocks = append(seg.Blocks, blk)
+	seg.IDMap[blk.GetID()] = len(seg.Blocks) - 1
 	seg.RowCount += blk.GetRowCount()
 }
 
 func (seg *ColumnSegment) GetBlockRoot() IColumnBlock {
-	return seg.BlockRoot
+	if len(seg.Blocks) == 0 {
+		return nil
+	}
+	return seg.Blocks[0]
 }
 
 func (seg *ColumnSegment) GetPartRoot() IColumnPart {
-	if seg.BlockRoot != nil {
-		return seg.BlockRoot.GetPartRoot()
+	if len(seg.Blocks) == 0 {
+		return nil
 	}
-	return nil
+	return seg.Blocks[0].GetPartRoot()
 }
 
 func (seg *ColumnSegment) String() string {

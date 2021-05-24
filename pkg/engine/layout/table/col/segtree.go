@@ -4,6 +4,9 @@ import (
 	"aoe/pkg/engine/layout"
 	"errors"
 	"fmt"
+	"runtime"
+
+	log "github.com/sirupsen/logrus"
 	"sync"
 )
 
@@ -18,20 +21,39 @@ type ISegmentTree interface {
 	Depth() uint64
 	Append(seg IColumnSegment) error
 	// ReferenceOther(other ISegmentTree)
+	DropSegment(id layout.ID) (seg IColumnSegment, err error)
 }
 
 type SegmentTree struct {
 	sync.RWMutex
 	Segments []IColumnSegment
-	Helper   map[layout.ID]bool
+	Helper   map[layout.ID]int
 }
 
 func NewSegmentTree() ISegmentTree {
 	tree := &SegmentTree{
 		Segments: make([]IColumnSegment, 0),
-		Helper:   make(map[layout.ID]bool),
+		Helper:   make(map[layout.ID]int),
 	}
+	runtime.SetFinalizer(tree, func(o ISegmentTree) {
+		log.Infof("[GC]: SegmentTree")
+	})
 	return tree
+}
+
+func (tree *SegmentTree) DropSegment(id layout.ID) (seg IColumnSegment, err error) {
+	idx, ok := tree.Helper[id]
+	if !ok {
+		return nil, errors.New(fmt.Sprintf("Specified seg %s not found", id.SegmentString()))
+	}
+	seg = tree.Segments[idx]
+	if idx == 0 {
+	} else {
+		prev := tree.Segments[idx-1]
+		prev.SetNext(seg.GetNext())
+	}
+	tree.Segments = append(tree.Segments[:idx], tree.Segments[idx+1:]...)
+	return seg, nil
 }
 
 func (tree *SegmentTree) Depth() uint64 {
@@ -61,7 +83,7 @@ func (tree *SegmentTree) Append(seg IColumnSegment) error {
 		tree.Segments[len(tree.Segments)-1].SetNext(seg)
 	}
 	tree.Segments = append(tree.Segments, seg)
-	tree.Helper[seg.GetID()] = true
+	tree.Helper[seg.GetID()] = len(tree.Segments) - 1
 	return nil
 }
 
