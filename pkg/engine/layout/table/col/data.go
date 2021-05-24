@@ -17,6 +17,7 @@ type IColumnData interface {
 	SegmentCount() uint64
 	GetSegmentRoot() IColumnSegment
 	GetSegmentTail() IColumnSegment
+	RegisterSegment(id layout.ID) (seg IColumnSegment, err error)
 }
 
 type ColumnData struct {
@@ -56,6 +57,12 @@ func (cdata *ColumnData) Append(seg IColumnSegment) error {
 		panic("logic error")
 	}
 	return cdata.SegTree.Append(seg)
+}
+
+func (cdata *ColumnData) RegisterSegment(id layout.ID) (seg IColumnSegment, err error) {
+	seg = NewSegment(id, cdata.Idx, UNSORTED_SEG)
+	err = cdata.Append(seg)
+	return seg, err
 }
 
 // func (cdata *ColumnData) AppendBlock(blk IColumnBlock) error {

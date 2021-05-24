@@ -52,10 +52,17 @@ func NewColumnPart(bmgr bmgrif.IBufferManager, blk IColumnBlock, id layout.ID,
 		MaxRowCount: rowCount,
 	}
 
-	if blk.GetBlockType() == TRANSIENT_BLK {
+	switch blk.GetBlockType() {
+	case TRANSIENT_BLK:
 		part.BufNode = bmgr.RegisterSpillableNode(typeSize*rowCount, id)
-	} else {
+	case PERSISTENT_BLK:
+		// TODO
 		part.BufNode = bmgr.RegisterNode(typeSize*rowCount, id)
+	case PERSISTENT_SORTED_BLK:
+		// TODO
+		part.BufNode = bmgr.RegisterNode(typeSize*rowCount, id)
+	default:
+		panic("not support")
 	}
 	runtime.SetFinalizer(part, func(p IColumnPart) {
 		id := part.GetID()

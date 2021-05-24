@@ -67,8 +67,8 @@ func (c *Collection) onNoMutableTable() (tbl imem.IMemTable, err error) {
 				TableID:   c.ID,
 				SegmentID: blk.SegmentID,
 			}
-			seg = col.NewSegment(seg_id, idx, col.UNSORTED_SEG)
-			err = column.Append(seg)
+			// TODO: All column data modification should be executed by one worker
+			seg, err = column.RegisterSegment(seg_id)
 			if err != nil {
 				return nil, err
 			}
