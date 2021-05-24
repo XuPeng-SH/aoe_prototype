@@ -14,8 +14,9 @@ type Vector interface {
 }
 
 type BaseVector struct {
-	Type mock.ColType
-	Data []byte
+	Type   mock.ColType
+	Data   []byte
+	Offset int
 }
 
 type StdVector struct {
@@ -39,7 +40,7 @@ func NewStdVector(t mock.ColType, dataBuf []byte) Vector {
 }
 
 func (v *StdVector) GetCount() uint64 {
-	return uint64(len(v.Data)) / v.Type.Size()
+	return uint64(v.Offset) / v.Type.Size()
 }
 
 func (v *StdVector) GetData() []byte {
@@ -49,7 +50,7 @@ func (v *StdVector) GetData() []byte {
 func (v *StdVector) Append(o Vector, offset uint64) (n uint64, err error) {
 	buf := o.GetData()
 	tsize := int(v.Type.Size())
-	remaining := (cap(v.Data) - len(v.Data))
+	remaining := cap(v.Data) - v.Offset
 	other_remaining := len(buf) - tsize*int(offset)
 	to_write := other_remaining
 	if other_remaining > remaining {
@@ -57,7 +58,8 @@ func (v *StdVector) Append(o Vector, offset uint64) (n uint64, err error) {
 	}
 	start := int(offset) * tsize
 	end := int(offset)*tsize + to_write
-	v.Data = append(v.Data, buf[start:end]...)
+	v.Data = append(v.Data[v.Offset:], buf[start:end]...)
+	v.Offset += to_write
 	return uint64(to_write / tsize), nil
 }
 

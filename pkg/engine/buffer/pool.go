@@ -50,7 +50,8 @@ func (pool *SimpleMemoryPool) MakeNode(size uint64) (node *Node) {
 			// return &Node{Data: []byte{}, Pool: pool}
 		}
 	}
-	buf := make([]byte, 0, size)
+	// buf := make([]byte, 0, size)
+	buf := make([]byte, size)
 	return &Node{Data: buf, Pool: pool, Capacity: size}
 }
 

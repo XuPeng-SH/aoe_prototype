@@ -59,6 +59,7 @@ func BuildChunk(types []mock.ColType, rows uint64) *chunk.Chunk {
 	buf := make([]byte, rows*types[0].Size())
 	for _, colType := range types {
 		vec := vector.NewStdVector(colType, buf)
+		vec.(*vector.StdVector).Offset = cap(buf)
 		vectors = append(vectors, vec)
 	}
 

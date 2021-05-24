@@ -71,7 +71,7 @@ func TestManager2(t *testing.T) {
 	node_capacity := 2 * capacity
 	mgr := NewBufferManager(capacity, flusher)
 	node0 := layout.ID{}
-	empty := &ldio.ColSegmentFile{}
+	empty := &ldio.MockColSegmentFile{}
 	h0 := mgr.RegisterNode(node_capacity, node0, empty)
 	assert.Equal(t, h0.GetID(), node0)
 	assert.False(t, h0.HasRef())
@@ -112,7 +112,7 @@ func TestManager3(t *testing.T) {
 
 	id := layout.ID{}
 	n0 := *id.Next()
-	empty := &ldio.ColSegmentFile{}
+	empty := &ldio.MockColSegmentFile{}
 	h0 := mgr.RegisterNode(node_capacity, n0, empty)
 	assert.NotNil(t, h0)
 	assert.Equal(t, h0.GetID(), n0)

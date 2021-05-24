@@ -11,6 +11,7 @@ const (
 	TRANSIENT_BLK BlockType = iota
 	PERSISTENT_BLK
 	PERSISTENT_SORTED_BLK
+	MOCK_BLK
 )
 
 type IColumnBlock interface {

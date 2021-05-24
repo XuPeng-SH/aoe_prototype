@@ -74,6 +74,7 @@ func (h *NodeHandle) Unload() {
 	h.Buff.Close()
 	h.Buff = nil
 	nif.AtomicStoreState(&(h.State), nif.NODE_UNLOAD)
+	log.Infof("Unload %s", h.ID.String())
 }
 
 func (h *NodeHandle) GetCapacity() uint64 {
@@ -172,7 +173,11 @@ func (h *NodeHandle) CommitLoad() error {
 	} else if h.ID.IsTransient() {
 		panic("logic error: should not load non-spillable transient memory")
 	} else {
-		// TODO: Load from persistent segment
+		log.Infof("loading persistent node %v", h.ID)
+		err := h.SpillIO.Load()
+		if err != nil {
+			return err
+		}
 	}
 
 	if !nif.AtomicCASState(&(h.State), nif.NODE_COMMIT, nif.NODE_LOADED) {

@@ -26,6 +26,20 @@ func (csf *ColSegmentFile) ReadPart(id layout.ID, buf []byte) {
 	csf.SegmentFile.ReadPart(csf.ColIdx, id, buf)
 }
 
+type MockColSegmentFile struct {
+}
+
+func (msf *MockColSegmentFile) ReadPart(id layout.ID, buf []byte) {
+	log.Infof("MockColSegmentFile ReadPart %s size: %d cap: %d", id.SegmentString(), len(buf), cap(buf))
+}
+
+type MockSegmentFile struct {
+}
+
+func (msf *MockSegmentFile) ReadPart(colIdx uint64, id layout.ID, buf []byte) {
+	log.Infof("MockSegmentFile ReadPart %d %s size: %d cap: %d", colIdx, id.SegmentString(), len(buf), cap(buf))
+}
+
 type UnsortedSegmentFile struct {
 	sync.RWMutex
 	ID     layout.ID
