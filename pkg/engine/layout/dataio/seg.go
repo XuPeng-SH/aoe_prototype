@@ -1,8 +1,10 @@
 package dataio
 
 import (
+	e "aoe/pkg/engine"
 	"aoe/pkg/engine/layout"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"sync"
 )
@@ -13,7 +15,16 @@ type ISegmentFile interface {
 
 type UnsortedSegmentFile struct {
 	sync.RWMutex
+	ID     layout.ID
 	Blocks map[layout.ID]*BlockFile
+}
+
+func NewUnsortedSegmentFile(dirname string, id layout.ID) ISegmentFile {
+	usf := &UnsortedSegmentFile{
+		ID:     id,
+		Blocks: make(map[layout.ID]*BlockFile),
+	}
+	return usf
 }
 
 func (sf *UnsortedSegmentFile) AddBlock(id layout.ID, bf *BlockFile) {
@@ -32,20 +43,36 @@ func (sf *UnsortedSegmentFile) ReadPart(colIdx uint64, id layout.ID, buf []byte)
 	blk.ReadPart(colIdx, id, buf)
 }
 
-type Pointer struct {
-	Offset int64
-	Len    uint64
-}
+func NewSortedSegmentFile(dirname string, id layout.ID) ISegmentFile {
+	sf := &SortedSegmentFile{
+		Parts: make(map[Key]Pointer),
+		ID:    id,
+	}
 
-type Key struct {
-	Col uint64
-	ID  layout.ID
+	name := e.MakeFilename(dirname, e.FTSegment, id.ToSegmentFileName(), false)
+	log.Infof("SegmentFile name %s", name)
+	if _, err := os.Stat(name); os.IsNotExist(err) {
+		panic(fmt.Sprintf("Specified file %s not existed", name))
+	}
+	r, err := os.OpenFile(name, os.O_RDONLY, 0666)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot open specified file %s: %s", name, err))
+	}
+
+	sf.File = *r
+	sf.initPointers()
+	return sf
 }
 
 type SortedSegmentFile struct {
 	sync.RWMutex
+	ID layout.ID
 	os.File
 	Parts map[Key]Pointer
+}
+
+func (sf *SortedSegmentFile) initPointers() {
+	// TODO
 }
 
 func (sf *SortedSegmentFile) ReadPart(colIdx uint64, id layout.ID, buf []byte) {

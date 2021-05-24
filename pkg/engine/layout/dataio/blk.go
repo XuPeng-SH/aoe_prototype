@@ -1,8 +1,10 @@
 package dataio
 
 import (
+	e "aoe/pkg/engine"
 	"aoe/pkg/engine/layout"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"sync"
 )
@@ -10,7 +12,33 @@ import (
 type BlockFile struct {
 	sync.RWMutex
 	os.File
+	ID    layout.ID
 	Parts map[Key]Pointer
+}
+
+func NewBlockFile(dirname string, id layout.ID) *BlockFile {
+	bf := &BlockFile{
+		Parts: make(map[Key]Pointer),
+		ID:    id,
+	}
+
+	name := e.MakeFilename(dirname, e.FTBlock, id.ToBlockFileName(), false)
+	log.Infof("BlockFile name %s", name)
+	if _, err := os.Stat(name); os.IsNotExist(err) {
+		panic(fmt.Sprintf("Specified file %s not existed", name))
+	}
+	r, err := os.OpenFile(name, os.O_RDONLY, 0666)
+	if err != nil {
+		panic(fmt.Sprintf("Cannot open specified file %s: %s", name, err))
+	}
+
+	bf.File = *r
+	bf.initPointers()
+	return bf
+}
+
+func (bf *BlockFile) initPointers() {
+	// TODO
 }
 
 func (bf *BlockFile) ReadPart(colIdx uint64, id layout.ID, buf []byte) {

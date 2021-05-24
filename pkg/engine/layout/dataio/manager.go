@@ -2,12 +2,17 @@ package dataio
 
 import (
 	"aoe/pkg/engine/layout"
+	"aoe/pkg/engine/layout/table/col"
 	"sync"
 )
 
 type Manager struct {
 	sync.RWMutex
 	Files map[layout.ID]ISegmentFile
+}
+
+func MakeSegmentFile(id layout.ID, segType col.SegmentType) ISegmentFile {
+	return nil
 }
 
 func (mgr *Manager) RegisterSegment(id layout.ID, sf ISegmentFile) {

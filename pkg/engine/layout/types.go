@@ -88,3 +88,11 @@ func (id *ID) IsTransient() bool {
 	}
 	return false
 }
+
+func (id *ID) ToBlockFileName() string {
+	return fmt.Sprintf("%d_%d_%d", id.TableID, id.SegmentID, id.BlockID)
+}
+
+func (id *ID) ToSegmentFileName() string {
+	return fmt.Sprintf("%d_%d", id.TableID, id.SegmentID)
+}
