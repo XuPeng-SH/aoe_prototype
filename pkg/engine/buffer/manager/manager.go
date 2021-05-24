@@ -6,6 +6,7 @@ import (
 	"aoe/pkg/engine/buffer/node"
 	nif "aoe/pkg/engine/buffer/node/iface"
 	"aoe/pkg/engine/layout"
+	ldio "aoe/pkg/engine/layout/dataio"
 	iw "aoe/pkg/engine/worker/base"
 	log "github.com/sirupsen/logrus"
 )
@@ -81,9 +82,10 @@ func (mgr *BufferManager) RegisterSpillableNode(capacity uint64, node_id layout.
 	return handle
 }
 
-func (mgr *BufferManager) RegisterNode(capacity uint64, node_id layout.ID) nif.INodeHandle {
+func (mgr *BufferManager) RegisterNode(capacity uint64, node_id layout.ID, segFile interface{}) nif.INodeHandle {
 	mgr.Lock()
 	defer mgr.Unlock()
+	sf := segFile.(ldio.IColSegmentFile)
 
 	handle, ok := mgr.Nodes[node_id]
 	if ok {
@@ -92,10 +94,11 @@ func (mgr *BufferManager) RegisterNode(capacity uint64, node_id layout.ID) nif.I
 		}
 	}
 	ctx := node.NodeHandleCtx{
-		ID:        node_id,
-		Manager:   mgr,
-		Size:      capacity,
-		Spillable: false,
+		ID:          node_id,
+		Manager:     mgr,
+		Size:        capacity,
+		Spillable:   false,
+		SegmentFile: sf,
 	}
 	handle = node.NewNodeHandle(&ctx)
 	mgr.Nodes[node_id] = handle

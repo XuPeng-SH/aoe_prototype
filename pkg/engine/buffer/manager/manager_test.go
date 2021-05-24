@@ -5,6 +5,7 @@ import (
 	nif "aoe/pkg/engine/buffer/node/iface"
 	dio "aoe/pkg/engine/dataio"
 	"aoe/pkg/engine/layout"
+	ldio "aoe/pkg/engine/layout/dataio"
 	w "aoe/pkg/engine/worker"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -29,22 +30,23 @@ func TestManagerBasic(t *testing.T) {
 	node_capacity := uint64(64)
 
 	assert.Equal(t, len(mgr.(*BufferManager).Nodes), 0)
-	h0 := mgr.RegisterNode(node_capacity, *node0)
+	empty := &ldio.ColSegmentFile{}
+	h0 := mgr.RegisterNode(node_capacity, *node0, empty)
 	assert.NotNil(t, h0)
 	assert.Equal(t, len(mgr.(*BufferManager).Nodes), 1)
 	assert.Equal(t, *node0, h0.GetID())
 
-	h1 := mgr.RegisterNode(node_capacity, *node1)
+	h1 := mgr.RegisterNode(node_capacity, *node1, empty)
 	assert.NotNil(t, h1)
 	assert.Equal(t, len(mgr.(*BufferManager).Nodes), 2)
 	assert.Equal(t, *node1, h1.GetID())
 
-	h0_1 := mgr.RegisterNode(node_capacity, *node0)
+	h0_1 := mgr.RegisterNode(node_capacity, *node0, empty)
 	assert.NotNil(t, h0_1)
 	assert.Equal(t, len(mgr.(*BufferManager).Nodes), 2)
 	assert.Equal(t, *node0, h0_1.GetID())
 
-	h2 := mgr.RegisterNode(node_capacity, *node2)
+	h2 := mgr.RegisterNode(node_capacity, *node2, empty)
 	assert.NotNil(t, h2)
 	assert.Equal(t, len(mgr.(*BufferManager).Nodes), 3)
 	assert.Equal(t, *node2, h2.GetID())
@@ -69,7 +71,8 @@ func TestManager2(t *testing.T) {
 	node_capacity := 2 * capacity
 	mgr := NewBufferManager(capacity, flusher)
 	node0 := layout.ID{}
-	h0 := mgr.RegisterNode(node_capacity, node0)
+	empty := &ldio.ColSegmentFile{}
+	h0 := mgr.RegisterNode(node_capacity, node0, empty)
 	assert.Equal(t, h0.GetID(), node0)
 	assert.False(t, h0.HasRef())
 	b0 := mgr.Pin(h0)
@@ -109,7 +112,8 @@ func TestManager3(t *testing.T) {
 
 	id := layout.ID{}
 	n0 := *id.Next()
-	h0 := mgr.RegisterNode(node_capacity, n0)
+	empty := &ldio.ColSegmentFile{}
+	h0 := mgr.RegisterNode(node_capacity, n0, empty)
 	assert.NotNil(t, h0)
 	assert.Equal(t, h0.GetID(), n0)
 	assert.Equal(t, h0.GetState(), nif.NODE_UNLOAD)
@@ -126,7 +130,7 @@ func TestManager3(t *testing.T) {
 		assert.False(t, h0.HasRef())
 
 		n1 := *id.Next()
-		h1 := mgr.RegisterNode(node_capacity, n1)
+		h1 := mgr.RegisterNode(node_capacity, n1, empty)
 		assert.True(t, h1 != nil)
 		assert.Equal(t, h1.GetID(), n1)
 		assert.Equal(t, h1.GetState(), nif.NODE_UNLOAD)
@@ -138,7 +142,7 @@ func TestManager3(t *testing.T) {
 		assert.Equal(t, mgr.GetUsage(), h0.GetCapacity()+h1.GetCapacity())
 
 		n2 := *id.Next()
-		h2 := mgr.RegisterNode(node_capacity, n2)
+		h2 := mgr.RegisterNode(node_capacity, n2, empty)
 		assert.True(t, h2 != nil)
 		assert.Equal(t, h2.GetID(), n2)
 		assert.Equal(t, h2.GetState(), nif.NODE_UNLOAD)

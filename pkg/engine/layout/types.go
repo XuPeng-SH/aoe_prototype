@@ -30,6 +30,13 @@ func (id *ID) AsBlockID() ID {
 	}
 }
 
+func (id *ID) AsSegmentID() ID {
+	return ID{
+		TableID:   id.TableID,
+		SegmentID: id.SegmentID,
+	}
+}
+
 func (id *ID) String() string {
 	return fmt.Sprintf("ID<%d-%d-%d-%d>", id.TableID, id.SegmentID, id.BlockID, id.PartID)
 }

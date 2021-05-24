@@ -3,7 +3,9 @@ package col
 import (
 	bmgrif "aoe/pkg/engine/buffer/manager/iface"
 	nif "aoe/pkg/engine/buffer/node/iface"
+	dio "aoe/pkg/engine/dataio"
 	"aoe/pkg/engine/layout"
+	ldio "aoe/pkg/engine/layout/dataio"
 	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
@@ -56,11 +58,15 @@ func NewColumnPart(bmgr bmgrif.IBufferManager, blk IColumnBlock, id layout.ID,
 	case TRANSIENT_BLK:
 		part.BufNode = bmgr.RegisterSpillableNode(typeSize*rowCount, id)
 	case PERSISTENT_BLK:
-		// TODO
-		part.BufNode = bmgr.RegisterNode(typeSize*rowCount, id)
+		sf := ldio.NewUnsortedSegmentFile(dio.READER_FACTORY.Dirname, id.AsSegmentID())
+		csf := ldio.ColSegmentFile{
+			SegmentFile: sf,
+			ColIdx:      uint64(part.Block.GetColIdx()),
+		}
+		part.BufNode = bmgr.RegisterNode(typeSize*rowCount, id, &csf)
 	case PERSISTENT_SORTED_BLK:
 		// TODO
-		part.BufNode = bmgr.RegisterNode(typeSize*rowCount, id)
+		part.BufNode = bmgr.RegisterNode(typeSize*rowCount, id, ldio.ColSegmentFile{})
 	default:
 		panic("not support")
 	}
