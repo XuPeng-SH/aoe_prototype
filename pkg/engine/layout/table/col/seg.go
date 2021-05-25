@@ -126,6 +126,8 @@ func (seg *ColumnSegment) Append(blk IColumnBlock) {
 	if !seg.ID.IsSameSegment(blk.GetID()) {
 		panic("logic error")
 	}
+	seg.Lock()
+	defer seg.Unlock()
 	if len(seg.Blocks) > 0 {
 		seg.Blocks[len(seg.Blocks)-1].SetNext(blk)
 	}
