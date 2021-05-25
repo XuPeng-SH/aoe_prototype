@@ -11,9 +11,9 @@ import (
 )
 
 type ISegmentTree interface {
-	sync.Locker
-	RLock()
-	RUnlock()
+	// sync.Locker
+	// RLock()
+	// RUnlock()
 	String() string
 	ToString(depth uint64) string
 	GetRoot() IColumnSegment
@@ -25,16 +25,17 @@ type ISegmentTree interface {
 }
 
 type SegmentTree struct {
-	sync.RWMutex
-	Segments []IColumnSegment
-	Helper   map[layout.ID]int
+	data struct {
+		sync.RWMutex
+		Segments []IColumnSegment
+		Helper   map[layout.ID]int
+	}
 }
 
 func NewSegmentTree() ISegmentTree {
-	tree := &SegmentTree{
-		Segments: make([]IColumnSegment, 0),
-		Helper:   make(map[layout.ID]int),
-	}
+	tree := &SegmentTree{}
+	tree.data.Segments = make([]IColumnSegment, 0)
+	tree.data.Helper = make(map[layout.ID]int)
 	runtime.SetFinalizer(tree, func(o ISegmentTree) {
 		log.Infof("[GC]: SegmentTree")
 	})
@@ -42,62 +43,79 @@ func NewSegmentTree() ISegmentTree {
 }
 
 func (tree *SegmentTree) UpgradeSegment(id layout.ID) (err error) {
-	idx, ok := tree.Helper[id]
+	idx, ok := tree.data.Helper[id]
 	if !ok {
 		return errors.New(fmt.Sprintf("Specified seg %s not found", id.SegmentString()))
 	}
-	seg := tree.Segments[idx]
+	seg := tree.data.Segments[idx]
 	if seg.GetSegmentType() == SORTED_SEG {
 		log.Warnf("Specified seg %s is already SORTED!", id.SegmentString())
 		return nil
 	}
+	upgraded := seg.CloneWithUpgrade()
+
+	tree.data.Lock()
+	defer tree.data.Unlock()
+	if idx > 0 {
+		tree.data.Segments[idx-1].SetNext(upgraded)
+	}
+	tree.data.Segments[idx] = upgraded
 
 	return nil
 }
 
 func (tree *SegmentTree) DropSegment(id layout.ID) (seg IColumnSegment, err error) {
-	idx, ok := tree.Helper[id]
+	idx, ok := tree.data.Helper[id]
 	if !ok {
 		return nil, errors.New(fmt.Sprintf("Specified seg %s not found", id.SegmentString()))
 	}
-	seg = tree.Segments[idx]
-	if idx == 0 {
-	} else {
-		prev := tree.Segments[idx-1]
+	seg = tree.data.Segments[idx]
+	tree.data.Lock()
+	defer tree.data.Unlock()
+	if idx > 0 {
+		prev := tree.data.Segments[idx-1]
 		prev.SetNext(seg.GetNext())
 	}
-	tree.Segments = append(tree.Segments[:idx], tree.Segments[idx+1:]...)
+	tree.data.Segments = append(tree.data.Segments[:idx], tree.data.Segments[idx+1:]...)
 	return seg, nil
 }
 
 func (tree *SegmentTree) Depth() uint64 {
-	return uint64(len(tree.Segments))
+	tree.data.RLock()
+	defer tree.data.RUnlock()
+	return uint64(len(tree.data.Segments))
 }
 
 func (tree *SegmentTree) GetRoot() IColumnSegment {
-	if len(tree.Segments) == 0 {
+	tree.data.RLock()
+	defer tree.data.RUnlock()
+	if len(tree.data.Segments) == 0 {
 		return nil
 	}
-	return tree.Segments[0]
+	return tree.data.Segments[0]
 }
 
 func (tree *SegmentTree) GetTail() IColumnSegment {
-	if len(tree.Segments) == 0 {
+	tree.data.RLock()
+	defer tree.data.RUnlock()
+	if len(tree.data.Segments) == 0 {
 		return nil
 	}
-	return tree.Segments[len(tree.Segments)-1]
+	return tree.data.Segments[len(tree.data.Segments)-1]
 }
 
 func (tree *SegmentTree) Append(seg IColumnSegment) error {
-	_, ok := tree.Helper[seg.GetID()]
+	tree.data.Lock()
+	defer tree.data.Unlock()
+	_, ok := tree.data.Helper[seg.GetID()]
 	if ok {
 		return errors.New(fmt.Sprintf("Duplicate seg %v in tree", seg.GetID()))
 	}
-	if len(tree.Segments) != 0 {
-		tree.Segments[len(tree.Segments)-1].SetNext(seg)
+	if len(tree.data.Segments) != 0 {
+		tree.data.Segments[len(tree.data.Segments)-1].SetNext(seg)
 	}
-	tree.Segments = append(tree.Segments, seg)
-	tree.Helper[seg.GetID()] = len(tree.Segments) - 1
+	tree.data.Segments = append(tree.data.Segments, seg)
+	tree.data.Helper[seg.GetID()] = len(tree.data.Segments) - 1
 	return nil
 }
 
@@ -115,7 +133,7 @@ func (tree *SegmentTree) ToString(depth uint64) string {
 	}
 	ret := fmt.Sprintf("SegTree (%v/%v) [", depth, tree.Depth())
 	for i := uint64(0); i < depth; i++ {
-		ret += tree.Segments[i].ToString(false)
+		ret += tree.data.Segments[i].ToString(false)
 		if i != depth-1 {
 			ret += ","
 		}

@@ -27,7 +27,6 @@ type IColumnSegment interface {
 	String() string
 	ToString(verbose bool) string
 	Append(blk IColumnBlock)
-	UpgradeBlock(layout.ID)
 	GetColIdx() int
 	GetSegmentType() SegmentType
 	CloneWithUpgrade() IColumnSegment
@@ -55,6 +54,7 @@ func NewSegment(id layout.ID, colIdx int, segType SegmentType) IColumnSegment {
 		id := o.GetID()
 		o.SetNext(nil)
 		log.Infof("[GC]: ColumnSegment %s [%d]", id.SegmentString(), o.GetSegmentType())
+		o.Close()
 	})
 	return seg
 }
@@ -92,30 +92,8 @@ func (seg *ColumnSegment) CloneWithUpgrade() IColumnSegment {
 		o.SetNext(nil)
 		log.Infof("[GC]: ColumnSegment %s [%d]", id.SegmentString(), o.GetSegmentType())
 	})
+	cloned.Next = seg.Next
 	return cloned
-}
-
-func (seg *ColumnSegment) UpgradeBlock(blkID layout.ID) {
-	// idx, ok := seg.IDMap[blkID]
-	// if !ok {
-	// 	panic("logic error")
-	// }
-	// blk := seg.Blocks[idx]
-	// if blk.GetBlockType() != TRANSIENT_BLK {
-	// 	panic("logic error")
-	// }
-	// if idx == 0 {
-
-	// } else {
-	// 	prev := seg.Blocks[idx-1]
-
-	// }
-
-	// if idx == len(seg.Blocks)-1 {
-
-	// } else {
-
-	// }
 }
 
 func (seg *ColumnSegment) GetRowCount() uint64 {

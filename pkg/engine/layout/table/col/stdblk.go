@@ -2,6 +2,8 @@ package col
 
 import (
 	"aoe/pkg/engine/layout"
+	log "github.com/sirupsen/logrus"
+	"runtime"
 )
 
 type StdColumnBlock struct {
@@ -18,6 +20,12 @@ func NewStdColumnBlock(seg IColumnSegment, id layout.ID, blkType BlockType) ICol
 		},
 	}
 	seg.Append(blk)
+	runtime.SetFinalizer(blk, func(o IColumnBlock) {
+		id := o.GetID()
+		o.SetNext(nil)
+		log.Infof("[GC]: StdColumnBlock %s [%d]", id.BlockString(), o.GetBlockType())
+		o.Close()
+	})
 	return blk
 }
 
@@ -38,6 +46,8 @@ func (blk *StdColumnBlock) CloneWithUpgrade(seg IColumnSegment) IColumnBlock {
 			Type:    newType,
 		},
 	}
+	cloned.Part = blk.Part.CloneWithUpgrade(cloned)
+
 	return cloned
 }
 

@@ -29,6 +29,7 @@ type IColumnPart interface {
 	GetBlock() IColumnBlock
 	GetBuf() []byte
 	GetColIdx() int
+	CloneWithUpgrade(blk IColumnBlock) IColumnPart
 }
 
 type ColumnPart struct {
@@ -72,23 +73,62 @@ func NewColumnPart(bmgr bmgrif.IBufferManager, blk IColumnBlock, id layout.ID,
 		}
 		part.BufNode = bmgr.RegisterNode(typeSize*rowCount, id, &csf)
 	case MOCK_BLK:
-		sf := new(ldio.MockSegmentFile)
-		csf := ldio.ColSegmentFile{
-			SegmentFile: sf,
-			ColIdx:      uint64(part.Block.GetColIdx()),
-		}
+		csf := ldio.MockColSegmentFile{}
 		part.BufNode = bmgr.RegisterNode(typeSize*rowCount, id, &csf)
 	default:
 		panic("not support")
 	}
 	runtime.SetFinalizer(part, func(p IColumnPart) {
-		id := part.GetID()
+		id := p.GetID()
 		log.Infof("GC ColumnPart %s", id.String())
-		part.Close()
+		p.SetNext(nil)
+		p.Close()
 	})
 
 	blk.Append(part)
 	return part
+}
+
+func (part *ColumnPart) CloneWithUpgrade(blk IColumnBlock) IColumnPart {
+	cloned := &ColumnPart{
+		ID:          part.ID,
+		Block:       blk,
+		BufMgr:      part.BufMgr,
+		TypeSize:    part.TypeSize,
+		MaxRowCount: part.MaxRowCount,
+		RowCount:    part.RowCount,
+		Size:        part.Size,
+		Capacity:    part.Capacity,
+	}
+	switch part.Block.GetBlockType() {
+	case TRANSIENT_BLK:
+		sf := ldio.NewUnsortedSegmentFile(dio.READER_FACTORY.Dirname, part.ID.AsSegmentID())
+		csf := ldio.ColSegmentFile{
+			SegmentFile: sf,
+			ColIdx:      uint64(part.Block.GetColIdx()),
+		}
+		cloned.BufNode = part.BufMgr.RegisterNode(part.MaxRowCount*part.TypeSize, part.ID, &csf)
+	case PERSISTENT_BLK:
+		sf := ldio.NewSortedSegmentFile(dio.READER_FACTORY.Dirname, part.ID.AsSegmentID())
+		csf := ldio.ColSegmentFile{
+			SegmentFile: sf,
+			ColIdx:      uint64(part.Block.GetColIdx()),
+		}
+		cloned.BufNode = part.BufMgr.RegisterNode(part.MaxRowCount*part.TypeSize, part.ID, &csf)
+	case PERSISTENT_SORTED_BLK:
+		panic("logic error")
+	default:
+		panic("not supported")
+	}
+
+	// cloned.Next = part.Next
+	runtime.SetFinalizer(cloned, func(p IColumnPart) {
+		id := p.GetID()
+		log.Infof("GC ColumnPart %s", id.String())
+		p.SetNext(nil)
+		p.Close()
+	})
+	return nil
 }
 
 func (part *ColumnPart) GetColIdx() int {

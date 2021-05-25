@@ -2,6 +2,8 @@ package col
 
 import (
 	"aoe/pkg/engine/layout"
+	log "github.com/sirupsen/logrus"
+	"runtime"
 )
 
 type StrColumnBlock struct {
@@ -19,6 +21,12 @@ func NewStrColumnBlock(seg IColumnSegment, id layout.ID, blkType BlockType) ICol
 		Parts: make([]IColumnPart, 0),
 	}
 	seg.Append(blk)
+	runtime.SetFinalizer(blk, func(o IColumnBlock) {
+		id := o.GetID()
+		o.SetNext(nil)
+		log.Infof("[GC]: StrColumnSegment %s [%d]", id.BlockString(), o.GetBlockType())
+		o.Close()
+	})
 	return blk
 }
 
