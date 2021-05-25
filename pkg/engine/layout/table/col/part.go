@@ -8,9 +8,11 @@ import (
 	ldio "aoe/pkg/engine/layout/dataio"
 	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"runtime"
+	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type ColumnPartAllocator struct {
@@ -33,6 +35,7 @@ type IColumnPart interface {
 }
 
 type ColumnPart struct {
+	sync.RWMutex
 	ID          layout.ID
 	Next        IColumnPart
 	Block       IColumnBlock
@@ -136,6 +139,8 @@ func (part *ColumnPart) GetColIdx() int {
 }
 
 func (part *ColumnPart) GetBuf() []byte {
+	part.RLock()
+	defer part.RUnlock()
 	return part.BufNode.GetBuffer().GetDataNode().Data
 }
 
@@ -143,6 +148,8 @@ func (part *ColumnPart) SetRowCount(cnt uint64) {
 	if cnt > part.MaxRowCount {
 		panic("logic error")
 	}
+	part.Lock()
+	defer part.Unlock()
 	part.RowCount = cnt
 }
 
@@ -150,6 +157,8 @@ func (part *ColumnPart) SetSize(size uint64) {
 	if size > part.Capacity {
 		panic("logic error")
 	}
+	part.Lock()
+	defer part.Unlock()
 	part.Size = size
 }
 
@@ -158,17 +167,24 @@ func (part *ColumnPart) GetID() layout.ID {
 }
 
 func (part *ColumnPart) GetBlock() IColumnBlock {
+	part.RLock()
+	defer part.RUnlock()
 	return part.Block
 }
 
 func (part *ColumnPart) SetNext(next IColumnPart) {
+	part.Lock()
+	defer part.Unlock()
 	part.Next = next
 }
 
 func (part *ColumnPart) GetNext() IColumnPart {
 	n := part.Next
+	part.RLock()
+	blk := part.Block
+	part.RUnlock()
 	if n == nil {
-		next_blk := part.Block.GetNext()
+		next_blk := blk.GetNext()
 		if next_blk != nil {
 			return next_blk.GetPartRoot()
 		}
@@ -188,7 +204,10 @@ func (part *ColumnPart) Close() error {
 }
 
 func (part *ColumnPart) InitScanCursor(cursor *ScanCursor) error {
-	cursor.Handle = part.BufMgr.Pin(part.BufNode)
+	part.RLock()
+	bufMgr := part.BufMgr
+	part.RUnlock()
+	cursor.Handle = bufMgr.Pin(part.BufNode)
 	if cursor.Handle == nil {
 		return errors.New(fmt.Sprintf("Cannot pin part %v", part.ID))
 	}

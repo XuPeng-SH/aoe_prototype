@@ -64,6 +64,8 @@ func (seg *ColumnSegment) GetColIdx() int {
 }
 
 func (seg *ColumnSegment) GetSegmentType() SegmentType {
+	seg.RLock()
+	defer seg.RUnlock()
 	return seg.Type
 }
 
@@ -97,14 +99,20 @@ func (seg *ColumnSegment) CloneWithUpgrade() IColumnSegment {
 }
 
 func (seg *ColumnSegment) GetRowCount() uint64 {
+	seg.RLock()
+	defer seg.RUnlock()
 	return seg.RowCount
 }
 
 func (seg *ColumnSegment) SetNext(next IColumnSegment) {
+	seg.Lock()
+	defer seg.Unlock()
 	seg.Next = next
 }
 
 func (seg *ColumnSegment) GetNext() IColumnSegment {
+	seg.RLock()
+	defer seg.RUnlock()
 	return seg.Next
 }
 
@@ -137,6 +145,8 @@ func (seg *ColumnSegment) Append(blk IColumnBlock) {
 }
 
 func (seg *ColumnSegment) GetBlockRoot() IColumnBlock {
+	seg.RLock()
+	defer seg.RUnlock()
 	if len(seg.Blocks) == 0 {
 		return nil
 	}
@@ -144,6 +154,8 @@ func (seg *ColumnSegment) GetBlockRoot() IColumnBlock {
 }
 
 func (seg *ColumnSegment) GetPartRoot() IColumnPart {
+	seg.RLock()
+	defer seg.RUnlock()
 	if len(seg.Blocks) == 0 {
 		return nil
 	}
