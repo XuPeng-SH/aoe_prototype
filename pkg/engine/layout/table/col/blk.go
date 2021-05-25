@@ -50,8 +50,6 @@ func (blk *ColumnBlock) GetBlockType() BlockType {
 }
 
 func (blk *ColumnBlock) GetSegment() IColumnSegment {
-	blk.RLock()
-	defer blk.RUnlock()
 	return blk.Segment
 }
 
@@ -66,10 +64,10 @@ func (blk *ColumnBlock) SetNext(next IColumnBlock) {
 }
 
 func (blk *ColumnBlock) GetNext() IColumnBlock {
-	n := blk.Next
 	blk.RLock()
-	seg := blk.Segment
+	n := blk.Next
 	blk.RUnlock()
+	seg := blk.Segment
 	if n == nil {
 		next_seg := seg.GetNext()
 		if next_seg != nil {

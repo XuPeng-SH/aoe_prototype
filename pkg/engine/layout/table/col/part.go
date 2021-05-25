@@ -179,12 +179,11 @@ func (part *ColumnPart) SetNext(next IColumnPart) {
 }
 
 func (part *ColumnPart) GetNext() IColumnPart {
-	n := part.Next
 	part.RLock()
-	blk := part.Block
+	n := part.Next
 	part.RUnlock()
 	if n == nil {
-		next_blk := blk.GetNext()
+		next_blk := part.Block.GetNext()
 		if next_blk != nil {
 			return next_blk.GetPartRoot()
 		}
@@ -204,9 +203,7 @@ func (part *ColumnPart) Close() error {
 }
 
 func (part *ColumnPart) InitScanCursor(cursor *ScanCursor) error {
-	part.RLock()
 	bufMgr := part.BufMgr
-	part.RUnlock()
 	cursor.Handle = bufMgr.Pin(part.BufNode)
 	if cursor.Handle == nil {
 		return errors.New(fmt.Sprintf("Cannot pin part %v", part.ID))
