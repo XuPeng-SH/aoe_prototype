@@ -1,6 +1,7 @@
 package data
 
 import (
+	e "aoe/pkg/engine"
 	imem "aoe/pkg/engine/memtable/base"
 	"aoe/pkg/engine/ops"
 	iops "aoe/pkg/engine/ops/base"
@@ -11,6 +12,7 @@ import (
 type OpCtx struct {
 	MemTable   imem.IMemTable
 	Collection imem.ICollection
+	Opts       *e.Options
 }
 
 type Op struct {

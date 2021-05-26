@@ -2,14 +2,12 @@ package data
 
 import (
 	imem "aoe/pkg/engine/memtable/base"
-	iworker "aoe/pkg/engine/worker/base"
 	log "github.com/sirupsen/logrus"
 )
 
-func NewFlushBlkOp(ctx *OpCtx,
-	w iworker.IOpWorker) *FlushBlkOp {
+func NewFlushBlkOp(ctx *OpCtx) *FlushBlkOp {
 	op := &FlushBlkOp{}
-	op.Op = *NewOp(op, ctx, w)
+	op.Op = *NewOp(op, ctx, ctx.Opts.Data.Flusher)
 	return op
 }
 

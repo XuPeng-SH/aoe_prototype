@@ -93,8 +93,8 @@ func (c *Collection) Append(ck *chunk.Chunk, index *md.LogIndex) (err error) {
 				cursor.Close()
 			}
 			go func() {
-				ctx := dops.OpCtx{Collection: c}
-				op := dops.NewFlushBlkOp(&ctx, c.Opts.Data.Flusher)
+				ctx := dops.OpCtx{Collection: c, Opts: c.Opts}
+				op := dops.NewFlushBlkOp(&ctx)
 				op.Push()
 				op.WaitDone()
 			}()
