@@ -48,7 +48,9 @@ func (blk *StdColumnBlock) CloneWithUpgrade(seg IColumnSegment) IColumnBlock {
 			Type:    newType,
 		},
 	}
+	blk.RLock()
 	part := blk.Part.CloneWithUpgrade(cloned)
+	blk.RUnlock()
 	if part == nil {
 		panic("logic error")
 	}
@@ -58,10 +60,14 @@ func (blk *StdColumnBlock) CloneWithUpgrade(seg IColumnSegment) IColumnBlock {
 }
 
 func (blk *StdColumnBlock) GetPartRoot() IColumnPart {
+	blk.RLock()
+	defer blk.RUnlock()
 	return blk.Part
 }
 
 func (blk *StdColumnBlock) Append(part IColumnPart) {
+	blk.Lock()
+	defer blk.Unlock()
 	if !blk.ID.IsSameBlock(part.GetID()) || blk.Part != nil {
 		panic("logic error")
 	}
@@ -69,6 +75,8 @@ func (blk *StdColumnBlock) Append(part IColumnPart) {
 }
 
 func (blk *StdColumnBlock) Close() error {
+	blk.Lock()
+	defer blk.Unlock()
 	if blk.Part != nil {
 		return blk.Part.Close()
 	}
@@ -76,6 +84,8 @@ func (blk *StdColumnBlock) Close() error {
 }
 
 func (blk *StdColumnBlock) InitScanCursor(cursor *ScanCursor) error {
+	blk.RLock()
+	defer blk.RUnlock()
 	if blk.Part != nil {
 		cursor.Current = blk.Part
 		// return blk.Part.InitScanCursor(cursor)

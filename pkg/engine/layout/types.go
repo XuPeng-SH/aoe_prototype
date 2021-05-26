@@ -10,6 +10,7 @@ type ID struct {
 	SegmentID uint64
 	BlockID   uint64
 	PartID    uint32
+	Iter      uint8
 }
 
 const (
@@ -38,7 +39,7 @@ func (id *ID) AsSegmentID() ID {
 }
 
 func (id *ID) String() string {
-	return fmt.Sprintf("ID<%d-%d-%d-%d>", id.TableID, id.SegmentID, id.BlockID, id.PartID)
+	return fmt.Sprintf("ID<%d-%d-%d-%d-%d>", id.TableID, id.SegmentID, id.BlockID, id.PartID, id.Iter)
 }
 
 func (id *ID) TableString() string {
@@ -73,6 +74,16 @@ func (id *ID) NextPart() ID {
 	bid := *id
 	bid.PartID = new_id - 1
 	return bid
+}
+
+func (id *ID) NextIter() ID {
+	return ID{
+		TableID:   id.TableID,
+		SegmentID: id.SegmentID,
+		BlockID:   id.BlockID,
+		PartID:    id.PartID,
+		Iter:      id.Iter + 1,
+	}
 }
 
 func (id *ID) NextBlock() ID {

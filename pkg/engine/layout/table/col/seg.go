@@ -20,6 +20,7 @@ const (
 
 type IColumnSegment interface {
 	io.Closer
+	sync.Locker
 	GetNext() IColumnSegment
 	SetNext(next IColumnSegment)
 	GetID() layout.ID
@@ -92,20 +93,26 @@ func (seg *ColumnSegment) UpgradeBlock(id layout.ID) (IColumnBlock, error) {
 	if !seg.ID.IsSameSegment(id) {
 		panic("logic error")
 	}
-	seg.Lock()
-	defer seg.Unlock()
 	idx, ok := seg.IDMap[id]
 	if !ok {
 		panic("logic error")
 	}
-	upgradeBlk := seg.Blocks[idx].CloneWithUpgrade(seg)
+	old := seg.Blocks[idx]
+	upgradeBlk := old.CloneWithUpgrade(seg)
 	if upgradeBlk == nil {
 		return nil, errors.New(fmt.Sprintf("Cannot upgrade blk: %s", id.BlockString()))
 	}
+	var old_next IColumnBlock
+	if idx != len(seg.Blocks)-1 {
+		old_next = old.GetNext()
+	}
+	upgradeBlk.SetNext(old_next)
+	seg.Lock()
+	defer seg.Unlock()
+	seg.Blocks[idx] = upgradeBlk
 	if idx > 0 {
 		seg.Blocks[idx-1].SetNext(upgradeBlk)
 	}
-	seg.Blocks[idx] = upgradeBlk
 	return upgradeBlk, nil
 }
 
