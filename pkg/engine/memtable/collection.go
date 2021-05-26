@@ -40,8 +40,8 @@ func NewCollection(tableData table.ITableData, opts *engine.Options) imem.IColle
 }
 
 func (c *Collection) onNoBlock() (blk *md.Block, colBlks []col.IColumnBlock, err error) {
-	ctx := mops.OpCtx{TableID: c.ID}
-	op := mops.NewCreateBlkOp(&ctx, c.Opts.Meta.Info, c.Opts.Meta.Updater, c.TableData)
+	ctx := mops.OpCtx{Opts: c.Opts}
+	op := mops.NewCreateBlkOp(&ctx, c.ID, c.TableData)
 	op.Push()
 	err = op.WaitDone()
 	if err != nil {

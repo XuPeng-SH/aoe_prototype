@@ -2,16 +2,14 @@ package meta
 
 import (
 	md "aoe/pkg/engine/metadata"
-	iworker "aoe/pkg/engine/worker/base"
 	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
 )
 
-func NewUpdateOp(ctx *OpCtx, info *md.MetaInfo,
-	w iworker.IOpWorker) *UpdateOp {
+func NewUpdateOp(ctx *OpCtx) *UpdateOp {
 	op := &UpdateOp{}
-	op.Op = *NewOp(op, ctx, info, w)
+	op.Op = *NewOp(op, ctx, ctx.Opts.Meta.Updater)
 	return op
 }
 
@@ -25,7 +23,7 @@ func (op *UpdateOp) updateBlock(blk *md.Block) error {
 		return errors.New(fmt.Sprintf("Block %d BoundSate should be %d", blk.ID, md.Detatched))
 	}
 
-	table, err := op.MetaInfo.ReferenceTable(blk.TableID)
+	table, err := op.Ctx.Opts.Meta.Info.ReferenceTable(blk.TableID)
 	if err != nil {
 		return err
 	}

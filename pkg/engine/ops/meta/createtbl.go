@@ -2,14 +2,12 @@ package meta
 
 import (
 	md "aoe/pkg/engine/metadata"
-	iworker "aoe/pkg/engine/worker/base"
 	// log "github.com/sirupsen/logrus"
 )
 
-func NewCreateTblOp(ctx *OpCtx, info *md.MetaInfo,
-	w iworker.IOpWorker) *CreateTblOp {
+func NewCreateTblOp(ctx *OpCtx) *CreateTblOp {
 	op := &CreateTblOp{}
-	op.Op = *NewOp(op, ctx, info, w)
+	op.Op = *NewOp(op, ctx, ctx.Opts.Meta.Updater)
 	return op
 }
 
@@ -23,12 +21,12 @@ func (op *CreateTblOp) GetTable() *md.Table {
 }
 
 func (op *CreateTblOp) Execute() error {
-	tbl, err := op.MetaInfo.CreateTable()
+	tbl, err := op.Ctx.Opts.Meta.Info.CreateTable()
 	if err != nil {
 		return err
 	}
 
-	err = op.MetaInfo.RegisterTable(tbl)
+	err = op.Ctx.Opts.Meta.Info.RegisterTable(tbl)
 	if err == nil {
 		op.Result = tbl
 	}

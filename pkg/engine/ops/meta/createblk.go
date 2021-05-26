@@ -5,17 +5,16 @@ import (
 	"aoe/pkg/engine/layout/table"
 	"aoe/pkg/engine/layout/table/col"
 	md "aoe/pkg/engine/metadata"
-	iworker "aoe/pkg/engine/worker/base"
 	// log "github.com/sirupsen/logrus"
 )
 
-func NewCreateBlkOp(ctx *OpCtx, info *md.MetaInfo,
-	w iworker.IOpWorker, tableData table.ITableData) *CreateBlkOp {
+func NewCreateBlkOp(ctx *OpCtx, tid uint64, tableData table.ITableData) *CreateBlkOp {
 	op := &CreateBlkOp{
 		TableData: tableData,
 		ColBlocks: make([]col.IColumnBlock, 0),
+		TableID:   tid,
 	}
-	op.Op = *NewOp(op, ctx, info, w)
+	op.Op = *NewOp(op, ctx, ctx.Opts.Meta.Updater)
 	return op
 }
 
@@ -24,6 +23,7 @@ type CreateBlkOp struct {
 	NewSegment bool
 	TableData  table.ITableData
 	ColBlocks  []col.IColumnBlock
+	TableID    uint64
 }
 
 func (op *CreateBlkOp) HasNewSegment() bool {
@@ -38,7 +38,7 @@ func (op *CreateBlkOp) GetBlock() *md.Block {
 }
 
 func (op *CreateBlkOp) Execute() error {
-	table, err := op.MetaInfo.ReferenceTable(op.Ctx.TableID)
+	table, err := op.Ctx.Opts.Meta.Info.ReferenceTable(op.TableID)
 	if err != nil {
 		return err
 	}

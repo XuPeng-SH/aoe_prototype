@@ -79,8 +79,8 @@ func TestCollection(t *testing.T) {
 	opts.Data.Flusher.Start()
 	opts.Data.Sorter.Start()
 
-	opCtx := mops.OpCtx{}
-	op := mops.NewCreateTblOp(&opCtx, opts.Meta.Info, opts.Meta.Updater)
+	opCtx := mops.OpCtx{Opts: opts}
+	op := mops.NewCreateTblOp(&opCtx)
 	op.Push()
 	err := op.WaitDone()
 	assert.Nil(t, err)

@@ -99,8 +99,8 @@ func (mt *MemTable) Flush() error {
 	// 	mt.Opts.EventListener.BackgroundErrorCB(err)
 	// 	return err
 	// }
-	ctx := mops.OpCtx{Block: mt.Meta}
-	op := mops.NewUpdateOp(&ctx, mt.Opts.Meta.Info, mt.Opts.Meta.Updater)
+	ctx := mops.OpCtx{Block: mt.Meta, Opts: mt.Opts}
+	op := mops.NewUpdateOp(&ctx)
 	op.Push()
 	err := op.WaitDone()
 	if err != nil {
@@ -108,9 +108,8 @@ func (mt *MemTable) Flush() error {
 		return err
 	}
 	go func() {
-		ctx := mops.OpCtx{}
-		op := mops.NewCheckpointOp(mt.Opts.Meta.Checkpointer, &ctx,
-			mt.Opts.Meta.Info, mt.Opts.Meta.Flusher)
+		ctx := mops.OpCtx{Opts: mt.Opts}
+		op := mops.NewCheckpointOp(&ctx)
 		op.Push()
 		err := op.WaitDone()
 		if err != nil {

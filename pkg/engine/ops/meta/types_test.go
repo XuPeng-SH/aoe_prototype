@@ -1,8 +1,8 @@
 package meta
 
 import (
+	e "aoe/pkg/engine"
 	md "aoe/pkg/engine/metadata"
-	w "aoe/pkg/engine/worker"
 	"github.com/stretchr/testify/assert"
 	"os"
 	"testing"
@@ -21,15 +21,16 @@ func createInfo() *md.MetaInfo {
 }
 
 func TestBasicOps(t *testing.T) {
-	worker := w.NewOpWorker()
-	worker.Start()
-
+	opts := e.Options{}
 	info := createInfo()
+	opts.Meta.Info = info
+	opts.FillDefaults("/tmp")
+	opts.Meta.Updater.Start()
 
 	now := time.Now()
 
-	opCtx := OpCtx{}
-	op := NewCreateTblOp(&opCtx, info, worker)
+	opCtx := OpCtx{Opts: &opts}
+	op := NewCreateTblOp(&opCtx)
 	op.Push()
 	err := op.WaitDone()
 	assert.Nil(t, err)
@@ -38,8 +39,8 @@ func TestBasicOps(t *testing.T) {
 	assert.NotNil(t, tbl)
 
 	t.Log(info.String())
-	opCtx = OpCtx{TableID: tbl.ID}
-	blkop := NewCreateBlkOp(&opCtx, info, worker, nil)
+	opCtx = OpCtx{Opts: &opts}
+	blkop := NewCreateBlkOp(&opCtx, tbl.ID, nil)
 	blkop.Push()
 	err = blkop.WaitDone()
 	assert.Nil(t, err)
@@ -57,8 +58,8 @@ func TestBasicOps(t *testing.T) {
 	assert.Equal(t, blk2.DataState, md.EMPTY)
 	assert.Equal(t, blk2.Count, uint64(0))
 
-	opCtx = OpCtx{Block: blk1}
-	updateop := NewUpdateOp(&opCtx, info, worker)
+	opCtx = OpCtx{Block: blk1, Opts: &opts}
+	updateop := NewUpdateOp(&opCtx)
 	updateop.Push()
 	err = updateop.WaitDone()
 	assert.Nil(t, err)
@@ -69,8 +70,8 @@ func TestBasicOps(t *testing.T) {
 	assert.Equal(t, blk1.Count, blk3.Count)
 
 	for i := 0; i < 100; i++ {
-		opCtx = OpCtx{TableID: blk1.TableID}
-		blkop = NewCreateBlkOp(&opCtx, info, worker, nil)
+		opCtx = OpCtx{Opts: &opts}
+		blkop = NewCreateBlkOp(&opCtx, blk1.TableID, nil)
 		blkop.Push()
 		err = blkop.WaitDone()
 		assert.Nil(t, err)
@@ -102,5 +103,5 @@ func TestBasicOps(t *testing.T) {
 	du = time.Since(now)
 	t.Log(du)
 
-	worker.Stop()
+	opts.Meta.Updater.Stop()
 }
