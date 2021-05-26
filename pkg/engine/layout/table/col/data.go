@@ -4,6 +4,7 @@ import (
 	bmgrif "aoe/pkg/engine/buffer/manager/iface"
 	"aoe/pkg/engine/layout"
 	mock "aoe/pkg/mock/type"
+	"errors"
 	"fmt"
 )
 
@@ -62,17 +63,18 @@ func (cdata *ColumnData) Append(seg IColumnSegment) error {
 }
 
 func (cdata *ColumnData) RegisterSegment(id layout.ID) (seg IColumnSegment, err error) {
-	seg = NewSegment(id, cdata.Idx, UNSORTED_SEG)
+	seg = NewColumnSegment(id, cdata.Idx, cdata.Type, UNSORTED_SEG)
 	err = cdata.Append(seg)
 	return seg, err
 }
 
 func (cdata *ColumnData) RegisterBlock(bufMgr bmgrif.IBufferManager, id layout.ID, maxRows uint64) (blk IColumnBlock, err error) {
 	seg := cdata.GetSegmentTail()
-	blk = NewStdColumnBlock(seg, id, TRANSIENT_BLK)
-	_ = NewColumnPart(bufMgr, blk, id, maxRows, uint64(cdata.Type.Size()))
-	// TODO: StrColumnBlock
-	return blk, err
+	if seg == nil {
+		err = errors.New(fmt.Sprintf("cannot register blk: %s", id.BlockString()))
+		return blk, err
+	}
+	return seg.RegisterBlock(bufMgr, id, maxRows)
 }
 
 // func (cdata *ColumnData) AppendBlock(blk IColumnBlock) error {

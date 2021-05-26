@@ -2,6 +2,7 @@ package col
 
 import (
 	bmgr "aoe/pkg/engine/buffer/manager"
+	mgrif "aoe/pkg/engine/buffer/manager/iface"
 	dio "aoe/pkg/engine/dataio"
 	"aoe/pkg/engine/layout"
 	w "aoe/pkg/engine/worker"
@@ -26,9 +27,10 @@ func TestStdColumnBlock(t *testing.T) {
 	var prev_seg IColumnSegment
 	var first_seg IColumnSegment
 	seg_cnt := 5
+	colType := mock.INTEGER
 	for i := 0; i < seg_cnt; i++ {
 		seg_id := baseid.NextSegment()
-		seg := NewSegment(seg_id, 0, UNSORTED_SEG)
+		seg := NewColumnSegment(seg_id, 0, colType, UNSORTED_SEG)
 		assert.Nil(t, seg.GetNext())
 		assert.Nil(t, seg.GetBlockRoot())
 		blk_0_id := seg_id.NextBlock()
@@ -63,16 +65,16 @@ func TestStdColumnBlock2(t *testing.T) {
 	typeSize := uint64(unsafe.Sizeof(uint64(0)))
 	row_count := uint64(64)
 	capacity := typeSize * row_count
-	flusher := w.NewOpWorker()
-	bufMgr := bmgr.NewBufferManager(capacity, flusher)
+	bufMgr := makeBufMagr(capacity)
 	t.Log(bufMgr.GetCapacity())
 	baseid := layout.ID{}
 	var prev_seg IColumnSegment
 	var first_seg IColumnSegment
 	seg_cnt := 5
+	colType := mock.INTEGER
 	for i := 0; i < seg_cnt; i++ {
 		seg_id := baseid.NextSegment()
-		seg := NewSegment(seg_id, 0, UNSORTED_SEG)
+		seg := NewColumnSegment(seg_id, 0, colType, UNSORTED_SEG)
 		assert.Nil(t, seg.GetNext())
 		assert.Nil(t, seg.GetBlockRoot())
 		blk_0_id := seg_id.NextBlock()
@@ -127,16 +129,16 @@ func TestStrColumnBlock(t *testing.T) {
 	typeSize := uint64(unsafe.Sizeof(uint64(0)))
 	row_count := uint64(1)
 	capacity := typeSize * row_count
-	flusher := w.NewOpWorker()
-	bufMgr := bmgr.NewBufferManager(capacity, flusher)
+	bufMgr := makeBufMagr(capacity)
 	t.Log(bufMgr.GetCapacity())
 	baseid := layout.ID{}
 	var prev_seg IColumnSegment
 	var first_seg IColumnSegment
 	seg_cnt := 5
+	colType := mock.INTEGER
 	for i := 0; i < seg_cnt; i++ {
 		seg_id := baseid.NextSegment()
-		seg := NewSegment(seg_id, 0, UNSORTED_SEG)
+		seg := NewColumnSegment(seg_id, 0, colType, UNSORTED_SEG)
 		assert.Nil(t, seg.GetNext())
 		assert.Nil(t, seg.GetBlockRoot())
 		blk_0_id := seg_id.NextBlock()
@@ -195,12 +197,13 @@ func (t *MockType) Size() uint64 {
 func TestStdSegmentTree(t *testing.T) {
 	baseid := layout.ID{}
 	col_idx := 0
-	col_data := NewColumnData(mock.INTEGER, col_idx)
+	colType := mock.INTEGER
+	col_data := NewColumnData(colType, col_idx)
 
 	seg_cnt := 5
 	for i := 0; i < seg_cnt; i++ {
 		seg_id := baseid.NextSegment()
-		seg := NewSegment(seg_id, 0, UNSORTED_SEG)
+		seg := NewColumnSegment(seg_id, 0, colType, UNSORTED_SEG)
 		assert.Nil(t, seg.GetNext())
 		assert.Nil(t, seg.GetBlockRoot())
 		err := col_data.Append(seg)
@@ -237,15 +240,15 @@ func TestRegisterNode(t *testing.T) {
 	typeSize := uint64(unsafe.Sizeof(uint64(0)))
 	row_count := uint64(64)
 	capacity := typeSize * row_count
-	flusher := w.NewOpWorker()
-	bufMgr := bmgr.NewBufferManager(capacity, flusher)
+	bufMgr := makeBufMagr(capacity)
 	baseid := layout.ID{}
 	var prev_seg IColumnSegment
 	var first_seg IColumnSegment
 	seg_cnt := 5
+	colType := mock.INTEGER
 	for i := 0; i < seg_cnt; i++ {
 		seg_id := baseid.NextSegment()
-		seg := NewSegment(seg_id, 0, UNSORTED_SEG)
+		seg := NewColumnSegment(seg_id, 0, colType, UNSORTED_SEG)
 		assert.Nil(t, seg.GetNext())
 		assert.Nil(t, seg.GetBlockRoot())
 		blk_0_id := seg_id.NextBlock()
@@ -288,27 +291,25 @@ func TestRegisterNode(t *testing.T) {
 	cursor.Close()
 }
 
-func TestUpgradeStdSegment(t *testing.T) {
-	typeSize := uint64(unsafe.Sizeof(uint64(0)))
-	row_count := uint64(64)
-	capacity := typeSize * row_count * 10000
-	flusher := w.NewOpWorker()
-	bufMgr := bmgr.NewBufferManager(capacity, flusher)
+func makeSegment(bufMgr mgrif.IBufferManager, id layout.ID, blkCnt int, rowCount, typeSize uint64, t *testing.T) IColumnSegment {
+	colType := mock.INTEGER
+	seg := NewColumnSegment(id, 0, colType, UNSORTED_SEG)
+	blk_id := id
+	for i := 0; i < blkCnt; i++ {
+		_, err := seg.RegisterBlock(bufMgr, blk_id.NextBlock(), rowCount)
+		assert.Nil(t, err)
+	}
+	return seg
+}
+
+func makeSegments(bufMgr mgrif.IBufferManager, segCnt, blkCnt int, rowCount, typeSize uint64, t *testing.T) []IColumnSegment {
 	baseid := layout.ID{}
-	seg_cnt := 4
-	blk_cnt := 4
 	var segs []IColumnSegment
 	var rootSeg IColumnSegment
 	var prevSeg IColumnSegment
-	for i := 0; i < seg_cnt; i++ {
+	for i := 0; i < segCnt; i++ {
 		seg_id := baseid.NextSegment()
-		seg := NewSegment(seg_id, 0, UNSORTED_SEG)
-		for j := 0; j < blk_cnt; j++ {
-			blk_id := seg_id.NextBlock()
-			blk := NewStdColumnBlock(seg, blk_id, TRANSIENT_BLK)
-			_ = NewColumnPart(bufMgr, blk, blk_id, row_count, typeSize)
-			// t.Log(part_0.GetID())
-		}
+		seg := makeSegment(bufMgr, seg_id, blkCnt, rowCount, typeSize, t)
 		segs = append(segs, seg)
 		if prevSeg != nil {
 			prevSeg.SetNext(seg)
@@ -317,8 +318,26 @@ func TestUpgradeStdSegment(t *testing.T) {
 			rootSeg = seg
 		}
 		prevSeg = seg
-		// blk_0.Append(part0_0)
 	}
+	return segs
+}
+
+func makeBufMagr(capacity uint64) mgrif.IBufferManager {
+	flusher := w.NewOpWorker()
+	bufMgr := bmgr.NewBufferManager(capacity, flusher)
+	return bufMgr
+}
+
+func TestUpgradeStdSegment(t *testing.T) {
+	typeSize := uint64(unsafe.Sizeof(uint64(0)))
+	row_count := uint64(64)
+	capacity := typeSize * row_count * 10000
+	bufMgr := makeBufMagr(capacity)
+	seg_cnt := 4
+	blk_cnt := 4
+	segs := makeSegments(bufMgr, seg_cnt, blk_cnt, row_count, typeSize, t)
+	rootSeg := segs[0]
+
 	for _, seg := range segs {
 		cursor := ScanCursor{}
 		err := seg.InitScanCursor(&cursor)

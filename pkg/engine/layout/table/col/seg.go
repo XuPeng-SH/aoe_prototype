@@ -1,7 +1,9 @@
 package col
 
 import (
+	bmgrif "aoe/pkg/engine/buffer/manager/iface"
 	"aoe/pkg/engine/layout"
+	mock "aoe/pkg/mock/type"
 	"errors"
 	"fmt"
 	"io"
@@ -37,6 +39,7 @@ type IColumnSegment interface {
 	UpgradeBlock(id layout.ID) (IColumnBlock, error)
 	GetBlock(id layout.ID) IColumnBlock
 	InitScanCursor(cursor *ScanCursor) error
+	RegisterBlock(bufMgr bmgrif.IBufferManager, id layout.ID, maxRows uint64) (blk IColumnBlock, err error)
 }
 
 type ColumnSegment struct {
@@ -48,14 +51,16 @@ type ColumnSegment struct {
 	IDMap    map[layout.ID]int
 	Idx      int
 	Type     SegmentType
+	ColType  mock.ColType
 }
 
-func NewSegment(id layout.ID, colIdx int, segType SegmentType) IColumnSegment {
+func NewColumnSegment(id layout.ID, colIdx int, colType mock.ColType, segType SegmentType) IColumnSegment {
 	seg := &ColumnSegment{
-		ID:    id,
-		IDMap: make(map[layout.ID]int, 0),
-		Idx:   colIdx,
-		Type:  segType,
+		ID:      id,
+		IDMap:   make(map[layout.ID]int, 0),
+		Idx:     colIdx,
+		Type:    segType,
+		ColType: colType,
 	}
 	runtime.SetFinalizer(seg, func(o IColumnSegment) {
 		id := o.GetID()
@@ -171,6 +176,13 @@ func (seg *ColumnSegment) Close() error {
 		}
 	}
 	return nil
+}
+
+func (seg *ColumnSegment) RegisterBlock(bufMgr bmgrif.IBufferManager, id layout.ID, maxRows uint64) (blk IColumnBlock, err error) {
+	blk = NewStdColumnBlock(seg, id, TRANSIENT_BLK)
+	_ = NewColumnPart(bufMgr, blk, id, maxRows, uint64(seg.ColType.Size()))
+	// TODO: StrColumnBlock
+	return blk, err
 }
 
 func (seg *ColumnSegment) GetID() layout.ID {
