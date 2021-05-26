@@ -2,7 +2,6 @@ package memtable
 
 import (
 	"aoe/pkg/engine"
-	"aoe/pkg/engine/layout"
 	"aoe/pkg/engine/layout/table"
 	"aoe/pkg/engine/layout/table/col"
 	imem "aoe/pkg/engine/memtable/base"
@@ -10,9 +9,8 @@ import (
 	dops "aoe/pkg/engine/ops/data"
 	mops "aoe/pkg/engine/ops/meta"
 	"aoe/pkg/mock/type/chunk"
-
-	// log "github.com/sirupsen/logrus"
 	"sync"
+	// log "github.com/sirupsen/logrus"
 )
 
 type Collection struct {
@@ -41,52 +39,31 @@ func NewCollection(tableData table.ITableData, opts *engine.Options) imem.IColle
 	return c
 }
 
-func (c *Collection) onNoBlock() (blk *md.Block, newSeg bool, err error) {
+func (c *Collection) onNoBlock() (blk *md.Block, colBlks []col.IColumnBlock, err error) {
 	ctx := mops.OpCtx{TableID: c.ID}
-	op := mops.NewCreateBlkOp(&ctx, c.Opts.Meta.Info, c.Opts.Meta.Updater)
+	op := mops.NewCreateBlkOp(&ctx, c.Opts.Meta.Info, c.Opts.Meta.Updater, c.TableData)
 	op.Push()
 	err = op.WaitDone()
 	if err != nil {
-		return nil, false, err
+		return nil, colBlks, err
 	}
 	blk = op.GetBlock()
-	return blk, op.HasNewSegment(), nil
+	return blk, op.ColBlocks, nil
 }
 
 func (c *Collection) onNoMutableTable() (tbl imem.IMemTable, err error) {
-	blk, newSeg, err := c.onNoBlock()
+	blk, colBlks, err := c.onNoBlock()
 	if err != nil {
 		return nil, err
 	}
 
-	columns := make([]col.IColumnBlock, 0)
-	for idx, column := range c.TableData.GetCollumns() {
-		if newSeg {
-			seg_id := layout.ID{
-				TableID:   c.ID,
-				SegmentID: blk.SegmentID,
-			}
-			// TODO: All column data modification should be executed by one worker
-			_, err = column.RegisterSegment(seg_id)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		blk_id := layout.ID{
-			TableID:   blk.TableID,
-			SegmentID: blk.SegmentID,
-			BlockID:   blk.ID,
-		}
-		// TODO: All column data modification should be executed by one worker
-		colBlk, _ := column.RegisterBlock(c.TableData.GetBufMgr(), blk_id, blk.MaxRowCount)
-		columns = append(columns, colBlk)
+	for idx, colBlk := range colBlks {
 		c.mem.Cursors[idx] = &col.ScanCursor{}
 		colBlk.InitScanCursor(c.mem.Cursors[idx].(*col.ScanCursor))
 		c.mem.Cursors[idx].Init()
 	}
 
-	tbl = NewMemTable(c.TableData.GetColTypes(), columns, c.mem.Cursors, c.Opts, blk)
+	tbl = NewMemTable(c.TableData.GetColTypes(), colBlks, c.mem.Cursors, c.Opts, blk)
 	c.mem.MemTables = append(c.mem.MemTables, tbl)
 	return tbl, err
 }

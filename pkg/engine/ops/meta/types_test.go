@@ -39,7 +39,7 @@ func TestBasicOps(t *testing.T) {
 
 	t.Log(info.String())
 	opCtx = OpCtx{TableID: tbl.ID}
-	blkop := NewCreateBlkOp(&opCtx, info, worker)
+	blkop := NewCreateBlkOp(&opCtx, info, worker, nil)
 	blkop.Push()
 	err = blkop.WaitDone()
 	assert.Nil(t, err)
@@ -70,7 +70,7 @@ func TestBasicOps(t *testing.T) {
 
 	for i := 0; i < 100; i++ {
 		opCtx = OpCtx{TableID: blk1.TableID}
-		blkop = NewCreateBlkOp(&opCtx, info, worker)
+		blkop = NewCreateBlkOp(&opCtx, info, worker, nil)
 		blkop.Push()
 		err = blkop.WaitDone()
 		assert.Nil(t, err)

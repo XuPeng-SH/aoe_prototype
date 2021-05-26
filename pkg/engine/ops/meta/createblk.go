@@ -1,14 +1,20 @@
 package meta
 
 import (
+	"aoe/pkg/engine/layout"
+	"aoe/pkg/engine/layout/table"
+	"aoe/pkg/engine/layout/table/col"
 	md "aoe/pkg/engine/metadata"
 	iworker "aoe/pkg/engine/worker/base"
 	// log "github.com/sirupsen/logrus"
 )
 
 func NewCreateBlkOp(ctx *OpCtx, info *md.MetaInfo,
-	w iworker.IOpWorker) *CreateBlkOp {
-	op := &CreateBlkOp{}
+	w iworker.IOpWorker, tableData table.ITableData) *CreateBlkOp {
+	op := &CreateBlkOp{
+		TableData: tableData,
+		ColBlocks: make([]col.IColumnBlock, 0),
+	}
 	op.Op = *NewOp(op, ctx, info, w)
 	return op
 }
@@ -16,6 +22,8 @@ func NewCreateBlkOp(ctx *OpCtx, info *md.MetaInfo,
 type CreateBlkOp struct {
 	Op
 	NewSegment bool
+	TableData  table.ITableData
+	ColBlocks  []col.IColumnBlock
 }
 
 func (op *CreateBlkOp) HasNewSegment() bool {
@@ -60,5 +68,26 @@ func (op *CreateBlkOp) Execute() error {
 		return err
 	}
 	op.Result = cloned
+	if op.TableData != nil {
+		op.registerTableData(blk)
+	}
 	return err
+}
+
+func (op *CreateBlkOp) registerTableData(blk *md.Block) {
+	blk_id := layout.ID{
+		TableID:   blk.TableID,
+		SegmentID: blk.SegmentID,
+		BlockID:   blk.ID,
+	}
+	for _, column := range op.TableData.GetCollumns() {
+		if op.NewSegment {
+			_, err := column.RegisterSegment(blk_id.AsBlockID())
+			if err != nil {
+				panic("should not happend")
+			}
+		}
+		colBlk, _ := column.RegisterBlock(op.TableData.GetBufMgr(), blk_id, blk.MaxRowCount)
+		op.ColBlocks = append(op.ColBlocks, colBlk)
+	}
 }
