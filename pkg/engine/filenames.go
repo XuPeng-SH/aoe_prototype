@@ -38,6 +38,12 @@ func MakeFilename(dirname string, ft FileType, name string, isTmp bool) string {
 	case FTTransientNode:
 		s = path.Join(MakeSpillDir(dirname), fmt.Sprintf("%s.nod", name))
 		isTmp = false
+	case FTBlock:
+		s = path.Join(MakeDataDir(dirname), fmt.Sprintf("%s.blk", name))
+		isTmp = false
+	case FTSegment:
+		s = path.Join(MakeDataDir(dirname), fmt.Sprintf("%s.seg", name))
+		isTmp = false
 	default:
 		panic(fmt.Sprintf("unsupported %d", ft))
 	}

@@ -83,6 +83,7 @@ func (c *Collection) onNoMutableTable() (tbl imem.IMemTable, err error) {
 		columns = append(columns, colBlk)
 		c.mem.Cursors[idx] = &col.ScanCursor{}
 		colBlk.InitScanCursor(c.mem.Cursors[idx].(*col.ScanCursor))
+		c.mem.Cursors[idx].Init()
 	}
 
 	tbl = NewMemTable(c.TableData.GetColTypes(), columns, c.mem.Cursors, c.Opts, blk)

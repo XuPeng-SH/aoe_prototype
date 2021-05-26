@@ -3,7 +3,7 @@ package col
 import (
 	bmgrif "aoe/pkg/engine/buffer/manager/iface"
 	nif "aoe/pkg/engine/buffer/node/iface"
-	dio "aoe/pkg/engine/dataio"
+	// dio "aoe/pkg/engine/dataio"
 	"aoe/pkg/engine/layout"
 	ldio "aoe/pkg/engine/layout/dataio"
 	"errors"
@@ -60,21 +60,29 @@ func NewColumnPart(bmgr bmgrif.IBufferManager, blk IColumnBlock, id layout.ID,
 
 	switch blk.GetBlockType() {
 	case TRANSIENT_BLK:
-		part.BufNode = bmgr.RegisterSpillableNode(typeSize*rowCount, id)
+		bNode := bmgr.RegisterSpillableNode(typeSize*rowCount, id)
+		if bNode == nil {
+			return nil
+		}
+		part.BufNode = bNode
 	case PERSISTENT_BLK:
-		sf := ldio.NewUnsortedSegmentFile(dio.READER_FACTORY.Dirname, id.AsSegmentID())
-		csf := ldio.ColSegmentFile{
-			SegmentFile: sf,
-			ColIdx:      uint64(part.Block.GetColIdx()),
-		}
+		csf := ldio.MockColSegmentFile{}
 		part.BufNode = bmgr.RegisterNode(typeSize*rowCount, id, &csf)
+		// sf := ldio.NewUnsortedSegmentFile(dio.READER_FACTORY.Dirname, id.AsSegmentID())
+		// csf := ldio.ColSegmentFile{
+		// 	SegmentFile: sf,
+		// 	ColIdx:      uint64(part.Block.GetColIdx()),
+		// }
+		// part.BufNode = bmgr.RegisterNode(typeSize*rowCount, id, &csf)
 	case PERSISTENT_SORTED_BLK:
-		sf := ldio.NewSortedSegmentFile(dio.READER_FACTORY.Dirname, id.AsSegmentID())
-		csf := ldio.ColSegmentFile{
-			SegmentFile: sf,
-			ColIdx:      uint64(part.Block.GetColIdx()),
-		}
+		csf := ldio.MockColSegmentFile{}
 		part.BufNode = bmgr.RegisterNode(typeSize*rowCount, id, &csf)
+		// sf := ldio.NewSortedSegmentFile(dio.READER_FACTORY.Dirname, id.AsSegmentID())
+		// csf := ldio.ColSegmentFile{
+		// 	SegmentFile: sf,
+		// 	ColIdx:      uint64(part.Block.GetColIdx()),
+		// }
+		// part.BufNode = bmgr.RegisterNode(typeSize*rowCount, id, &csf)
 	case MOCK_BLK:
 		csf := ldio.MockColSegmentFile{}
 		part.BufNode = bmgr.RegisterNode(typeSize*rowCount, id, &csf)
@@ -105,19 +113,23 @@ func (part *ColumnPart) CloneWithUpgrade(blk IColumnBlock) IColumnPart {
 	}
 	switch part.Block.GetBlockType() {
 	case TRANSIENT_BLK:
-		sf := ldio.NewUnsortedSegmentFile(dio.READER_FACTORY.Dirname, part.ID.AsSegmentID())
-		csf := ldio.ColSegmentFile{
-			SegmentFile: sf,
-			ColIdx:      uint64(part.Block.GetColIdx()),
-		}
-		cloned.BufNode = part.BufMgr.RegisterNode(part.MaxRowCount*part.TypeSize, part.ID, &csf)
+		csf := ldio.MockColSegmentFile{}
+		cloned.BufNode = part.BufMgr.RegisterNode(part.TypeSize*part.MaxRowCount, part.ID, &csf)
+		// sf := ldio.NewUnsortedSegmentFile(dio.READER_FACTORY.Dirname, part.ID.AsSegmentID())
+		// csf := ldio.ColSegmentFile{
+		// 	SegmentFile: sf,
+		// 	ColIdx:      uint64(part.Block.GetColIdx()),
+		// }
+		// cloned.BufNode = part.BufMgr.RegisterNode(part.MaxRowCount*part.TypeSize, part.ID, &csf)
 	case PERSISTENT_BLK:
-		sf := ldio.NewSortedSegmentFile(dio.READER_FACTORY.Dirname, part.ID.AsSegmentID())
-		csf := ldio.ColSegmentFile{
-			SegmentFile: sf,
-			ColIdx:      uint64(part.Block.GetColIdx()),
-		}
-		cloned.BufNode = part.BufMgr.RegisterNode(part.MaxRowCount*part.TypeSize, part.ID, &csf)
+		csf := ldio.MockColSegmentFile{}
+		cloned.BufNode = part.BufMgr.RegisterNode(part.TypeSize*part.MaxRowCount, part.ID, &csf)
+		// sf := ldio.NewSortedSegmentFile(dio.READER_FACTORY.Dirname, part.ID.AsSegmentID())
+		// csf := ldio.ColSegmentFile{
+		// 	SegmentFile: sf,
+		// 	ColIdx:      uint64(part.Block.GetColIdx()),
+		// }
+		// cloned.BufNode = part.BufMgr.RegisterNode(part.MaxRowCount*part.TypeSize, part.ID, &csf)
 	case PERSISTENT_SORTED_BLK:
 		panic("logic error")
 	default:
@@ -131,7 +143,7 @@ func (part *ColumnPart) CloneWithUpgrade(blk IColumnBlock) IColumnPart {
 		p.SetNext(nil)
 		p.Close()
 	})
-	return nil
+	return cloned
 }
 
 func (part *ColumnPart) GetColIdx() int {
@@ -204,9 +216,13 @@ func (part *ColumnPart) Close() error {
 
 func (part *ColumnPart) InitScanCursor(cursor *ScanCursor) error {
 	bufMgr := part.BufMgr
-	cursor.Handle = bufMgr.Pin(part.BufNode)
+	part.RLock()
+	bufNode := part.BufNode
+	part.RUnlock()
+	cursor.Handle = bufMgr.Pin(bufNode)
 	if cursor.Handle == nil {
 		return errors.New(fmt.Sprintf("Cannot pin part %v", part.ID))
 	}
+	// cursor.Inited = true
 	return nil
 }

@@ -28,6 +28,7 @@ type IColumnBlock interface {
 	GetBlockType() BlockType
 	GetColIdx() int
 	CloneWithUpgrade(IColumnSegment) IColumnBlock
+	String() string
 }
 
 type ColumnBlock struct {

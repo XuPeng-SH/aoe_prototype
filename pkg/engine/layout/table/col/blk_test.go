@@ -6,12 +6,12 @@ import (
 	"aoe/pkg/engine/layout"
 	w "aoe/pkg/engine/worker"
 	mock "aoe/pkg/mock/type"
+	"github.com/stretchr/testify/assert"
 	"runtime"
+	"sync"
 	"testing"
 	"time"
 	"unsafe"
-
-	"github.com/stretchr/testify/assert"
 )
 
 var WORK_DIR = "/tmp/layout/blk_test"
@@ -286,4 +286,117 @@ func TestRegisterNode(t *testing.T) {
 	}
 
 	cursor.Close()
+}
+
+func TestUpgradeStdSegment(t *testing.T) {
+	typeSize := uint64(unsafe.Sizeof(uint64(0)))
+	row_count := uint64(64)
+	capacity := typeSize * row_count * 10000
+	flusher := w.NewOpWorker()
+	bufMgr := bmgr.NewBufferManager(capacity, flusher)
+	baseid := layout.ID{}
+	seg_cnt := 5
+	blk_cnt := 2
+	var segs []IColumnSegment
+	var rootSeg IColumnSegment
+	var prevSeg IColumnSegment
+	for i := 0; i < seg_cnt; i++ {
+		seg_id := baseid.NextSegment()
+		seg := NewSegment(seg_id, 0, UNSORTED_SEG)
+		for j := 0; j < blk_cnt; j++ {
+			blk_id := seg_id.NextBlock()
+			blk := NewStdColumnBlock(seg, blk_id, TRANSIENT_BLK)
+			part_0 := NewColumnPart(bufMgr, blk, blk_id, row_count, typeSize)
+			t.Log(part_0.GetID())
+		}
+		segs = append(segs, seg)
+		if prevSeg != nil {
+			prevSeg.SetNext(seg)
+		}
+		if rootSeg == nil {
+			rootSeg = seg
+		}
+		prevSeg = seg
+		// blk_0.Append(part0_0)
+	}
+	for _, seg := range segs {
+		cursor := ScanCursor{}
+		err := seg.InitScanCursor(&cursor)
+		assert.Nil(t, err)
+		assert.False(t, cursor.Inited)
+		err = cursor.Init()
+		assert.Nil(t, err)
+		assert.True(t, cursor.Inited)
+	}
+
+	pools := 4
+	var savedStrings []*[]string
+	var wg sync.WaitGroup
+	for i := 0; i < pools; i++ {
+		wg.Add(1)
+		var strings []string
+		savedStrings = append(savedStrings, &strings)
+		go func(wgp *sync.WaitGroup, strs *[]string) {
+			defer wgp.Done()
+			cursor := ScanCursor{}
+			err := rootSeg.InitScanCursor(&cursor)
+			cursor.Init()
+			cnt := 0
+			prevType := TRANSIENT_BLK
+			for cursor.Current != nil {
+				cnt += 1
+				err = cursor.Init()
+				assert.Nil(t, err)
+				assert.True(t, cursor.Current.GetBlock().GetBlockType() >= prevType)
+				prevType = cursor.Current.GetBlock().GetBlockType()
+				*strs = append(*strs, cursor.Current.GetBlock().String())
+				cursor.Next()
+			}
+			assert.Nil(t, err)
+			assert.Equal(t, seg_cnt*blk_cnt, cnt)
+		}(&wg, &strings)
+	}
+
+	time.Sleep(time.Duration(100) * time.Microsecond)
+	currSeg := rootSeg
+	for currSeg != nil {
+		ids := currSeg.GetBlockIDs()
+		for _, id := range ids {
+			oldBlk := currSeg.GetBlock(id)
+			assert.NotNil(t, oldBlk)
+			assert.Equal(t, TRANSIENT_BLK, oldBlk.GetBlockType())
+			blk, err := currSeg.UpgradeBlock(id)
+			assert.Nil(t, err)
+			assert.Equal(t, PERSISTENT_BLK, blk.GetBlockType())
+			// t.Log(blk.String())
+		}
+		currSeg = currSeg.GetNext()
+	}
+
+	currSeg = rootSeg
+	for currSeg != nil {
+		ids := currSeg.GetBlockIDs()
+		for _, id := range ids {
+			oldBlk := currSeg.GetBlock(id)
+			assert.NotNil(t, oldBlk)
+			assert.Equal(t, PERSISTENT_BLK, oldBlk.GetBlockType())
+			blk, err := currSeg.UpgradeBlock(id)
+			assert.Nil(t, err)
+			assert.Equal(t, PERSISTENT_SORTED_BLK, blk.GetBlockType())
+			// t.Log(blk.String())
+		}
+		currSeg = currSeg.GetNext()
+	}
+	wg.Wait()
+	for _, strings := range savedStrings {
+		assert.Equal(t, seg_cnt*blk_cnt, len(*strings))
+		// t.Log("---------------------------")
+		// for _, str := range *strings {
+		// 	t.Log(str)
+		// }
+	}
+	// for i := 0; i < 50; i++ {
+	// 	runtime.GC()
+	// 	time.Sleep(time.Duration(1) * time.Millisecond)
+	// }
 }

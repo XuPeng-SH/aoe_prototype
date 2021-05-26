@@ -2,8 +2,10 @@ package col
 
 import (
 	"aoe/pkg/engine/layout"
-	log "github.com/sirupsen/logrus"
+	"fmt"
 	"runtime"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type StdColumnBlock struct {
@@ -46,7 +48,11 @@ func (blk *StdColumnBlock) CloneWithUpgrade(seg IColumnSegment) IColumnBlock {
 			Type:    newType,
 		},
 	}
-	cloned.Part = blk.Part.CloneWithUpgrade(cloned)
+	part := blk.Part.CloneWithUpgrade(cloned)
+	if part == nil {
+		panic("logic error")
+	}
+	cloned.Part = part
 
 	return cloned
 }
@@ -72,7 +78,12 @@ func (blk *StdColumnBlock) Close() error {
 func (blk *StdColumnBlock) InitScanCursor(cursor *ScanCursor) error {
 	if blk.Part != nil {
 		cursor.Current = blk.Part
-		return blk.Part.InitScanCursor(cursor)
+		// return blk.Part.InitScanCursor(cursor)
 	}
 	return nil
+}
+
+func (blk *StdColumnBlock) String() string {
+	s := fmt.Sprintf("Std[%s](T=%d)", blk.ID.BlockString(), blk.Type)
+	return s
 }

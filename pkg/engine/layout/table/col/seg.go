@@ -2,11 +2,13 @@ package col
 
 import (
 	"aoe/pkg/engine/layout"
+	"errors"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"runtime"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type SegmentType uint8
@@ -21,6 +23,7 @@ type IColumnSegment interface {
 	GetNext() IColumnSegment
 	SetNext(next IColumnSegment)
 	GetID() layout.ID
+	GetBlockIDs() []layout.ID
 	GetBlockRoot() IColumnBlock
 	GetPartRoot() IColumnPart
 	GetRowCount() uint64
@@ -30,6 +33,9 @@ type IColumnSegment interface {
 	GetColIdx() int
 	GetSegmentType() SegmentType
 	CloneWithUpgrade() IColumnSegment
+	UpgradeBlock(id layout.ID) (IColumnBlock, error)
+	GetBlock(id layout.ID) IColumnBlock
+	InitScanCursor(cursor *ScanCursor) error
 }
 
 type ColumnSegment struct {
@@ -67,6 +73,40 @@ func (seg *ColumnSegment) GetSegmentType() SegmentType {
 	seg.RLock()
 	defer seg.RUnlock()
 	return seg.Type
+}
+
+func (seg *ColumnSegment) GetBlock(id layout.ID) IColumnBlock {
+	seg.RLock()
+	defer seg.RUnlock()
+	idx, ok := seg.IDMap[id]
+	if !ok {
+		return nil
+	}
+	return seg.Blocks[idx]
+}
+
+func (seg *ColumnSegment) UpgradeBlock(id layout.ID) (IColumnBlock, error) {
+	if seg.Type != UNSORTED_SEG {
+		panic("logic error")
+	}
+	if !seg.ID.IsSameSegment(id) {
+		panic("logic error")
+	}
+	seg.Lock()
+	defer seg.Unlock()
+	idx, ok := seg.IDMap[id]
+	if !ok {
+		panic("logic error")
+	}
+	upgradeBlk := seg.Blocks[idx].CloneWithUpgrade(seg)
+	if upgradeBlk == nil {
+		return nil, errors.New(fmt.Sprintf("Cannot upgrade blk: %s", id.BlockString()))
+	}
+	if idx > 0 {
+		seg.Blocks[idx-1].SetNext(upgradeBlk)
+	}
+	seg.Blocks[idx] = upgradeBlk
+	return upgradeBlk, nil
 }
 
 func (seg *ColumnSegment) CloneWithUpgrade() IColumnSegment {
@@ -160,6 +200,26 @@ func (seg *ColumnSegment) GetPartRoot() IColumnPart {
 		return nil
 	}
 	return seg.Blocks[0].GetPartRoot()
+}
+
+func (seg *ColumnSegment) InitScanCursor(cursor *ScanCursor) error {
+	seg.RLock()
+	if len(seg.Blocks) == 0 {
+		return nil
+	}
+	blk := seg.Blocks[0]
+	seg.RUnlock()
+	return blk.InitScanCursor(cursor)
+}
+
+func (seg *ColumnSegment) GetBlockIDs() []layout.ID {
+	seg.RLock()
+	defer seg.RUnlock()
+	var ids []layout.ID
+	for _, blk := range seg.Blocks {
+		ids = append(ids, blk.GetID())
+	}
+	return ids
 }
 
 func (seg *ColumnSegment) String() string {

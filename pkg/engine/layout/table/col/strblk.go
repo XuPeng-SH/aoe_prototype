@@ -67,3 +67,7 @@ func (blk *StrColumnBlock) InitScanCursor(cursor *ScanCursor) error {
 	}
 	return nil
 }
+
+func (blk *StrColumnBlock) String() string {
+	return ""
+}

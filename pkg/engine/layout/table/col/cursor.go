@@ -34,7 +34,8 @@ func (c *ScanCursor) IsInited() bool {
 
 func (c *ScanCursor) Init() error {
 	if c.Inited {
-		return errors.New("Cannot init already init'ed cursor")
+		// return errors.New("Cannot init already init'ed cursor")
+		return nil
 	}
 	if c.Current == nil {
 		return errors.New("Cannot init due to no block")
