@@ -1,6 +1,9 @@
-package engine
+package db
 
 import (
+	e "aoe/pkg/engine"
+	bmgrif "aoe/pkg/engine/buffer/manager/iface"
+	mtif "aoe/pkg/engine/memtable/base"
 	"io"
 	"os"
 	"sync/atomic"
@@ -13,7 +16,11 @@ import (
 
 type DB struct {
 	Dir  string
-	Opts *Options
+	Opts *e.Options
+
+	MemTableMgr     mtif.IManager
+	MutableBufMgr   bmgrif.IBufferManager
+	TableDataBufMgr bmgrif.IBufferManager
 
 	DataDir  *os.File
 	FileLock io.Closer

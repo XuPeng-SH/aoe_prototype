@@ -30,6 +30,10 @@ type Options struct {
 		Sorter  iw.IOpWorker
 		// IOFactory ioif.IOFactory
 	}
+
+	MemData struct {
+		Updater iw.IOpWorker
+	}
 }
 
 func (o *Options) FillDefaults(dirname string) *Options {
@@ -78,6 +82,10 @@ func (o *Options) FillDefaults(dirname string) *Options {
 
 	if o.Data.Sorter == nil {
 		o.Data.Sorter = w.NewOpWorker()
+	}
+
+	if o.MemData.Updater == nil {
+		o.MemData.Updater = w.NewOpWorker()
 	}
 	return o
 }
