@@ -17,6 +17,7 @@ type IColumnData interface {
 	// AppendBlock(blk IColumnBlock) error
 	// AppendPart(part IColumnPart) error
 	UpgradeBlock(blkID layout.ID) IColumnBlock
+	UpgradeSegment(segID layout.ID) IColumnSegment
 	SegmentCount() uint64
 	GetSegmentRoot() IColumnSegment
 	GetSegmentTail() IColumnSegment
@@ -105,6 +106,10 @@ func (cdata *ColumnData) RegisterBlock(bufMgr bmgrif.IBufferManager, id layout.I
 
 func (cdata *ColumnData) UpgradeBlock(blkID layout.ID) IColumnBlock {
 	return cdata.SegTree.UpgradeBlock(blkID)
+}
+
+func (cdata *ColumnData) UpgradeSegment(segID layout.ID) IColumnSegment {
+	return cdata.SegTree.UpgradeSegment(segID)
 }
 
 func (cdata *ColumnData) InitScanCursor(cursor *ScanCursor) error {

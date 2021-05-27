@@ -20,6 +20,7 @@ type ITableData interface {
 	GetSegmentCount() uint64
 
 	UpgradeBlock(blkID layout.ID) (blks []col.IColumnBlock)
+	UpgradeSegment(segID layout.ID) (segs []col.IColumnSegment)
 	AppendColSegments(colSegs []col.IColumnSegment)
 	// Scan()
 }
@@ -96,6 +97,14 @@ func (td *TableData) UpgradeBlock(blkID layout.ID) (blks []col.IColumnBlock) {
 		blks = append(blks, blk)
 	}
 	return blks
+}
+
+func (td *TableData) UpgradeSegment(segID layout.ID) (segs []col.IColumnSegment) {
+	for _, column := range td.Columns {
+		seg := column.UpgradeSegment(segID)
+		segs = append(segs, seg)
+	}
+	return segs
 }
 
 // Only be called at engine startup.

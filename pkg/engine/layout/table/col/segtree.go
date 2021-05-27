@@ -24,6 +24,7 @@ type ISegmentTree interface {
 	// Modifier
 	Append(seg IColumnSegment) error
 	UpgradeBlock(blkID layout.ID) IColumnBlock
+	UpgradeSegment(segID layout.ID) IColumnSegment
 	DropSegment(id layout.ID) (seg IColumnSegment, err error)
 }
 
@@ -45,27 +46,27 @@ func NewSegmentTree() ISegmentTree {
 	return tree
 }
 
-func (tree *SegmentTree) UpgradeSegment(id layout.ID) (err error) {
-	idx, ok := tree.data.Helper[id]
-	if !ok {
-		return errors.New(fmt.Sprintf("Specified seg %s not found", id.SegmentString()))
-	}
-	seg := tree.data.Segments[idx]
-	if seg.GetSegmentType() == SORTED_SEG {
-		log.Warnf("Specified seg %s is already SORTED!", id.SegmentString())
-		return nil
-	}
-	upgraded := seg.CloneWithUpgrade()
+// func (tree *SegmentTree) UpgradeSegment(id layout.ID) (err error) {
+// 	idx, ok := tree.data.Helper[id]
+// 	if !ok {
+// 		return errors.New(fmt.Sprintf("Specified seg %s not found", id.SegmentString()))
+// 	}
+// 	seg := tree.data.Segments[idx]
+// 	if seg.GetSegmentType() == SORTED_SEG {
+// 		log.Warnf("Specified seg %s is already SORTED!", id.SegmentString())
+// 		return nil
+// 	}
+// 	upgraded := seg.CloneWithUpgrade()
 
-	tree.data.Lock()
-	defer tree.data.Unlock()
-	if idx > 0 {
-		tree.data.Segments[idx-1].SetNext(upgraded)
-	}
-	tree.data.Segments[idx] = upgraded
+// 	tree.data.Lock()
+// 	defer tree.data.Unlock()
+// 	if idx > 0 {
+// 		tree.data.Segments[idx-1].SetNext(upgraded)
+// 	}
+// 	tree.data.Segments[idx] = upgraded
 
-	return nil
-}
+// 	return nil
+// }
 
 func (tree *SegmentTree) DropSegment(id layout.ID) (seg IColumnSegment, err error) {
 	idx, ok := tree.data.Helper[id]
@@ -108,7 +109,7 @@ func (tree *SegmentTree) GetTail() IColumnSegment {
 }
 
 func (tree *SegmentTree) UpgradeBlock(blkID layout.ID) IColumnBlock {
-	idx, ok := tree.data.Helper[blkID]
+	idx, ok := tree.data.Helper[blkID.AsBlockID()]
 	if !ok {
 		panic("logic error")
 	}
@@ -118,6 +119,39 @@ func (tree *SegmentTree) UpgradeBlock(blkID layout.ID) IColumnBlock {
 		panic(fmt.Sprintf("logic error: %s", err))
 	}
 	return blk
+}
+
+func (tree *SegmentTree) UpgradeSegment(segID layout.ID) IColumnSegment {
+	idx, ok := tree.data.Helper[segID]
+	if !ok {
+		panic("logic error")
+	}
+	seg := tree.data.Segments[idx]
+
+	if seg.GetSegmentType() != UNSORTED_SEG {
+		panic("logic error")
+	}
+	if !segID.IsSameSegment(seg.GetID()) {
+		panic("logic error")
+	}
+
+	old := tree.data.Segments[idx]
+	upgradeSeg := old.CloneWithUpgrade()
+	if upgradeSeg == nil {
+		panic(fmt.Sprintf("Cannot upgrade seg: %s", segID.SegmentString()))
+	}
+	var old_next IColumnSegment
+	if idx != len(tree.data.Segments)-1 {
+		old_next = old.GetNext()
+	}
+	upgradeSeg.SetNext(old_next)
+	tree.data.Lock()
+	defer tree.data.Unlock()
+	tree.data.Segments[idx] = upgradeSeg
+	if idx > 0 {
+		tree.data.Segments[idx-1].SetNext(upgradeSeg)
+	}
+	return upgradeSeg
 }
 
 func (tree *SegmentTree) Append(seg IColumnSegment) error {
@@ -149,7 +183,7 @@ func (tree *SegmentTree) ToString(depth uint64) string {
 	}
 	ret := fmt.Sprintf("SegTree (%v/%v) [", depth, tree.Depth())
 	for i := uint64(0); i < depth; i++ {
-		ret += tree.data.Segments[i].ToString(false)
+		ret += tree.data.Segments[i].ToString(true)
 		if i != depth-1 {
 			ret += ","
 		}

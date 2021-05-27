@@ -130,7 +130,7 @@ func (seg *ColumnSegment) CloneWithUpgrade() IColumnSegment {
 		IDMap:    seg.IDMap,
 		RowCount: seg.RowCount,
 		Next:     seg.Next,
-		// Blocks:   seg.Blocks,
+		Type:     SORTED_SEG,
 	}
 	var prev IColumnBlock
 	for _, blk := range seg.Blocks {
@@ -247,7 +247,7 @@ func (seg *ColumnSegment) String() string {
 
 func (seg *ColumnSegment) ToString(verbose bool) string {
 	if verbose {
-		return fmt.Sprintf("Seg(%v)(%d)[HasNext:%v]", seg.ID, seg.RowCount, seg.Next != nil)
+		return fmt.Sprintf("Seg(%v)(%d)[HasNext:%v]", seg.ID, seg.Type, seg.Next != nil)
 	}
-	return fmt.Sprintf("(%v, %v)", seg.ID, seg.RowCount)
+	return fmt.Sprintf("(%v, %v)", seg.ID, seg.Type)
 }

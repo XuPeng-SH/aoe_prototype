@@ -47,6 +47,43 @@ func makeSegments(bufMgr mgrif.IBufferManager, segCnt, blkCnt int, rowCount, typ
 	return segIDs
 }
 
+func TestUpgradeSegOp(t *testing.T) {
+	colDefs := make([]mock.ColType, 2)
+	colDefs[0] = mock.INTEGER
+	colDefs[1] = mock.INTEGER
+	opts := new(e.Options)
+	opts.FillDefaults("/tmp")
+	opts.MemData.Updater.Start()
+	typeSize := colDefs[0].Size()
+	row_count := uint64(64)
+	capacity := typeSize * row_count * 10000
+	bufMgr := makeBufMagr(capacity)
+	t0 := uint64(0)
+	tableData := table.NewTableData(bufMgr, t0, colDefs)
+	seg_cnt := 4
+	blk_cnt := 4
+	segIDs := makeSegments(bufMgr, seg_cnt, blk_cnt, row_count, typeSize, tableData, t)
+	assert.Equal(t, uint64(seg_cnt), tableData.GetSegmentCount())
+
+	for idx, segID := range segIDs {
+		ctx := new(OpCtx)
+		ctx.Opts = opts
+		op := NewUpgradeSegOp(ctx, segID, tableData)
+		op.Push()
+		op.WaitDone()
+		for _, seg := range op.Segments {
+			assert.Equal(t, col.SORTED_SEG, seg.GetSegmentType())
+			if idx < seg_cnt-1 {
+				assert.NotNil(t, seg.GetNext())
+			} else {
+				assert.Nil(t, seg.GetNext())
+			}
+		}
+	}
+
+	opts.MemData.Updater.Stop()
+}
+
 func TestUpgradeBlkOp(t *testing.T) {
 	colDefs := make([]mock.ColType, 2)
 	colDefs[0] = mock.INTEGER
