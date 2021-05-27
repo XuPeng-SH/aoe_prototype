@@ -6,6 +6,8 @@ import (
 	"aoe/pkg/engine/layout/table/col"
 	mock "aoe/pkg/mock/type"
 	"fmt"
+	log "github.com/sirupsen/logrus"
+	"runtime"
 	"sync"
 )
 
@@ -51,6 +53,10 @@ func NewTableData(bufMgr bmgrif.IBufferManager, id uint64, colTypes []mock.ColTy
 	for idx, colType := range colTypes {
 		data.Columns = append(data.Columns, col.NewColumnData(colType, idx))
 	}
+	runtime.SetFinalizer(data, func(o ITableData) {
+		id := o.GetID()
+		log.Infof("[GC]: TableData: %d", id)
+	})
 	return data
 }
 

@@ -16,9 +16,9 @@ type StdColumnBlock struct {
 func NewStdColumnBlock(seg IColumnSegment, id layout.ID, blkType BlockType) IColumnBlock {
 	blk := &StdColumnBlock{
 		ColumnBlock: ColumnBlock{
-			ID:      id,
-			Segment: seg,
-			Type:    blkType,
+			ID:     id,
+			Type:   blkType,
+			ColIdx: seg.GetColIdx(),
 		},
 	}
 	seg.Append(blk)
@@ -43,9 +43,9 @@ func (blk *StdColumnBlock) CloneWithUpgrade(seg IColumnSegment) IColumnBlock {
 	}
 	cloned := &StdColumnBlock{
 		ColumnBlock: ColumnBlock{
-			ID:      blk.ID,
-			Segment: seg,
-			Type:    newType,
+			ID:     blk.ID,
+			Type:   newType,
+			ColIdx: seg.GetColIdx(),
 		},
 	}
 	blk.RLock()
@@ -75,11 +75,6 @@ func (blk *StdColumnBlock) Append(part IColumnPart) {
 }
 
 func (blk *StdColumnBlock) Close() error {
-	blk.Lock()
-	defer blk.Unlock()
-	if blk.Part != nil {
-		return blk.Part.Close()
-	}
 	return nil
 }
 
@@ -94,6 +89,7 @@ func (blk *StdColumnBlock) InitScanCursor(cursor *ScanCursor) error {
 }
 
 func (blk *StdColumnBlock) String() string {
-	s := fmt.Sprintf("Std[%s](T=%d)", blk.ID.BlockString(), blk.Type)
+	partID := blk.Part.GetNodeID()
+	s := fmt.Sprintf("Std[%s](T=%d)[Part=%s]", blk.ID.BlockString(), blk.Type, partID.String())
 	return s
 }

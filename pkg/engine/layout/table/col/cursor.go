@@ -4,6 +4,7 @@ import (
 	nif "aoe/pkg/engine/buffer/node/iface"
 	"errors"
 	"io"
+	// log "github.com/sirupsen/logrus"
 )
 
 type IScanCursor interface {
@@ -14,6 +15,7 @@ type IScanCursor interface {
 }
 
 type ScanCursor struct {
+	CurrSeg IColumnSegment
 	Current IColumnPart
 	Handle  nif.IBufferHandle
 	Inited  bool
@@ -23,8 +25,27 @@ func (c *ScanCursor) Next() bool {
 	if c.Current == nil {
 		return false
 	}
+	currBlkID := c.Current.GetID()
 	c.Close()
 	c.Current = c.Current.GetNext()
+	if c.Current == nil {
+		if c.CurrSeg == nil {
+			return false
+		}
+
+		currBlk := c.CurrSeg.GetBlock(currBlkID)
+		currBlk = currBlk.GetNext()
+		if currBlk != nil {
+			currBlk.InitScanCursor(c)
+			return c.Current != nil
+		}
+
+		c.CurrSeg = c.CurrSeg.GetNext()
+		if c.CurrSeg == nil {
+			return false
+		}
+		c.CurrSeg.InitScanCursor(c)
+	}
 	return c.Current != nil
 }
 

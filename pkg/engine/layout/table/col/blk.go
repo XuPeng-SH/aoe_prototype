@@ -21,7 +21,6 @@ type IColumnBlock interface {
 	SetNext(next IColumnBlock)
 	GetID() layout.ID
 	GetRowCount() uint64
-	GetSegment() IColumnSegment
 	InitScanCursor(cusor *ScanCursor) error
 	Append(part IColumnPart)
 	GetPartRoot() IColumnPart
@@ -35,23 +34,20 @@ type ColumnBlock struct {
 	sync.RWMutex
 	ID       layout.ID
 	Next     IColumnBlock
-	Segment  IColumnSegment
 	RowCount uint64
 	Type     BlockType
+	ColIdx   int
+	// Segment  IColumnSegment
 }
 
 func (blk *ColumnBlock) GetColIdx() int {
-	return blk.Segment.GetColIdx()
+	return blk.ColIdx
 }
 
 func (blk *ColumnBlock) GetBlockType() BlockType {
 	blk.RLock()
 	defer blk.RUnlock()
 	return blk.Type
-}
-
-func (blk *ColumnBlock) GetSegment() IColumnSegment {
-	return blk.Segment
 }
 
 func (blk *ColumnBlock) GetRowCount() uint64 {
@@ -66,16 +62,8 @@ func (blk *ColumnBlock) SetNext(next IColumnBlock) {
 
 func (blk *ColumnBlock) GetNext() IColumnBlock {
 	blk.RLock()
-	n := blk.Next
-	blk.RUnlock()
-	seg := blk.Segment
-	if n == nil {
-		next_seg := seg.GetNext()
-		if next_seg != nil {
-			return next_seg.GetBlockRoot()
-		}
-	}
-	return n
+	defer blk.RUnlock()
+	return blk.Next
 }
 
 func (blk *ColumnBlock) GetID() layout.ID {

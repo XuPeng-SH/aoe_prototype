@@ -36,7 +36,6 @@ func TestStdColumnBlock(t *testing.T) {
 		blk_0_id := seg_id.NextBlock()
 		blk_0 := NewStdColumnBlock(seg, blk_0_id, MOCK_BLK)
 		assert.Nil(t, blk_0.GetNext())
-		assert.Equal(t, seg, blk_0.GetSegment())
 		assert.Equal(t, blk_0, seg.GetBlockRoot())
 		blk_1_id := seg_id.NextBlock()
 		blk_1 := NewStdColumnBlock(seg, blk_1_id, MOCK_BLK)
@@ -50,13 +49,17 @@ func TestStdColumnBlock(t *testing.T) {
 		prev_seg = seg
 	}
 	t.Log(first_seg.ToString(true))
-	blk := first_seg.GetBlockRoot()
-	assert.NotNil(t, blk)
 	var cnt int
-	for blk != nil {
-		t.Log(blk.GetID())
-		blk = blk.GetNext()
-		cnt++
+	loopSeg := first_seg
+	for loopSeg != nil {
+		blk := loopSeg.GetBlockRoot()
+		assert.NotNil(t, blk)
+		for blk != nil {
+			t.Log(blk.GetID())
+			blk = blk.GetNext()
+			cnt++
+		}
+		loopSeg = loopSeg.GetNext()
 	}
 	assert.Equal(t, seg_cnt*2, cnt)
 }
@@ -81,13 +84,11 @@ func TestStdColumnBlock2(t *testing.T) {
 		blk_0 := NewStdColumnBlock(seg, blk_0_id, MOCK_BLK)
 		part_0 := NewColumnPart(bufMgr, blk_0, blk_0_id, row_count, typeSize)
 		assert.Nil(t, part_0.GetNext())
-		assert.Equal(t, blk_0, part_0.GetBlock())
 		assert.Equal(t, part_0, blk_0.GetPartRoot())
 		blk_1_id := seg_id.NextBlock()
 		blk_1 := NewStdColumnBlock(seg, blk_1_id, MOCK_BLK)
 		part_1 := NewColumnPart(bufMgr, blk_1, blk_1_id, row_count, typeSize)
 		assert.Nil(t, part_1.GetNext())
-		assert.Equal(t, blk_1, part_1.GetBlock())
 		assert.Equal(t, part_1, blk_1.GetPartRoot())
 		// assert.Equal(t, row_count*2, seg.GetRowCount())
 		if prev_seg != nil {
@@ -98,19 +99,24 @@ func TestStdColumnBlock2(t *testing.T) {
 		prev_seg = seg
 	}
 	t.Log(first_seg.ToString(true))
-	blk := first_seg.GetBlockRoot()
-	assert.NotNil(t, blk)
 	var cnt int
-	for blk != nil {
-		t.Log(blk.GetID())
-		blk = blk.GetNext()
-		cnt++
+	loopSeg := first_seg
+	for loopSeg != nil {
+		blk := loopSeg.GetBlockRoot()
+		assert.NotNil(t, blk)
+		for blk != nil {
+			t.Log(blk.GetID())
+			blk = blk.GetNext()
+			cnt++
+		}
+		loopSeg = loopSeg.GetNext()
 	}
 	assert.Equal(t, seg_cnt*2, cnt)
 
 	first_part := first_seg.GetPartRoot()
 	assert.NotNil(t, first_part)
 	cursor := ScanCursor{
+		CurrSeg: first_seg,
 		Current: first_part,
 	}
 
@@ -146,12 +152,10 @@ func TestStrColumnBlock(t *testing.T) {
 		part_0_0_id := blk_0_id.NextPart()
 		part_0 := NewColumnPart(bufMgr, blk_0, part_0_0_id, row_count, typeSize)
 		assert.Nil(t, part_0.GetNext())
-		assert.Equal(t, blk_0, part_0.GetBlock())
 		assert.Equal(t, part_0, blk_0.GetPartRoot())
 		part_0_1_id := blk_0_id.NextPart()
 		part_0_1 := NewColumnPart(bufMgr, blk_0, part_0_1_id, row_count, typeSize)
 		assert.Nil(t, part_0_1.GetNext())
-		assert.Equal(t, blk_0, part_0_1.GetBlock())
 		// assert.Equal(t, part_0, blk_0.GetPartRoot())
 		if prev_seg != nil {
 			prev_seg.SetNext(seg)
@@ -161,13 +165,18 @@ func TestStrColumnBlock(t *testing.T) {
 		prev_seg = seg
 	}
 	t.Log(first_seg.ToString(true))
-	part := first_seg.GetPartRoot()
-	assert.NotNil(t, part)
 	var cnt int
-	for part != nil {
-		t.Log(part.GetID())
-		part = part.GetNext()
-		cnt++
+
+	loopSeg := first_seg
+	for loopSeg != nil {
+		part := loopSeg.GetPartRoot()
+		assert.NotNil(t, part)
+		for part != nil {
+			t.Log(part.GetID())
+			part = part.GetNext()
+			cnt++
+		}
+		loopSeg = loopSeg.GetNext()
 	}
 	assert.Equal(t, seg_cnt*2, cnt)
 
@@ -255,13 +264,11 @@ func TestRegisterNode(t *testing.T) {
 		blk_0 := NewStdColumnBlock(seg, blk_0_id, MOCK_BLK)
 		part_0 := NewColumnPart(bufMgr, blk_0, blk_0_id, row_count, typeSize)
 		assert.Nil(t, part_0.GetNext())
-		assert.Equal(t, blk_0, part_0.GetBlock())
 		assert.Equal(t, part_0, blk_0.GetPartRoot())
 		blk_1_id := seg_id.NextBlock()
 		blk_1 := NewStdColumnBlock(seg, blk_1_id, MOCK_BLK)
 		part_1 := NewColumnPart(bufMgr, blk_1, blk_1_id, row_count, typeSize)
 		assert.Nil(t, part_1.GetNext())
-		assert.Equal(t, blk_1, part_1.GetBlock())
 		assert.Equal(t, part_1, blk_1.GetPartRoot())
 		if prev_seg != nil {
 			prev_seg.SetNext(seg)
@@ -333,7 +340,7 @@ func TestUpgradeStdSegment(t *testing.T) {
 	row_count := uint64(64)
 	capacity := typeSize * row_count * 10000
 	bufMgr := makeBufMagr(capacity)
-	seg_cnt := 4
+	seg_cnt := 5
 	blk_cnt := 4
 	segs := makeSegments(bufMgr, seg_cnt, blk_cnt, row_count, typeSize, t)
 	rootSeg := segs[0]
@@ -348,7 +355,7 @@ func TestUpgradeStdSegment(t *testing.T) {
 		assert.True(t, cursor.Inited)
 	}
 
-	pools := 5
+	pools := 1
 	var savedStrings []*[]string
 	var wg sync.WaitGroup
 	for i := 0; i < pools; i++ {
@@ -357,7 +364,7 @@ func TestUpgradeStdSegment(t *testing.T) {
 		savedStrings = append(savedStrings, &strings)
 		go func(wgp *sync.WaitGroup, strs *[]string) {
 			defer wgp.Done()
-			cursor := ScanCursor{}
+			cursor := ScanCursor{CurrSeg: rootSeg}
 			err := rootSeg.InitScanCursor(&cursor)
 			assert.Nil(t, err)
 			cursor.Init()
@@ -369,7 +376,6 @@ func TestUpgradeStdSegment(t *testing.T) {
 				assert.Nil(t, err)
 				// assert.True(t, cursor.Current.GetBlock().GetBlockType() >= prevType, cursor.Current.GetBlock().String())
 				// prevType = cursor.Current.GetBlock().GetBlockType()
-				*strs = append(*strs, cursor.Current.GetBlock().String())
 				cursor.Next()
 			}
 			assert.Equal(t, seg_cnt*blk_cnt, cnt)

@@ -10,7 +10,9 @@ import (
 	w "aoe/pkg/engine/worker"
 	mock "aoe/pkg/mock/type"
 	"github.com/stretchr/testify/assert"
+	"runtime"
 	"testing"
+	"time"
 	// log "github.com/sirupsen/logrus"
 )
 
@@ -125,6 +127,10 @@ func TestUpgradeBlkOp(t *testing.T) {
 				}
 			}
 		}
+	}
+	for i := 0; i < 4; i++ {
+		runtime.GC()
+		time.Sleep(time.Duration(1) * time.Millisecond)
 	}
 	opts.MemData.Updater.Stop()
 }

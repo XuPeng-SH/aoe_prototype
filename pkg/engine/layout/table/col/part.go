@@ -28,17 +28,17 @@ type IColumnPart interface {
 	SetNext(IColumnPart)
 	InitScanCursor(cursor *ScanCursor) error
 	GetID() layout.ID
-	GetBlock() IColumnBlock
+	// GetBlock() IColumnBlock
 	GetBuf() []byte
 	GetColIdx() int
 	CloneWithUpgrade(blk IColumnBlock) IColumnPart
+	GetNodeID() layout.ID
 }
 
 type ColumnPart struct {
 	sync.RWMutex
 	ID          layout.ID
 	Next        IColumnPart
-	Block       IColumnBlock
 	BufMgr      bmgrif.IBufferManager
 	BufNode     nif.INodeHandle
 	TypeSize    uint64
@@ -46,6 +46,9 @@ type ColumnPart struct {
 	RowCount    uint64
 	Size        uint64
 	Capacity    uint64
+	NodeID      layout.ID
+	BlockType   BlockType
+	ColIdx      int
 }
 
 func NewColumnPart(bmgr bmgrif.IBufferManager, blk IColumnBlock, id layout.ID,
@@ -53,9 +56,10 @@ func NewColumnPart(bmgr bmgrif.IBufferManager, blk IColumnBlock, id layout.ID,
 	part := &ColumnPart{
 		BufMgr:      bmgr,
 		ID:          id,
-		Block:       blk,
 		TypeSize:    typeSize,
 		MaxRowCount: rowCount,
+		NodeID:      id,
+		ColIdx:      blk.GetColIdx(),
 	}
 
 	switch blk.GetBlockType() {
@@ -100,21 +104,27 @@ func NewColumnPart(bmgr bmgrif.IBufferManager, blk IColumnBlock, id layout.ID,
 	return part
 }
 
+func (part *ColumnPart) GetNodeID() layout.ID {
+	return part.NodeID
+}
+
 func (part *ColumnPart) CloneWithUpgrade(blk IColumnBlock) IColumnPart {
 	cloned := &ColumnPart{
 		ID:          part.ID,
-		Block:       blk,
 		BufMgr:      part.BufMgr,
 		TypeSize:    part.TypeSize,
 		MaxRowCount: part.MaxRowCount,
 		RowCount:    part.RowCount,
 		Size:        part.Size,
 		Capacity:    part.Capacity,
+		NodeID:      part.NodeID.NextIter(),
+		ColIdx:      part.GetColIdx(),
 	}
-	switch part.Block.GetBlockType() {
+	switch part.BlockType {
 	case TRANSIENT_BLK:
 		csf := ldio.MockColSegmentFile{}
-		cloned.BufNode = part.BufMgr.RegisterNode(part.TypeSize*part.MaxRowCount, part.ID, &csf)
+		cloned.BufNode = part.BufMgr.RegisterNode(part.TypeSize*part.MaxRowCount, cloned.NodeID, &csf)
+		cloned.BlockType = PERSISTENT_BLK
 		// sf := ldio.NewUnsortedSegmentFile(dio.READER_FACTORY.Dirname, part.ID.AsSegmentID())
 		// csf := ldio.ColSegmentFile{
 		// 	SegmentFile: sf,
@@ -123,7 +133,8 @@ func (part *ColumnPart) CloneWithUpgrade(blk IColumnBlock) IColumnPart {
 		// cloned.BufNode = part.BufMgr.RegisterNode(part.MaxRowCount*part.TypeSize, part.ID, &csf)
 	case PERSISTENT_BLK:
 		csf := ldio.MockColSegmentFile{}
-		cloned.BufNode = part.BufMgr.RegisterNode(part.TypeSize*part.MaxRowCount, part.ID, &csf)
+		cloned.BufNode = part.BufMgr.RegisterNode(part.TypeSize*part.MaxRowCount, cloned.NodeID, &csf)
+		cloned.BlockType = PERSISTENT_SORTED_BLK
 		// sf := ldio.NewSortedSegmentFile(dio.READER_FACTORY.Dirname, part.ID.AsSegmentID())
 		// csf := ldio.ColSegmentFile{
 		// 	SegmentFile: sf,
@@ -147,7 +158,7 @@ func (part *ColumnPart) CloneWithUpgrade(blk IColumnBlock) IColumnPart {
 }
 
 func (part *ColumnPart) GetColIdx() int {
-	return part.Block.GetColIdx()
+	return part.ColIdx
 }
 
 func (part *ColumnPart) GetBuf() []byte {
@@ -178,12 +189,6 @@ func (part *ColumnPart) GetID() layout.ID {
 	return part.ID
 }
 
-func (part *ColumnPart) GetBlock() IColumnBlock {
-	part.RLock()
-	defer part.RUnlock()
-	return part.Block
-}
-
 func (part *ColumnPart) SetNext(next IColumnPart) {
 	part.Lock()
 	defer part.Unlock()
@@ -192,15 +197,8 @@ func (part *ColumnPart) SetNext(next IColumnPart) {
 
 func (part *ColumnPart) GetNext() IColumnPart {
 	part.RLock()
-	n := part.Next
-	part.RUnlock()
-	if n == nil {
-		next_blk := part.Block.GetNext()
-		if next_blk != nil {
-			return next_blk.GetPartRoot()
-		}
-	}
-	return n
+	defer part.RUnlock()
+	return part.Next
 }
 
 func (part *ColumnPart) Close() error {

@@ -135,7 +135,7 @@ func (seg *ColumnSegment) CloneWithUpgrade() IColumnSegment {
 	var prev IColumnBlock
 	for _, blk := range seg.Blocks {
 		cur := blk.CloneWithUpgrade(cloned)
-		cloned.Blocks = append(seg.Blocks, cur)
+		cloned.Blocks = append(cloned.Blocks, cur)
 		if prev != nil {
 			prev.SetNext(cur)
 		}
@@ -146,7 +146,6 @@ func (seg *ColumnSegment) CloneWithUpgrade() IColumnSegment {
 		o.SetNext(nil)
 		log.Infof("[GC]: ColumnSegment %s [%d]", id.SegmentString(), o.GetSegmentType())
 	})
-	cloned.Next = seg.Next
 	return cloned
 }
 
@@ -169,12 +168,6 @@ func (seg *ColumnSegment) GetNext() IColumnSegment {
 }
 
 func (seg *ColumnSegment) Close() error {
-	for _, blk := range seg.Blocks {
-		err := blk.Close()
-		if err != nil {
-			return err
-		}
-	}
 	return nil
 }
 

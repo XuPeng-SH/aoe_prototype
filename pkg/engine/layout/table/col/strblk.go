@@ -14,9 +14,9 @@ type StrColumnBlock struct {
 func NewStrColumnBlock(seg IColumnSegment, id layout.ID, blkType BlockType) IColumnBlock {
 	blk := &StrColumnBlock{
 		ColumnBlock: ColumnBlock{
-			ID:      id,
-			Segment: seg,
-			Type:    blkType,
+			ID:     id,
+			Type:   blkType,
+			ColIdx: seg.GetColIdx(),
 		},
 		Parts: make([]IColumnPart, 0),
 	}

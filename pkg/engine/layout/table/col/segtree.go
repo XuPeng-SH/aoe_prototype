@@ -40,33 +40,12 @@ func NewSegmentTree() ISegmentTree {
 	tree := &SegmentTree{}
 	tree.data.Segments = make([]IColumnSegment, 0)
 	tree.data.Helper = make(map[layout.ID]int)
-	runtime.SetFinalizer(tree, func(o ISegmentTree) {
-		log.Infof("[GC]: SegmentTree")
+	runtime.SetFinalizer(tree, func(o *SegmentTree) {
+		log.Infof("[GC]: SegmentTree: %s", o.String())
+		o.data.Segments = nil
 	})
 	return tree
 }
-
-// func (tree *SegmentTree) UpgradeSegment(id layout.ID) (err error) {
-// 	idx, ok := tree.data.Helper[id]
-// 	if !ok {
-// 		return errors.New(fmt.Sprintf("Specified seg %s not found", id.SegmentString()))
-// 	}
-// 	seg := tree.data.Segments[idx]
-// 	if seg.GetSegmentType() == SORTED_SEG {
-// 		log.Warnf("Specified seg %s is already SORTED!", id.SegmentString())
-// 		return nil
-// 	}
-// 	upgraded := seg.CloneWithUpgrade()
-
-// 	tree.data.Lock()
-// 	defer tree.data.Unlock()
-// 	if idx > 0 {
-// 		tree.data.Segments[idx-1].SetNext(upgraded)
-// 	}
-// 	tree.data.Segments[idx] = upgraded
-
-// 	return nil
-// }
 
 func (tree *SegmentTree) DropSegment(id layout.ID) (seg IColumnSegment, err error) {
 	idx, ok := tree.data.Helper[id]
@@ -80,7 +59,11 @@ func (tree *SegmentTree) DropSegment(id layout.ID) (seg IColumnSegment, err erro
 		prev := tree.data.Segments[idx-1]
 		prev.SetNext(seg.GetNext())
 	}
+	delete(tree.data.Helper, id)
 	tree.data.Segments = append(tree.data.Segments[:idx], tree.data.Segments[idx+1:]...)
+	for idx, segment := range tree.data.Segments {
+		tree.data.Helper[segment.GetID()] = idx
+	}
 	return seg, nil
 }
 
@@ -109,7 +92,7 @@ func (tree *SegmentTree) GetTail() IColumnSegment {
 }
 
 func (tree *SegmentTree) UpgradeBlock(blkID layout.ID) IColumnBlock {
-	idx, ok := tree.data.Helper[blkID.AsBlockID()]
+	idx, ok := tree.data.Helper[blkID.AsSegmentID()]
 	if !ok {
 		panic("logic error")
 	}
@@ -135,14 +118,13 @@ func (tree *SegmentTree) UpgradeSegment(segID layout.ID) IColumnSegment {
 		panic("logic error")
 	}
 
-	old := tree.data.Segments[idx]
-	upgradeSeg := old.CloneWithUpgrade()
+	upgradeSeg := seg.CloneWithUpgrade()
 	if upgradeSeg == nil {
 		panic(fmt.Sprintf("Cannot upgrade seg: %s", segID.SegmentString()))
 	}
 	var old_next IColumnSegment
 	if idx != len(tree.data.Segments)-1 {
-		old_next = old.GetNext()
+		old_next = seg.GetNext()
 	}
 	upgradeSeg.SetNext(old_next)
 	tree.data.Lock()

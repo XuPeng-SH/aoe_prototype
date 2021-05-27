@@ -44,6 +44,7 @@ func (mgr *BufferManager) RegisterMemory(capacity uint64, spillable bool) nif.IN
 }
 
 func (mgr *BufferManager) RegisterSpillableNode(capacity uint64, node_id layout.ID) nif.INodeHandle {
+	// log.Infof("RegisterSpillableNode %s", node_id.String())
 	{
 		mgr.RLock()
 		handle, ok := mgr.Nodes[node_id]
@@ -85,6 +86,7 @@ func (mgr *BufferManager) RegisterSpillableNode(capacity uint64, node_id layout.
 func (mgr *BufferManager) RegisterNode(capacity uint64, node_id layout.ID, segFile interface{}) nif.INodeHandle {
 	mgr.Lock()
 	defer mgr.Unlock()
+	// log.Infof("RegisterNode %s", node_id.String())
 	sf := segFile.(ldio.IColSegmentFile)
 
 	handle, ok := mgr.Nodes[node_id]
@@ -107,6 +109,7 @@ func (mgr *BufferManager) RegisterNode(capacity uint64, node_id layout.ID, segFi
 
 func (mgr *BufferManager) UnregisterNode(h nif.INodeHandle) {
 	node_id := h.GetID()
+	// log.Infof("UnRegisterNode %s", node_id.String())
 	if h.IsSpillable() {
 		if node_id.IsTransient() {
 			h.Clean()
