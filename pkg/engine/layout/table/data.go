@@ -2,8 +2,10 @@ package table
 
 import (
 	bmgrif "aoe/pkg/engine/buffer/manager/iface"
+	"aoe/pkg/engine/layout"
 	"aoe/pkg/engine/layout/table/col"
 	mock "aoe/pkg/mock/type"
+	"fmt"
 	"sync"
 )
 
@@ -15,6 +17,10 @@ type ITableData interface {
 	GetColTypeSize(idx int) uint64
 	GetColTypes() []mock.ColType
 	GetBufMgr() bmgrif.IBufferManager
+	GetSegmentCount() uint64
+
+	UpgradeBlock(blkID layout.ID) (blks []col.IColumnBlock)
+	AppendColSegments(colSegs []col.IColumnSegment)
 	// Scan()
 }
 
@@ -78,4 +84,32 @@ func (td *TableData) GetColTypeSize(idx int) uint64 {
 
 func (td *TableData) GetBufMgr() bmgrif.IBufferManager {
 	return td.BufMgr
+}
+
+func (td *TableData) GetSegmentCount() uint64 {
+	return td.Columns[0].SegmentCount()
+}
+
+func (td *TableData) UpgradeBlock(blkID layout.ID) (blks []col.IColumnBlock) {
+	for _, column := range td.Columns {
+		blk := column.UpgradeBlock(blkID)
+		blks = append(blks, blk)
+	}
+	return blks
+}
+
+// Only be called at engine startup.
+func (td *TableData) AppendColSegments(colSegs []col.IColumnSegment) {
+	if len(colSegs) != len(td.ColType) {
+		panic("logic error")
+	}
+	for idx, column := range td.Columns {
+		if idx != column.GetColIdx() {
+			panic("logic error")
+		}
+		err := column.Append(colSegs[idx])
+		if err != nil {
+			panic(fmt.Sprintf("logic error: %s", err))
+		}
+	}
 }

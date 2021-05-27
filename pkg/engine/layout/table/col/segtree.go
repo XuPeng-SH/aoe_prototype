@@ -19,8 +19,11 @@ type ISegmentTree interface {
 	GetRoot() IColumnSegment
 	GetTail() IColumnSegment
 	Depth() uint64
-	Append(seg IColumnSegment) error
 	// ReferenceOther(other ISegmentTree)
+
+	// Modifier
+	Append(seg IColumnSegment) error
+	UpgradeBlock(blkID layout.ID) IColumnBlock
 	DropSegment(id layout.ID) (seg IColumnSegment, err error)
 }
 
@@ -102,6 +105,19 @@ func (tree *SegmentTree) GetTail() IColumnSegment {
 		return nil
 	}
 	return tree.data.Segments[len(tree.data.Segments)-1]
+}
+
+func (tree *SegmentTree) UpgradeBlock(blkID layout.ID) IColumnBlock {
+	idx, ok := tree.data.Helper[blkID]
+	if !ok {
+		panic("logic error")
+	}
+	seg := tree.data.Segments[idx]
+	blk, err := seg.UpgradeBlock(blkID)
+	if err != nil {
+		panic(fmt.Sprintf("logic error: %s", err))
+	}
+	return blk
 }
 
 func (tree *SegmentTree) Append(seg IColumnSegment) error {

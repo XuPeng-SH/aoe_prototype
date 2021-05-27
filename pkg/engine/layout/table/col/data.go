@@ -16,9 +16,11 @@ type IColumnData interface {
 	DropSegment(id layout.ID) (seg IColumnSegment, err error)
 	// AppendBlock(blk IColumnBlock) error
 	// AppendPart(part IColumnPart) error
+	UpgradeBlock(blkID layout.ID) IColumnBlock
 	SegmentCount() uint64
 	GetSegmentRoot() IColumnSegment
 	GetSegmentTail() IColumnSegment
+	GetColIdx() int
 	RegisterSegment(id layout.ID) (seg IColumnSegment, err error)
 	RegisterBlock(bufMgr bmgrif.IBufferManager, id layout.ID, maxRows uint64) (blk IColumnBlock, err error)
 }
@@ -37,6 +39,10 @@ func NewColumnData(col_type mock.ColType, col_idx int) IColumnData {
 		SegTree: NewSegmentTree(),
 	}
 	return data
+}
+
+func (cdata *ColumnData) GetColIdx() int {
+	return cdata.Idx
 }
 
 func (cdata *ColumnData) GetSegmentRoot() IColumnSegment {
@@ -96,6 +102,10 @@ func (cdata *ColumnData) RegisterBlock(bufMgr bmgrif.IBufferManager, id layout.I
 // 	}
 // 	return nil
 // }
+
+func (cdata *ColumnData) UpgradeBlock(blkID layout.ID) IColumnBlock {
+	return cdata.SegTree.UpgradeBlock(blkID)
+}
 
 func (cdata *ColumnData) InitScanCursor(cursor *ScanCursor) error {
 	err := cursor.Close()
