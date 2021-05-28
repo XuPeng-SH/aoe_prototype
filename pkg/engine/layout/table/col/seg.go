@@ -142,9 +142,9 @@ func (seg *ColumnSegment) CloneWithUpgrade() IColumnSegment {
 		prev = cur
 	}
 	runtime.SetFinalizer(cloned, func(o IColumnSegment) {
-		id := o.GetID()
 		o.SetNext(nil)
-		log.Infof("[GC]: ColumnSegment %s [%d]", id.SegmentString(), o.GetSegmentType())
+		// id := o.GetID()
+		// log.Infof("[GC]: ColumnSegment %s [%d]", id.SegmentString(), o.GetSegmentType())
 	})
 	return cloned
 }

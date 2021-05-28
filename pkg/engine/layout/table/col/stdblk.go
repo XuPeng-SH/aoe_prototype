@@ -4,8 +4,7 @@ import (
 	"aoe/pkg/engine/layout"
 	"fmt"
 	"runtime"
-
-	log "github.com/sirupsen/logrus"
+	// log "github.com/sirupsen/logrus"
 )
 
 type StdColumnBlock struct {
@@ -23,9 +22,9 @@ func NewStdColumnBlock(seg IColumnSegment, id layout.ID, blkType BlockType) ICol
 	}
 	seg.Append(blk)
 	runtime.SetFinalizer(blk, func(o IColumnBlock) {
-		id := o.GetID()
 		o.SetNext(nil)
-		log.Infof("[GC]: StdColumnBlock %s [%d]", id.BlockString(), o.GetBlockType())
+		// id := o.GetID()
+		// log.Infof("[GC]: StdColumnBlock %s [%d]", id.BlockString(), o.GetBlockType())
 		o.Close()
 	})
 	return blk
@@ -55,7 +54,12 @@ func (blk *StdColumnBlock) CloneWithUpgrade(seg IColumnSegment) IColumnBlock {
 		panic("logic error")
 	}
 	cloned.Part = part
-
+	runtime.SetFinalizer(cloned, func(o IColumnBlock) {
+		o.SetNext(nil)
+		// id := o.GetID()
+		// log.Infof("[GC]: StdColumnBlock %s [%d]", id.BlockString(), o.GetBlockType())
+		o.Close()
+	})
 	return cloned
 }
 

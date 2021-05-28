@@ -8,6 +8,8 @@ import (
 	"aoe/pkg/engine/layout"
 	ldio "aoe/pkg/engine/layout/dataio"
 	iw "aoe/pkg/engine/worker/base"
+	"fmt"
+
 	log "github.com/sirupsen/logrus"
 )
 
@@ -25,6 +27,40 @@ func NewBufferManager(capacity uint64, flusher iw.IOpWorker, evict_ctx ...interf
 	}
 
 	return mgr
+}
+
+func (mgr *BufferManager) NodeCount() int {
+	mgr.RLock()
+	defer mgr.RUnlock()
+	return len(mgr.Nodes)
+}
+
+func (mgr *BufferManager) String() string {
+	mgr.RLock()
+	defer mgr.RUnlock()
+	s := fmt.Sprintf("BMgr[Cap:%d, Usage:%d, Nodes:%d]:\n", mgr.GetCapacity(), mgr.GetUsage(), len(mgr.Nodes))
+	var mapped = map[uint64]map[uint64][]layout.ID{}
+	for k, _ := range mgr.Nodes {
+		_, ok := mapped[k.TableID]
+		if !ok {
+			mapped[k.TableID] = make(map[uint64][]layout.ID)
+		}
+		l := mapped[k.TableID][k.SegmentID]
+		l = append(l, k)
+		mapped[k.TableID][k.SegmentID] = l
+	}
+	for tbID, segMap := range mapped {
+		s += fmt.Sprintf("Table %d Nodes %d {\n", tbID, len(segMap))
+		for segID, ids := range segMap {
+			s += fmt.Sprintf("  Segment %d Nodes %d {\n", segID, len(ids))
+			for _, id := range ids {
+				s += fmt.Sprintf("    Block-%d-Part-%d [%d] (%d)\n", id.BlockID, id.PartID, id.Iter, mgr.Nodes[id].GetState())
+			}
+			s += "  }\n"
+		}
+		s += "}"
+	}
+	return s
 }
 
 func (mgr *BufferManager) RegisterMemory(capacity uint64, spillable bool) nif.INodeHandle {

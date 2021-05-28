@@ -94,9 +94,9 @@ func NewColumnPart(bmgr bmgrif.IBufferManager, blk IColumnBlock, id layout.ID,
 		panic("not support")
 	}
 	runtime.SetFinalizer(part, func(p IColumnPart) {
+		p.SetNext(nil)
 		id := p.GetID()
 		log.Infof("GC ColumnPart %s", id.String())
-		p.SetNext(nil)
 		p.Close()
 	})
 

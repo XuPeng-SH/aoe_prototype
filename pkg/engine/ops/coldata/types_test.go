@@ -99,10 +99,12 @@ func TestUpgradeBlkOp(t *testing.T) {
 	bufMgr := makeBufMagr(capacity)
 	t0 := uint64(0)
 	tableData := table.NewTableData(bufMgr, t0, colDefs)
-	seg_cnt := 4
-	blk_cnt := 4
+	seg_cnt := 2
+	blk_cnt := 2
 	segIDs := makeSegments(bufMgr, seg_cnt, blk_cnt, row_count, typeSize, tableData, t)
 	assert.Equal(t, uint64(seg_cnt), tableData.GetSegmentCount())
+	t.Log(bufMgr.String())
+	assert.Equal(t, seg_cnt*blk_cnt, bufMgr.NodeCount())
 	for _, segID := range segIDs {
 		var ops []*UpgradeBlkOp
 		blkID := segID
@@ -132,5 +134,7 @@ func TestUpgradeBlkOp(t *testing.T) {
 		runtime.GC()
 		time.Sleep(time.Duration(1) * time.Millisecond)
 	}
+	t.Log(bufMgr.String())
+	assert.Equal(t, seg_cnt*blk_cnt, bufMgr.NodeCount())
 	opts.MemData.Updater.Stop()
 }

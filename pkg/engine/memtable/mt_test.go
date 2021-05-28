@@ -13,6 +13,7 @@ import (
 	"aoe/pkg/mock/type/chunk"
 	"aoe/pkg/mock/type/vector"
 	"github.com/stretchr/testify/assert"
+	"runtime"
 	"sync"
 	"testing"
 	"time"
@@ -125,11 +126,11 @@ func TestCollection(t *testing.T) {
 	}
 	waitgroup.Wait()
 	assert.Equal(t, len(tbl.SegmentIDs()), int(blks/opts.Meta.Info.Conf.SegmentMaxBlocks))
-	// t.Log(opts.Meta.Info.String())
-	time.Sleep(time.Duration(100) * time.Millisecond)
-	for _, colData := range t0_data.GetCollumns() {
-		t.Log(colData.ToString(10000))
+	for i := 0; i < 50; i++ {
+		runtime.GC()
+		time.Sleep(time.Duration(1) * time.Millisecond)
 	}
+	t.Log(bufMgr.String())
 
 	opts.Meta.Updater.Stop()
 	opts.Meta.Flusher.Stop()

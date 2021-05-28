@@ -13,6 +13,9 @@ type IBufferManager interface {
 	RUnlock()
 	buf.IMemoryPool
 
+	String() string
+	NodeCount() int
+
 	RegisterMemory(capacity uint64, spillable bool) nif.INodeHandle
 	RegisterSpillableNode(capacity uint64, node_id layout.ID) nif.INodeHandle
 	RegisterNode(capacity uint64, node_id layout.ID, segFile interface{}) nif.INodeHandle
